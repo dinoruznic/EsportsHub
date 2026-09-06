@@ -1,0 +1,88 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 008-create-teams
+      author: dino
+      changes:
+        - createTable:
+            tableName: teams
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: name, type: VARCHAR(60), constraints: { nullable: false, unique: true } }
+              - column: { name: tag, type: VARCHAR(5), constraints: { nullable: false, unique: true } }
+              - column: { name: logo_url, type: VARCHAR(255) }
+              - column: { name: region, type: VARCHAR(10) }
+              - column: { name: game_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: captain_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: budget, type: INT, defaultValueNumeric: 0 }
+              - column: { name: created_at, type: TIMESTAMP, constraints: { nullable: false } }
+        - addForeignKeyConstraint: { baseTableName: teams, baseColumnNames: game_id, referencedTableName: games, referencedColumnNames: id, constraintName: fk_team_game }
+        - addForeignKeyConstraint: { baseTableName: teams, baseColumnNames: captain_id, referencedTableName: users, referencedColumnNames: id, constraintName: fk_team_captain }
+
+  - changeSet:
+      id: 009-create-team-memberships
+      author: dino
+      changes:
+        - createTable:
+            tableName: team_memberships
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: team_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: game_account_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: role_in_team, type: VARCHAR(10) }
+              - column: { name: active, type: BOOLEAN, defaultValueBoolean: true }
+              - column: { name: joined_at, type: TIMESTAMP }
+              - column: { name: left_at, type: TIMESTAMP }
+        - addForeignKeyConstraint: { baseTableName: team_memberships, baseColumnNames: team_id, referencedTableName: teams, referencedColumnNames: id, constraintName: fk_membership_team, onDelete: CASCADE }
+        - addForeignKeyConstraint: { baseTableName: team_memberships, baseColumnNames: game_account_id, referencedTableName: game_accounts, referencedColumnNames: id, constraintName: fk_membership_account, onDelete: CASCADE }
+
+  - changeSet:
+      id: 010-create-transfer-listings
+      author: dino
+      changes:
+        - createTable:
+            tableName: transfer_listings
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: game_account_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: asking_price, type: INT }
+              - column: { name: status, type: VARCHAR(10), constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP }
+              - column: { name: closed_at, type: TIMESTAMP }
+        - addForeignKeyConstraint: { baseTableName: transfer_listings, baseColumnNames: game_account_id, referencedTableName: game_accounts, referencedColumnNames: id, constraintName: fk_listing_account, onDelete: CASCADE }
+
+  - changeSet:
+      id: 011-create-transfer-offers
+      author: dino
+      changes:
+        - createTable:
+            tableName: transfer_offers
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: listing_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: from_team_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: amount, type: INT }
+              - column: { name: message, type: VARCHAR(255) }
+              - column: { name: status, type: VARCHAR(10), constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP }
+              - column: { name: responded_at, type: TIMESTAMP }
+        - addForeignKeyConstraint: { baseTableName: transfer_offers, baseColumnNames: listing_id, referencedTableName: transfer_listings, referencedColumnNames: id, constraintName: fk_offer_listing, onDelete: CASCADE }
+        - addForeignKeyConstraint: { baseTableName: transfer_offers, baseColumnNames: from_team_id, referencedTableName: teams, referencedColumnNames: id, constraintName: fk_offer_team }
+
+  - changeSet:
+      id: 012-create-contracts
+      author: dino
+      changes:
+        - createTable:
+            tableName: contracts
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: game_account_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: team_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: salary, type: INT }
+              - column: { name: start_date, type: DATE }
+              - column: { name: end_date, type: DATE }
+              - column: { name: status, type: VARCHAR(12), constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP }
+        - addForeignKeyConstraint: { baseTableName: contracts, baseColumnNames: game_account_id, referencedTableName: game_accounts, referencedColumnNames: id, constraintName: fk_contract_account }
+        - addForeignKeyConstraint: { baseTableName: contracts, baseColumnNames: team_id, referencedTableName: teams, referencedColumnNames: id, constraintName: fk_contract_team }

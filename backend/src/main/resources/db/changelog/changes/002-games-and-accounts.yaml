@@ -1,0 +1,45 @@
+databaseChangeLog:
+
+  # katalog igara
+  - changeSet:
+      id: 005-create-games
+      author: dino
+      changes:
+        - createTable:
+            tableName: games
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: code, type: VARCHAR(20), constraints: { nullable: false, unique: true } }
+              - column: { name: name, type: VARCHAR(40), constraints: { nullable: false } }
+              - column: { name: has_live_api, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 006-seed-games
+      author: dino
+      changes:
+        - insert: { tableName: games, columns: [ { column: { name: code, value: LOL } }, { column: { name: name, value: "League of Legends" } }, { column: { name: has_live_api, valueBoolean: true } } ] }
+        - insert: { tableName: games, columns: [ { column: { name: code, value: CS2 } }, { column: { name: name, value: "Counter-Strike 2" } }, { column: { name: has_live_api, valueBoolean: false } } ] }
+        - insert: { tableName: games, columns: [ { column: { name: code, value: VALORANT } }, { column: { name: name, value: "Valorant" } }, { column: { name: has_live_api, valueBoolean: false } } ] }
+        - insert: { tableName: games, columns: [ { column: { name: code, value: DOTA2 } }, { column: { name: name, value: "Dota 2" } }, { column: { name: has_live_api, valueBoolean: false } } ] }
+
+  # identitet igraca PO IGRI (rank, pozicija, handle... za bilo koju igru)
+  - changeSet:
+      id: 007-create-game-accounts
+      author: dino
+      changes:
+        - createTable:
+            tableName: game_accounts
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: user_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: game_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: in_game_name, type: VARCHAR(60), constraints: { nullable: false } }
+              - column: { name: external_id, type: VARCHAR(80) }
+              - column: { name: region, type: VARCHAR(10) }
+              - column: { name: rank, type: VARCHAR(30) }
+              - column: { name: position, type: VARCHAR(20) }
+              - column: { name: market_status, type: VARCHAR(12), defaultValue: INACTIVE, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP }
+        - addForeignKeyConstraint: { baseTableName: game_accounts, baseColumnNames: user_id, referencedTableName: users, referencedColumnNames: id, constraintName: fk_gameacc_user, onDelete: CASCADE }
+        - addForeignKeyConstraint: { baseTableName: game_accounts, baseColumnNames: game_id, referencedTableName: games, referencedColumnNames: id, constraintName: fk_gameacc_game }
+        - addUniqueConstraint: { tableName: game_accounts, columnNames: user_id, game_id, constraintName: uq_gameacc_user_game }

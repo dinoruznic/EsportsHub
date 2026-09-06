@@ -3,7 +3,6 @@ package com.esportshub.backend.user;
 import jakarta.persistence.*;
 import lombok.*;
 
-/** Uloga (SPECTATOR, PLAYER, CAPTAIN, REFEREE, ADMIN) - punjena kroz Liquibase seed. */
 @Entity
 @Table(name = "roles")
 @Getter
