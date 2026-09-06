@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: esportshub-postgres
+    environment:
+      POSTGRES_DB: esportshub
+      POSTGRES_USER: esportshub
+      POSTGRES_PASSWORD: esportshub
+    ports:
+      - "5433:5432"          # host 5433 -> kontejner 5432 (izbjegava lokalni Postgres na 5432)
+    volumes:
+      - esportshub_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U esportshub -d esportshub"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  esportshub_pgdata:
