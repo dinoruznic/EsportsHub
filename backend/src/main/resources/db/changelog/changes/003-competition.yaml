@@ -1,0 +1,146 @@
+databaseChangeLog:
+
+  # ---- tournaments ----
+  - changeSet:
+      id: 011-create-tournaments
+      author: dino
+      changes:
+        - createTable:
+            tableName: tournaments
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: name, type: VARCHAR(80), constraints: { nullable: false } }
+              - column: { name: game, type: VARCHAR(24), defaultValue: LEAGUE_OF_LEGENDS, constraints: { nullable: false } }
+              - column: { name: format, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: max_teams, type: INT }
+              - column: { name: status, type: VARCHAR(14), constraints: { nullable: false } }
+              - column: { name: prize_pool, type: INT }
+              - column: { name: start_date, type: TIMESTAMP }
+              - column: { name: organizer_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: created_at, type: TIMESTAMP }
+        - addForeignKeyConstraint:
+            baseTableName: tournaments
+            baseColumnNames: organizer_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_tournament_organizer
+
+  # ---- tournament_registrations ----
+  - changeSet:
+      id: 012-create-tournament-registrations
+      author: dino
+      changes:
+        - createTable:
+            tableName: tournament_registrations
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: tournament_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: team_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: status, type: VARCHAR(10), constraints: { nullable: false } }
+              - column: { name: seed, type: INT }
+              - column: { name: registered_at, type: TIMESTAMP }
+        - addForeignKeyConstraint:
+            baseTableName: tournament_registrations
+            baseColumnNames: tournament_id
+            referencedTableName: tournaments
+            referencedColumnNames: id
+            constraintName: fk_reg_tournament
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: tournament_registrations
+            baseColumnNames: team_id
+            referencedTableName: teams
+            referencedColumnNames: id
+            constraintName: fk_reg_team
+        - addUniqueConstraint:
+            tableName: tournament_registrations
+            columnNames: tournament_id, team_id
+            constraintName: uq_reg_tournament_team
+
+  # ---- rounds ----
+  - changeSet:
+      id: 013-create-rounds
+      author: dino
+      changes:
+        - createTable:
+            tableName: rounds
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: tournament_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: round_number, type: INT, constraints: { nullable: false } }
+              - column: { name: name, type: VARCHAR(30) }
+              - column: { name: bracket_side, type: VARCHAR(8) }
+        - addForeignKeyConstraint:
+            baseTableName: rounds
+            baseColumnNames: tournament_id
+            referencedTableName: tournaments
+            referencedColumnNames: id
+            constraintName: fk_round_tournament
+            onDelete: CASCADE
+
+  # ---- matches (state machine; self-ref next_match_id) ----
+  - changeSet:
+      id: 014-create-matches
+      author: dino
+      changes:
+        - createTable:
+            tableName: matches
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: tournament_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: round_id, type: BIGINT }
+              - column: { name: team_a_id, type: BIGINT }
+              - column: { name: team_b_id, type: BIGINT }
+              - column: { name: referee_id, type: BIGINT }
+              - column: { name: status, type: VARCHAR(12), defaultValue: SCHEDULED, constraints: { nullable: false } }
+              - column: { name: score_a, type: INT, defaultValueNumeric: 0 }
+              - column: { name: score_b, type: INT, defaultValueNumeric: 0 }
+              - column: { name: winner_team_id, type: BIGINT }
+              - column: { name: next_match_id, type: BIGINT }
+              - column: { name: spectator_key, type: VARCHAR(40) }
+              - column: { name: scheduled_at, type: TIMESTAMP }
+              - column: { name: started_at, type: TIMESTAMP }
+              - column: { name: ended_at, type: TIMESTAMP }
+        - addForeignKeyConstraint:
+            baseTableName: matches
+            baseColumnNames: tournament_id
+            referencedTableName: tournaments
+            referencedColumnNames: id
+            constraintName: fk_match_tournament
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: matches
+            baseColumnNames: round_id
+            referencedTableName: rounds
+            referencedColumnNames: id
+            constraintName: fk_match_round
+        - addForeignKeyConstraint:
+            baseTableName: matches
+            baseColumnNames: team_a_id
+            referencedTableName: teams
+            referencedColumnNames: id
+            constraintName: fk_match_team_a
+        - addForeignKeyConstraint:
+            baseTableName: matches
+            baseColumnNames: team_b_id
+            referencedTableName: teams
+            referencedColumnNames: id
+            constraintName: fk_match_team_b
+        - addForeignKeyConstraint:
+            baseTableName: matches
+            baseColumnNames: winner_team_id
+            referencedTableName: teams
+            referencedColumnNames: id
+            constraintName: fk_match_winner
+        - addForeignKeyConstraint:
+            baseTableName: matches
+            baseColumnNames: referee_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_match_referee
+        - addForeignKeyConstraint:
+            baseTableName: matches
+            baseColumnNames: next_match_id
+            referencedTableName: matches
+            referencedColumnNames: id
+            constraintName: fk_match_next

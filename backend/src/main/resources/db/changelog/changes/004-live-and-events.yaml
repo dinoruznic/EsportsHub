@@ -1,0 +1,118 @@
+databaseChangeLog:
+
+  # ---- match_events (event log / audit) ----
+  - changeSet:
+      id: 015-create-match-events
+      author: dino
+      changes:
+        - createTable:
+            tableName: match_events
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: match_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: type, type: VARCHAR(24), constraints: { nullable: false } }
+              - column: { name: source, type: VARCHAR(10), constraints: { nullable: false } }
+              - column: { name: payload, type: JSONB }
+              - column: { name: created_by, type: BIGINT }
+              - column: { name: created_at, type: TIMESTAMP, constraints: { nullable: false } }
+        - addForeignKeyConstraint:
+            baseTableName: match_events
+            baseColumnNames: match_id
+            referencedTableName: matches
+            referencedColumnNames: id
+            constraintName: fk_event_match
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: match_events
+            baseColumnNames: created_by
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_event_user
+
+  # ---- result_confirmations (dvostruka potvrda) ----
+  - changeSet:
+      id: 016-create-result-confirmations
+      author: dino
+      changes:
+        - createTable:
+            tableName: result_confirmations
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: match_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: team_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: submitted_by, type: BIGINT }
+              - column: { name: reported_score_a, type: INT }
+              - column: { name: reported_score_b, type: INT }
+              - column: { name: confirmed, type: BOOLEAN, defaultValueBoolean: false }
+              - column: { name: created_at, type: TIMESTAMP }
+        - addForeignKeyConstraint:
+            baseTableName: result_confirmations
+            baseColumnNames: match_id
+            referencedTableName: matches
+            referencedColumnNames: id
+            constraintName: fk_confirm_match
+            onDelete: CASCADE
+        - addForeignKeyConstraint:
+            baseTableName: result_confirmations
+            baseColumnNames: team_id
+            referencedTableName: teams
+            referencedColumnNames: id
+            constraintName: fk_confirm_team
+        - addForeignKeyConstraint:
+            baseTableName: result_confirmations
+            baseColumnNames: submitted_by
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_confirm_user
+
+  # ---- live_game_snapshots (Riot feed) ----
+  - changeSet:
+      id: 017-create-live-game-snapshots
+      author: dino
+      changes:
+        - createTable:
+            tableName: live_game_snapshots
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: match_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: game_time, type: INT }
+              - column: { name: team_a_kills, type: INT }
+              - column: { name: team_b_kills, type: INT }
+              - column: { name: team_a_gold, type: INT }
+              - column: { name: team_b_gold, type: INT }
+              - column: { name: dragons_a, type: INT }
+              - column: { name: dragons_b, type: INT }
+              - column: { name: barons_a, type: INT }
+              - column: { name: barons_b, type: INT }
+              - column: { name: raw_json, type: JSONB }
+              - column: { name: captured_at, type: TIMESTAMP }
+        - addForeignKeyConstraint:
+            baseTableName: live_game_snapshots
+            baseColumnNames: match_id
+            referencedTableName: matches
+            referencedColumnNames: id
+            constraintName: fk_snapshot_match
+            onDelete: CASCADE
+
+  # ---- notifications ----
+  - changeSet:
+      id: 018-create-notifications
+      author: dino
+      changes:
+        - createTable:
+            tableName: notifications
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: user_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: type, type: VARCHAR(30) }
+              - column: { name: message, type: VARCHAR(255) }
+              - column: { name: link, type: VARCHAR(255) }
+              - column: { name: read, type: BOOLEAN, defaultValueBoolean: false }
+              - column: { name: created_at, type: TIMESTAMP }
+        - addForeignKeyConstraint:
+            baseTableName: notifications
+            baseColumnNames: user_id
+            referencedTableName: users
+            referencedColumnNames: id
+            constraintName: fk_notification_user
+            onDelete: CASCADE
