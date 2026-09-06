@@ -1,0 +1,14 @@
+# Aktivira se sa: --spring.profiles.active=postgres (kad dignemo Postgres u Dockeru)
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/esportshub
+    username: esportshub
+    password: esportshub
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: none
+  h2:
+    console:
+      enabled: false

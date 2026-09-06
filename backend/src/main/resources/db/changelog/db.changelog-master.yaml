@@ -1,0 +1,9 @@
+databaseChangeLog:
+  # Svaka migracija ide kao poseban .yaml fajl u db/changelog/changes/
+  # i automatski se ucitava ovdje (endsWithFilter ignorise .gitkeep i sl.).
+  # Za sada nema migracija - dodajemo ih kroz faze (npr. 001-create-users.yaml).
+  - includeAll:
+      path: db/changelog/changes/
+      relativeToChangelogFile: false
+      errorIfMissingOrEmpty: false
+      endsWithFilter: .yaml

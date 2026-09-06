@@ -1,0 +1,47 @@
+###############################
+# Java / Maven (backend)
+###############################
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.log
+*.jar
+!**/maven-wrapper.jar
+
+###############################
+# Baza (H2 dev fajlovi)
+###############################
+*.db
+*.mv.db
+*.trace.db
+
+###############################
+# Node / Angular (frontend - kasnije)
+###############################
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+yarn-error.log*
+
+###############################
+# IDE
+###############################
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+
+###############################
+# OS
+###############################
+.DS_Store
+Thumbs.db
+
+###############################
+# Env / lokalne postavke
+###############################
+.env
+*.local
+application-local.yaml
