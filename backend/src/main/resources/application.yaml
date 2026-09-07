@@ -28,3 +28,8 @@ logging:
   level:
     org.springframework.web: INFO
     org.hibernate.SQL: DEBUG
+
+app:
+  jwt:
+    secret: '${JWT_SECRET:hgJzceBqRoQL3r/0bDVxGiHYHvi4xQI3BBWnM3B0b1a3U/fyhXPAmDwftVqWMdJttL4b017ruqNtg7eDgyw1jA==}'
+    expiration-ms: 86400000
