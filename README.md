@@ -6,9 +6,10 @@
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.1-6DB33F?style=flat-square&logo=springboot&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)
 ![Liquibase](https://img.shields.io/badge/Liquibase-2962FF?style=flat-square&logo=liquibase&logoColor=white)
+![JWT](https://img.shields.io/badge/JWT-auth-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)
+![Swagger](https://img.shields.io/badge/Swagger-OpenAPI-85EA2D?style=flat-square&logo=swagger&logoColor=black)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
 ![WebSocket](https://img.shields.io/badge/WebSocket-STOMP-010101?style=flat-square)
-![JWT](https://img.shields.io/badge/JWT-planned-000000?style=flat-square&logo=jsonwebtokens&logoColor=white)
 ![Angular](https://img.shields.io/badge/Angular-planned-DD0031?style=flat-square&logo=angular&logoColor=white)
 
 [Overview](#overview) · [Tech Stack](#tech-stack) · [Architecture](#architecture) · [Database](#database) · [Getting Started](#getting-started) · [Project Structure](#project-structure) · [Roadmap](#roadmap)
@@ -37,8 +38,9 @@ The domain is modelled **generically so any game can be added** (CS2, Valorant, 
 |-------|-----------|
 | Backend | Spring Boot 4.1 (Java 21, Maven) |
 | Database | PostgreSQL — schema managed by **Liquibase** |
-| Security | Spring Security + JWT *(in progress)* |
-| Real-time | WebSocket (STOMP) |
+| Security | Spring Security + JWT authentication |
+| API docs | springdoc-openapi (**Swagger UI**) |
+| Real-time | WebSocket (STOMP) *(planned)* |
 | Messaging | RabbitMQ *(planned)* |
 | Frontend | Angular *(planned)* |
 | Dev infra | Docker Compose |
@@ -80,20 +82,32 @@ cd backend
 ./mvnw spring-boot:run
 ```
 
-On startup, Liquibase builds the full schema automatically. Quick check:
+On startup, Liquibase builds the full schema automatically. Explore and test every endpoint in the browser via **Swagger UI**:
+
+```
+http://localhost:8080/swagger-ui.html
+```
+
+Key endpoints:
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| GET | `http://localhost:8080/api/ping` | Service health |
-| GET | `http://localhost:8080/api/roles` | Seeded user roles |
+| GET  | `/api/ping` | Service health (public) |
+| POST | `/api/auth/register` | Create an account, returns a JWT |
+| POST | `/api/auth/login` | Log in, returns a JWT |
+| GET  | `/api/roles` | Seeded user roles (requires `Authorization: Bearer <token>`) |
 
-> 🐳 No Docker? Run with the H2 fallback profile: `--spring.profiles.active=h2`
+Authentication is stateless: register or log in, then send the returned token in the `Authorization: Bearer <token>` header (in Swagger, click **Authorize** and paste it).
 
 ## Project Structure
 
 ```
 EsportsHub/
 ├── backend/                 # Spring Boot API
+│   ├── src/main/java/com/esportshub/backend/
+│   │   ├── auth/            # JWT auth (register, login, filter, service)
+│   │   ├── user/            # User & Role entities, repositories
+│   │   └── config/          # Security & OpenAPI configuration
 │   └── src/main/resources/
 │       └── db/changelog/    # Liquibase migrations (the DB schema)
 ├── frontend/                # Angular app (planned)
@@ -105,7 +119,9 @@ EsportsHub/
 - [x] Project skeleton, PostgreSQL via Docker, Liquibase
 - [x] Full generic multi-game database schema
 - [x] Users & roles (entities, repositories, endpoint)
-- [ ] 🔐 Authentication — registration & JWT login, RBAC
+- [x] 🔐 Authentication — registration & JWT login
+- [x] 📖 API documentation with Swagger UI
+- [ ] 🛡️ Role-based authorization (RBAC) on endpoints
 - [ ] 👤 Player profiles & transfer market
 - [ ] 🏆 Tournaments & bracket generation
 - [ ] 📡 Live match tracking (WebSocket + state machine)
