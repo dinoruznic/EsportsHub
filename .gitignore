@@ -45,3 +45,6 @@ Thumbs.db
 .env
 *.local
 application-local.yaml
+
+# Claude Code local settings
+.claude/
