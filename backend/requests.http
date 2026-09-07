@@ -1,0 +1,33 @@
+### 1) Registracija (vrati token) - pokreni jednom
+POST http://localhost:8080/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "dino",
+  "email": "dino@example.com",
+  "password": "lozinka123",
+  "displayName": "Dino"
+}
+
+> {% client.global.set("token", response.body.token); %}
+
+### 2) Login (vrati token) - koristi ako user vec postoji
+POST http://localhost:8080/api/auth/login
+Content-Type: application/json
+
+{
+  "usernameOrEmail": "dino",
+  "password": "lozinka123"
+}
+
+> {% client.global.set("token", response.body.token); %}
+
+### 3) Zasticeni endpoint - koristi uhvaceni token
+GET http://localhost:8080/api/roles
+Authorization: Bearer {{token}}
+
+### 4) Isti endpoint BEZ tokena - treba vratiti 401
+GET http://localhost:8080/api/roles
+
+### 5) Javni ping
+GET http://localhost:8080/api/ping
