@@ -7,7 +7,6 @@ import java.time.Instant;
 import java.util.HashSet;
 import java.util.Set;
 
-/** Korisnicki nalog. Uloge su M:N preko tabele user_roles. */
 @Entity
 @Table(name = "users")
 @Getter
@@ -38,6 +37,9 @@ public class User {
 
     @Column(length = 2)
     private String country;
+
+    @Column(columnDefinition = "text")
+    private String bio;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
