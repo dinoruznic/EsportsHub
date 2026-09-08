@@ -35,7 +35,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/api/auth/**").permitAll() /**Ko god dodje moze pristupiti, a **/
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()
