@@ -48,3 +48,6 @@ application-local.yaml
 
 # Claude Code local settings
 .claude/
+
+# lokalni fajlovi (nisu dio projekta)
+Claude outputs/
