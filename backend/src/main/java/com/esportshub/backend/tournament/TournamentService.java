@@ -68,6 +68,32 @@ public class TournamentService {
         return TournamentResponse.from(tournament);
     }
 
+    @Transactional(readOnly = true)
+    public List<TournamentResponse> listPending() {
+        return tournamentRepository.findByStatus(TournamentStatus.PENDING).stream()
+                .map(TournamentResponse::from)
+                .toList();
+    }
+
+    public TournamentResponse approve(Long id) {
+        return changeStatus(id, TournamentStatus.REGISTRATION);
+    }
+
+    public TournamentResponse reject(Long id) {
+        return changeStatus(id, TournamentStatus.REJECTED);
+    }
+
+    private TournamentResponse changeStatus(Long id, TournamentStatus target) {
+        Tournament tournament = tournamentRepository.findById(id).orElseThrow(TournamentService::notFound);
+
+        if (tournament.getStatus() != TournamentStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Turnir nije u statusu PENDING");
+        }
+
+        tournament.setStatus(target);
+        return TournamentResponse.from(tournamentRepository.save(tournament));
+    }
+
     private boolean canSeeHidden(Tournament tournament, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return false;
