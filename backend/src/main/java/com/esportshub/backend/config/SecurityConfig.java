@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/tournaments/pending").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/tournaments").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/tournaments/{id}").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/players/*/game-accounts").permitAll()
                 .anyRequest().authenticated())
             .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
