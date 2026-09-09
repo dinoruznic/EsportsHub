@@ -51,4 +51,39 @@ public class GameAccountService {
                 .map(GameAccountResponse::from)
                 .toList();
     }
+
+    public GameAccountResponse update(String username, Long id, UpdateGameAccountRequest request) {
+        GameAccount account = gameAccountRepository.findByIdAndUser_Username(id, username)
+                .orElseThrow(GameAccountService::notFound);
+
+        account.setInGameName(request.inGameName().trim());
+        account.setRegion(request.region());
+        account.setRank(request.rank());
+        account.setPosition(request.position());
+        account.setMarketStatus(request.marketStatus());
+
+        return GameAccountResponse.from(gameAccountRepository.save(account));
+    }
+
+    public void delete(String username, Long id) {
+        GameAccount account = gameAccountRepository.findByIdAndUser_Username(id, username)
+                .orElseThrow(GameAccountService::notFound);
+
+        gameAccountRepository.delete(account);
+    }
+
+    @Transactional(readOnly = true)
+    public List<GameAccountResponse> listByUsername(String username) {
+        if (!userRepository.existsByUsername(username)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Korisnik ne postoji");
+        }
+
+        return gameAccountRepository.findByUser_Username(username).stream()
+                .map(GameAccountResponse::from)
+                .toList();
+    }
+
+    private static ResponseStatusException notFound() {
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, "Nalog ne postoji");
+    }
 }
