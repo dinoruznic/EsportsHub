@@ -1,0 +1,8 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 021-fix-gameacc-unique
+      author: dino
+      changes:
+        - dropUniqueConstraint: { tableName: game_accounts, constraintName: uq_gameacc_user_game }
+        - addUniqueConstraint: { tableName: game_accounts, columnNames: "user_id, game_id", constraintName: uq_gameacc_user_game }
