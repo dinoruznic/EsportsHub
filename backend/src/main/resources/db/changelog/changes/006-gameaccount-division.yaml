@@ -1,0 +1,10 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 020-add-division
+      author: dino
+      changes:
+        - addColumn:
+            tableName: game_accounts
+            columns:
+              - column: { name: division, type: VARCHAR(4) }
