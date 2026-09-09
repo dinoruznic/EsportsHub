@@ -34,14 +34,17 @@ public class GameAccount {
     @Column(name = "external_id", length = 80)
     private String externalId;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 10)
-    private String region;
+    private Region region;
 
+    @Enumerated(EnumType.STRING)
     @Column(name = "rank", length = 30)
-    private String rank;
+    private Rank rank;
 
+    @Enumerated(EnumType.STRING)
     @Column(length = 20)
-    private String position;
+    private Position position;
 
     @Enumerated(EnumType.STRING)
     @Column(name = "market_status", nullable = false, length = 12)

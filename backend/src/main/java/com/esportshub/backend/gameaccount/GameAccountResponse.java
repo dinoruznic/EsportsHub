@@ -8,9 +8,9 @@ public record GameAccountResponse(
         String gameCode,
         String gameName,
         String inGameName,
-        String region,
-        String rank,
-        String position,
+        Region region,
+        Rank rank,
+        Position position,
         String marketStatus,
         Instant createdAt
 ) {
