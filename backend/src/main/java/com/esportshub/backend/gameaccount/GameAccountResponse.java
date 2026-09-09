@@ -11,6 +11,7 @@ public record GameAccountResponse(
         Region region,
         Rank rank,
         Position position,
+        Division division,
         String marketStatus,
         Instant createdAt
 ) {
@@ -24,6 +25,7 @@ public record GameAccountResponse(
                 account.getRegion(),
                 account.getRank(),
                 account.getPosition(),
+                account.getDivision(),
                 account.getMarketStatus().name(),
                 account.getCreatedAt());
     }

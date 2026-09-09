@@ -9,6 +9,7 @@ public record CreateGameAccountRequest(
         @NotBlank @Size(max = 60) String inGameName,
         Region region,
         Rank rank,
-        Position position
+        Position position,
+        Division division
 ) {
 }

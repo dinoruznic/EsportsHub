@@ -47,6 +47,10 @@ public class GameAccount {
     private Position position;
 
     @Enumerated(EnumType.STRING)
+    @Column(name = "division", length = 4)
+    private Division division;
+
+    @Enumerated(EnumType.STRING)
     @Column(name = "market_status", nullable = false, length = 12)
     private MarketStatus marketStatus;
 

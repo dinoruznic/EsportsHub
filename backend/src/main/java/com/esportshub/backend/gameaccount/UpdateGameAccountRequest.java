@@ -9,6 +9,7 @@ public record UpdateGameAccountRequest(
         Region region,
         Rank rank,
         Position position,
+        Division division,
         @NotNull MarketStatus marketStatus
 ) {
 }
