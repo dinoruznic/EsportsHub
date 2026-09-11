@@ -2,6 +2,7 @@ package com.esportshub.backend.team;
 
 import com.esportshub.backend.game.Game;
 import com.esportshub.backend.game.GameRepository;
+import com.esportshub.backend.gameaccount.GameAccount;
 import com.esportshub.backend.gameaccount.GameAccountRepository;
 import com.esportshub.backend.user.User;
 import com.esportshub.backend.user.UserRepository;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.List;
 
 @Service
@@ -74,11 +76,63 @@ public class TeamService {
         return new TeamDetailResponse(TeamResponse.from(team, members.size()), members);
     }
 
+    public TeamMemberResponse addMember(String username, Long teamId, AddMemberRequest request) {
+        Team team = teamRepository.findById(teamId).orElseThrow(TeamService::teamNotFound);
+        requireCaptain(team, username);
+
+        GameAccount account = gameAccountRepository.findById(request.gameAccountId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Nalog ne postoji"));
+
+        if (!account.getGame().getId().equals(team.getGame().getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account game does not match team game");
+        }
+
+        if (teamMembershipRepository.existsByTeam_IdAndGameAccount_IdAndActiveTrue(teamId, account.getId())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "already a member");
+        }
+
+        TeamMembership membership = TeamMembership.builder()
+                .team(team)
+                .gameAccount(account)
+                .roleInTeam(request.roleInTeam())
+                .active(true)
+                .joinedAt(Instant.now())
+                .build();
+
+        return TeamMemberResponse.from(teamMembershipRepository.save(membership));
+    }
+
+    public void removeMember(String username, Long teamId, Long membershipId) {
+        Team team = teamRepository.findById(teamId).orElseThrow(TeamService::teamNotFound);
+        requireCaptain(team, username);
+
+        TeamMembership membership = teamMembershipRepository.findById(membershipId)
+                .orElseThrow(TeamService::membershipNotFound);
+
+        if (!membership.getTeam().getId().equals(teamId)) {
+            throw membershipNotFound();
+        }
+
+        membership.setActive(false);
+        membership.setLeftAt(Instant.now());
+        teamMembershipRepository.save(membership);
+    }
+
+    private static void requireCaptain(Team team, String username) {
+        if (!team.getCaptain().getUsername().equals(username)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Samo kapiten moze mijenjati sastav tima");
+        }
+    }
+
     private int countMembers(Long teamId) {
         return teamMembershipRepository.findByTeam_IdAndActiveTrue(teamId).size();
     }
 
     private static ResponseStatusException teamNotFound() {
         return new ResponseStatusException(HttpStatus.NOT_FOUND, "Tim ne postoji");
+    }
+
+    private static ResponseStatusException membershipNotFound() {
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, "Clanstvo ne postoji");
     }
 }

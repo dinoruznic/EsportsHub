@@ -33,4 +33,20 @@ public class TeamController {
     public TeamDetailResponse getTeam(@PathVariable Long id) {
         return teamService.getTeam(id);
     }
+
+    @PostMapping("/{id}/members")
+    public ResponseEntity<TeamMemberResponse> addMember(@AuthenticationPrincipal UserDetails principal,
+                                                        @PathVariable Long id,
+                                                        @Valid @RequestBody AddMemberRequest request) {
+        TeamMemberResponse created = teamService.addMember(principal.getUsername(), id, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @DeleteMapping("/{id}/members/{membershipId}")
+    public ResponseEntity<Void> removeMember(@AuthenticationPrincipal UserDetails principal,
+                                             @PathVariable Long id,
+                                             @PathVariable Long membershipId) {
+        teamService.removeMember(principal.getUsername(), id, membershipId);
+        return ResponseEntity.noContent().build();
+    }
 }
