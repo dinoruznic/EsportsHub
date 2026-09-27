@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/players/*/game-accounts").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/games").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/teams", "/api/teams/*").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/market/listings").permitAll()
                 .anyRequest().authenticated())
             .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
             .headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()))
