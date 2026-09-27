@@ -48,4 +48,10 @@ public class MarketController {
                                           @PathVariable Long listingId) {
         return marketService.listOffers(principal.getUsername(), listingId);
     }
+
+    @PostMapping("/offers/{offerId}/accept")
+    public ContractResponse acceptOffer(@AuthenticationPrincipal UserDetails principal,
+                                        @PathVariable Long offerId) {
+        return marketService.acceptOffer(principal.getUsername(), offerId);
+    }
 }

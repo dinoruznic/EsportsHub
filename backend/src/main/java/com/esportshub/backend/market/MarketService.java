@@ -4,6 +4,8 @@ import com.esportshub.backend.gameaccount.GameAccount;
 import com.esportshub.backend.gameaccount.GameAccountRepository;
 import com.esportshub.backend.gameaccount.MarketStatus;
 import com.esportshub.backend.team.Team;
+import com.esportshub.backend.team.TeamMembership;
+import com.esportshub.backend.team.TeamMembershipRepository;
 import com.esportshub.backend.team.TeamRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -12,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -23,6 +26,8 @@ public class MarketService {
     private final GameAccountRepository gameAccountRepository;
     private final TransferOfferRepository transferOfferRepository;
     private final TeamRepository teamRepository;
+    private final ContractRepository contractRepository;
+    private final TeamMembershipRepository teamMembershipRepository;
 
     public ListingResponse createListing(String username, CreateListingRequest request) {
         GameAccount account = gameAccountRepository.findById(request.gameAccountId())
@@ -126,6 +131,70 @@ public class MarketService {
         return transferOfferRepository.findByListing_Id(listingId).stream()
                 .map(OfferResponse::from)
                 .toList();
+    }
+
+    public ContractResponse acceptOffer(String username, Long offerId) {
+        TransferOffer offer = transferOfferRepository.findById(offerId).orElseThrow(MarketService::offerNotFound);
+        TransferListing listing = offer.getListing();
+        GameAccount account = listing.getGameAccount();
+        Team team = offer.getFromTeam();
+
+        if (!account.getUser().getUsername().equals(username)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "nisi vlasnik oglasa");
+        }
+
+        if (offer.getStatus() != OfferStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "ponuda nije aktivna");
+        }
+
+        if (listing.getStatus() != ListingStatus.OPEN) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "oglas nije otvoren");
+        }
+
+        Instant now = Instant.now();
+
+        offer.setStatus(OfferStatus.ACCEPTED);
+        offer.setRespondedAt(now);
+        transferOfferRepository.save(offer);
+
+        Contract contract = contractRepository.save(Contract.builder()
+                .gameAccount(account)
+                .team(team)
+                .salary(offer.getAmount())
+                .status(ContractStatus.ACTIVE)
+                .startDate(LocalDate.now())
+                .build());
+
+        if (!teamMembershipRepository.existsByTeam_IdAndGameAccount_IdAndActiveTrue(team.getId(), account.getId())) {
+            teamMembershipRepository.save(TeamMembership.builder()
+                    .team(team)
+                    .gameAccount(account)
+                    .active(true)
+                    .joinedAt(now)
+                    .build());
+        }
+
+        listing.setStatus(ListingStatus.CLOSED);
+        listing.setClosedAt(now);
+        transferListingRepository.save(listing);
+
+        account.setMarketStatus(MarketStatus.INACTIVE);
+        gameAccountRepository.save(account);
+
+        List<TransferOffer> others = transferOfferRepository.findByListing_IdAndStatus(listing.getId(), OfferStatus.PENDING).stream()
+                .filter(other -> !other.getId().equals(offer.getId()))
+                .toList();
+        others.forEach(other -> {
+            other.setStatus(OfferStatus.REJECTED);
+            other.setRespondedAt(now);
+        });
+        transferOfferRepository.saveAll(others);
+
+        return ContractResponse.from(contract);
+    }
+
+    private static ResponseStatusException offerNotFound() {
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, "Ponuda ne postoji");
     }
 
     private static ResponseStatusException listingNotFound() {
