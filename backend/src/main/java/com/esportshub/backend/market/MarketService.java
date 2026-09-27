@@ -193,6 +193,43 @@ public class MarketService {
         return ContractResponse.from(contract);
     }
 
+    public OfferResponse rejectOffer(String username, Long offerId) {
+        TransferOffer offer = transferOfferRepository.findById(offerId).orElseThrow(MarketService::offerNotFound);
+
+        if (!offer.getListing().getGameAccount().getUser().getUsername().equals(username)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "nisi vlasnik oglasa");
+        }
+
+        return closeOffer(offer, OfferStatus.REJECTED);
+    }
+
+    public OfferResponse withdrawOffer(String username, Long offerId) {
+        TransferOffer offer = transferOfferRepository.findById(offerId).orElseThrow(MarketService::offerNotFound);
+
+        if (!offer.getFromTeam().getCaptain().getUsername().equals(username)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "nije tvoja ponuda");
+        }
+
+        return closeOffer(offer, OfferStatus.WITHDRAWN);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ContractResponse> listTeamContracts(Long teamId) {
+        return contractRepository.findByTeam_Id(teamId).stream()
+                .map(ContractResponse::from)
+                .toList();
+    }
+
+    private OfferResponse closeOffer(TransferOffer offer, OfferStatus status) {
+        if (offer.getStatus() != OfferStatus.PENDING) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "ponuda nije aktivna");
+        }
+
+        offer.setStatus(status);
+        offer.setRespondedAt(Instant.now());
+        return OfferResponse.from(transferOfferRepository.save(offer));
+    }
+
     private static ResponseStatusException offerNotFound() {
         return new ResponseStatusException(HttpStatus.NOT_FOUND, "Ponuda ne postoji");
     }

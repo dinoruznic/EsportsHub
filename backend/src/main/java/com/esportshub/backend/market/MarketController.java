@@ -54,4 +54,21 @@ public class MarketController {
                                         @PathVariable Long offerId) {
         return marketService.acceptOffer(principal.getUsername(), offerId);
     }
+
+    @PostMapping("/offers/{offerId}/reject")
+    public OfferResponse rejectOffer(@AuthenticationPrincipal UserDetails principal,
+                                     @PathVariable Long offerId) {
+        return marketService.rejectOffer(principal.getUsername(), offerId);
+    }
+
+    @PostMapping("/offers/{offerId}/withdraw")
+    public OfferResponse withdrawOffer(@AuthenticationPrincipal UserDetails principal,
+                                       @PathVariable Long offerId) {
+        return marketService.withdrawOffer(principal.getUsername(), offerId);
+    }
+
+    @GetMapping("/teams/{teamId}/contracts")
+    public List<ContractResponse> listTeamContracts(@PathVariable Long teamId) {
+        return marketService.listTeamContracts(teamId);
+    }
 }
