@@ -1,0 +1,176 @@
+### EsportsHub — Teams flow test
+### Pokreni sve odjednom: klikni na ikonu ">>" (Run all requests in file) gore u toolbaru,
+### ili ">" pored svakog zahtjeva redom. Tokeni i id-evi se sami hvataju u varijable.
+### Svaki put pravi SVJEZEG korisnika (cap<random>) pa je bezbjedno pokretati vise puta.
+
+@host = http://localhost:8080
+
+### 0. Javne igre + generisi svjezi identitet (nema tokena)
+GET {{host}}/api/games
+
+> {%
+    client.test("games 200", function () { client.assert(response.status === 200); });
+    var r = Math.floor(Math.random() * 1000000);
+    client.global.set("capUser", "cap" + r);
+    client.global.set("teamTag", "T" + (r % 9000 + 1000));
+    response.body.forEach(function (g) {
+        if (g.code === "LOL") client.global.set("lolId", g.id);
+        if (g.code === "CS2") client.global.set("cs2Id", g.id);
+    });
+    client.log("capUser=" + client.global.get("capUser") + " lolId=" + client.global.get("lolId") + " cs2Id=" + client.global.get("cs2Id"));
+%}
+
+### 1. Registracija kapitena (201)
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{
+  "username": "{{capUser}}",
+  "email": "{{capUser}}@esportshub.local",
+  "password": "captain123",
+  "displayName": "Kapiten"
+}
+
+> {% client.test("register 201", function () { client.assert(response.status === 201); }); %}
+
+### 2. Login -> token
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{
+  "usernameOrEmail": "{{capUser}}",
+  "password": "captain123"
+}
+
+> {%
+    client.test("login 200", function () { client.assert(response.status === 200); });
+    client.global.set("token", response.body.token);
+%}
+
+### 3. Napravi LoL nalog -> lolAccId (201)
+POST {{host}}/api/me/game-accounts
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "gameId": {{lolId}},
+  "inGameName": "Cap#EUW",
+  "region": "EUW",
+  "rank": "DIAMOND",
+  "division": "II",
+  "position": "MID"
+}
+
+> {%
+    client.test("lol account 201", function () { client.assert(response.status === 201); });
+    client.global.set("lolAccId", response.body.id);
+%}
+
+### 4. Napravi CS2 nalog -> cs2AccId (201)
+POST {{host}}/api/me/game-accounts
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "gameId": {{cs2Id}},
+  "inGameName": "cap_awp",
+  "rank": "GOLD"
+}
+
+> {%
+    client.test("cs2 account 201", function () { client.assert(response.status === 201); });
+    client.global.set("cs2AccId", response.body.id);
+%}
+
+### 5. Napravi tim -> teamId (201, kapiten = ja, memberCount 0)
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "{{capUser}} Team",
+  "tag": "{{teamTag}}",
+  "gameId": {{lolId}},
+  "region": "EUW"
+}
+
+> {%
+    client.test("team 201", function () { client.assert(response.status === 201); });
+    client.test("kapiten sam ja", function () { client.assert(response.body.captainUsername === client.global.get("capUser")); });
+    client.test("memberCount 0", function () { client.assert(response.body.memberCount === 0); });
+    client.global.set("teamId", response.body.id);
+%}
+
+### 6. Duplikat imena/taga -> 409
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "{{capUser}} Team",
+  "tag": "{{teamTag}}",
+  "gameId": {{lolId}},
+  "region": "EUW"
+}
+
+> {% client.test("duplikat tima 409", function () { client.assert(response.status === 409); }); %}
+
+### 7. Dodaj sebe kao clana -> membershipId (201)
+POST {{host}}/api/teams/{{teamId}}/members
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "gameAccountId": {{lolAccId}},
+  "roleInTeam": "STARTER"
+}
+
+> {%
+    client.test("dodaj clana 201", function () { client.assert(response.status === 201); });
+    client.global.set("membershipId", response.body.membershipId);
+%}
+
+### 8. Detalji tima -> roster ima 1 clana
+GET {{host}}/api/teams/{{teamId}}
+
+> {%
+    client.test("team detail 200", function () { client.assert(response.status === 200); });
+    client.test("roster ima 1 clana", function () { client.assert(response.body.members.length === 1); });
+%}
+
+### 9. Isti clan opet -> 409 (already a member)
+POST {{host}}/api/teams/{{teamId}}/members
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "gameAccountId": {{lolAccId}},
+  "roleInTeam": "STARTER"
+}
+
+> {% client.test("dupli clan 409", function () { client.assert(response.status === 409); }); %}
+
+### 10. CS2 nalog u LoL tim -> 400 (provjera igre!)
+POST {{host}}/api/teams/{{teamId}}/members
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "gameAccountId": {{cs2AccId}},
+  "roleInTeam": "SUB"
+}
+
+> {% client.test("pogresna igra 400", function () { client.assert(response.status === 400); }); %}
+
+### 11. Ukloni clana -> 204
+DELETE {{host}}/api/teams/{{teamId}}/members/{{membershipId}}
+Authorization: Bearer {{token}}
+
+> {% client.test("ukloni clana 204", function () { client.assert(response.status === 204); }); %}
+
+### 12. Detalji tima -> roster prazan (clan deaktiviran)
+GET {{host}}/api/teams/{{teamId}}
+
+> {%
+    client.test("roster prazan", function () { client.assert(response.body.members.length === 0); });
+%}
