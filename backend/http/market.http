@@ -1,0 +1,124 @@
+### EsportsHub — Transfer market (DIO 1: oglasi) test
+### Run all requests in file (⏩). Pravi svjeze korisnike svaki put, sam hvata id-eve.
+
+@host = http://localhost:8080
+
+### 0. Javne igre + generisi dva svjeza identiteta
+GET {{host}}/api/games
+
+> {%
+    client.test("games 200", function () { client.assert(response.status === 200); });
+    var r = Math.floor(Math.random() * 1000000);
+    client.global.set("capUser", "sell" + r);
+    client.global.set("otherUser", "buyr" + r);
+    response.body.forEach(function (g) { if (g.code === "LOL") client.global.set("lolId", g.id); });
+%}
+
+### 1. Registruj prodavca (igrac koji se listuje)
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{capUser}}", "email": "{{capUser}}@esportshub.local", "password": "lozinka123", "displayName": "Prodavac" }
+
+> {% client.test("register 201", function () { client.assert(response.status === 201); }); %}
+
+### 2. Login prodavac -> token
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{capUser}}", "password": "lozinka123" }
+
+> {% client.test("login 200", function(){ client.assert(response.status===200); }); client.global.set("token", response.body.token); %}
+
+### 3. Prodavac pravi LoL nalog -> gaId
+POST {{host}}/api/me/game-accounts
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{ "gameId": {{lolId}}, "inGameName": "Seller#EUW", "region": "EUW", "rank": "DIAMOND", "position": "MID" }
+
+> {% client.test("nalog 201", function(){ client.assert(response.status===201); }); client.global.set("gaId", response.body.id); %}
+
+### 4. Registruj drugog korisnika (za test tudjeg naloga)
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{otherUser}}", "email": "{{otherUser}}@esportshub.local", "password": "lozinka123", "displayName": "Drugi" }
+
+### 5. Login drugi -> token2
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{otherUser}}", "password": "lozinka123" }
+
+> {% client.global.set("token2", response.body.token); %}
+
+### 6. Drugi pravi svoj LoL nalog -> otherGaId
+POST {{host}}/api/me/game-accounts
+Content-Type: application/json
+Authorization: Bearer {{token2}}
+
+{ "gameId": {{lolId}}, "inGameName": "Other#EUW", "region": "EUW", "rank": "GOLD", "position": "TOP" }
+
+> {% client.global.set("otherGaId", response.body.id); %}
+
+### 7. Prodavac listuje SVOJ nalog -> listingId (201, status OPEN)
+POST {{host}}/api/market/listings
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{ "gameAccountId": {{gaId}}, "askingPrice": 500 }
+
+> {%
+    client.test("oglas 201", function(){ client.assert(response.status===201); });
+    client.test("status OPEN", function(){ client.assert(response.body.status==="OPEN"); });
+    client.global.set("listingId", response.body.id);
+%}
+
+### 8. Profil prodavca -> marketStatus AVAILABLE
+GET {{host}}/api/players/{{capUser}}/game-accounts
+
+> {% client.test("marketStatus AVAILABLE", function(){ client.assert(response.body[0].marketStatus==="AVAILABLE"); }); %}
+
+### 9. Isti nalog opet listaj -> 409 (vec je na trzistu)
+POST {{host}}/api/market/listings
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{ "gameAccountId": {{gaId}}, "askingPrice": 999 }
+
+> {% client.test("duplikat oglasa 409", function(){ client.assert(response.status===409); }); %}
+
+### 10. Prodavac pokusa listati TUDJI nalog -> 403
+POST {{host}}/api/market/listings
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{ "gameAccountId": {{otherGaId}}, "askingPrice": 100 }
+
+> {% client.test("tudji nalog 403", function(){ client.assert(response.status===403); }); %}
+
+### 11. Javna lista oglasa (bez tokena) -> sadrzi nas oglas
+GET {{host}}/api/market/listings
+
+> {%
+    client.test("lista 200", function(){ client.assert(response.status===200); });
+    client.test("nas oglas je u listi", function(){ client.assert(response.body.some(function(l){ return l.id === client.global.get("listingId"); })); });
+%}
+
+### 12. Otkazi oglas -> 200
+POST {{host}}/api/market/listings/{{listingId}}/cancel
+Authorization: Bearer {{token}}
+
+> {% client.test("otkazi 200", function(){ client.assert(response.status===200); }); %}
+
+### 13. Profil prodavca -> marketStatus vracen na INACTIVE
+GET {{host}}/api/players/{{capUser}}/game-accounts
+
+> {% client.test("marketStatus INACTIVE", function(){ client.assert(response.body[0].marketStatus==="INACTIVE"); }); %}
+
+### 14. Otkazi opet -> 409 (oglas nije otvoren)
+POST {{host}}/api/market/listings/{{listingId}}/cancel
+Authorization: Bearer {{token}}
+
+> {% client.test("otkazi opet 409", function(){ client.assert(response.status===409); }); %}
