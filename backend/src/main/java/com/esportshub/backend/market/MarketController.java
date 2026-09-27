@@ -11,27 +11,41 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/market/listings")
+@RequestMapping("/api/market")
 @RequiredArgsConstructor
 public class MarketController {
 
     private final MarketService marketService;
 
-    @PostMapping("")
+    @PostMapping("/listings")
     public ResponseEntity<ListingResponse> create(@AuthenticationPrincipal UserDetails principal,
                                                   @Valid @RequestBody CreateListingRequest request) {
         ListingResponse created = marketService.createListing(principal.getUsername(), request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    @GetMapping("")
+    @GetMapping("/listings")
     public List<ListingResponse> listOpen(@RequestParam(required = false) Long gameId) {
         return marketService.listOpen(gameId);
     }
 
-    @PostMapping("/{id}/cancel")
+    @PostMapping("/listings/{id}/cancel")
     public ListingResponse cancel(@AuthenticationPrincipal UserDetails principal,
                                   @PathVariable Long id) {
         return marketService.cancelListing(principal.getUsername(), id);
+    }
+
+    @PostMapping("/listings/{listingId}/offers")
+    public ResponseEntity<OfferResponse> makeOffer(@AuthenticationPrincipal UserDetails principal,
+                                                   @PathVariable Long listingId,
+                                                   @Valid @RequestBody MakeOfferRequest request) {
+        OfferResponse created = marketService.makeOffer(principal.getUsername(), listingId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
+
+    @GetMapping("/listings/{listingId}/offers")
+    public List<OfferResponse> listOffers(@AuthenticationPrincipal UserDetails principal,
+                                          @PathVariable Long listingId) {
+        return marketService.listOffers(principal.getUsername(), listingId);
     }
 }
