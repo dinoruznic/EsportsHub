@@ -3,6 +3,7 @@ package com.esportshub.agent;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
+import java.security.GeneralSecurityException;
 import java.util.concurrent.TimeUnit;
 
 public final class AgentMain {
@@ -24,7 +25,14 @@ public final class AgentMain {
         }
 
         ObjectMapper objectMapper = JsonMapper.builder().build();
-        SnapshotSource source = createSource(config);
+        SnapshotSource source;
+        try {
+            source = createSource(config, objectMapper);
+        } catch (GeneralSecurityException e) {
+            Log.error("TLS za League klijent nije moguce podesiti: " + e.getMessage());
+            System.exit(1);
+            return;
+        }
 
         SnapshotPublisher publisher;
         try {
@@ -80,11 +88,11 @@ public final class AgentMain {
         }
     }
 
-    private static SnapshotSource createSource(AgentConfig config) {
+    private static SnapshotSource createSource(AgentConfig config, ObjectMapper objectMapper) throws GeneralSecurityException {
         if (config.mock()) {
             return new MockSnapshotSource(config);
         }
-        throw new IllegalStateException("stvarni mod jos nije podrzan, koristi --mock");
+        return new RiotSnapshotSource(new RiotClient(objectMapper), config);
     }
 
     private static String clock(Integer seconds) {
