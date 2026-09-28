@@ -21,10 +21,12 @@ spring:
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.yaml
 
+  web:
+    error:
+      include-stacktrace: never
+
 server:
   port: 8080
-  error:
-    include-stacktrace: never
 
 logging:
   level:
