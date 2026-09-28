@@ -9,11 +9,13 @@ import org.springframework.amqp.AmqpRejectAndDontRequeueException;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -52,6 +54,33 @@ public class LiveSnapshotService {
                 MatchEvent.LIVE_SNAPSHOT,
                 MatchEvent.RIOT_AGENT,
                 stats(message)));
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<LiveSnapshotResponse> latest(Long matchId) {
+        return liveGameSnapshotRepository.findTopByMatch_IdOrderByIdDesc(matchId).map(this::toResponse);
+    }
+
+    private LiveSnapshotResponse toResponse(LiveGameSnapshot snapshot) {
+        JsonNode extras = snapshot.getRawJson() == null ? null : objectMapper.readTree(snapshot.getRawJson());
+        return new LiveSnapshotResponse(
+                snapshot.getMatch().getId(),
+                snapshot.getCapturedAt(),
+                snapshot.getGameTime(),
+                snapshot.getScoreA(),
+                snapshot.getScoreB(),
+                intOrNull(extras, "goldA"),
+                intOrNull(extras, "goldB"),
+                intOrNull(extras, "towersA"),
+                intOrNull(extras, "towersB"),
+                extras == null ? null : extras.get("raw"));
+    }
+
+    private static Integer intOrNull(JsonNode node, String field) {
+        if (node == null || node.get(field) == null || node.get(field).isNull()) {
+            return null;
+        }
+        return node.get(field).asInt();
     }
 
     private static Map<String, Object> stats(LiveSnapshotMessage message) {

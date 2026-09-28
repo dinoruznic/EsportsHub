@@ -3,7 +3,6 @@ package com.esportshub.backend.match;
 import com.esportshub.backend.bracket.MatchView;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
@@ -22,26 +21,26 @@ public class MatchController {
     public MatchView assignReferee(@AuthenticationPrincipal UserDetails principal,
                                    @PathVariable Long id,
                                    @Valid @RequestBody AssignRefereeRequest request) {
-        return matchService.assignReferee(actor(principal), id, request);
+        return matchService.assignReferee(MatchActor.from(principal), id, request);
     }
 
     @PostMapping("/{id}/start")
     public MatchView start(@AuthenticationPrincipal UserDetails principal, @PathVariable Long id) {
-        return matchService.start(actor(principal), id);
+        return matchService.start(MatchActor.from(principal), id);
     }
 
     @PutMapping("/{id}/score")
     public MatchView updateScore(@AuthenticationPrincipal UserDetails principal,
                                  @PathVariable Long id,
                                  @Valid @RequestBody ScoreRequest request) {
-        return matchService.updateScore(actor(principal), id, request);
+        return matchService.updateScore(MatchActor.from(principal), id, request);
     }
 
     @PostMapping("/{id}/finish")
     public MatchView finish(@AuthenticationPrincipal UserDetails principal,
                             @PathVariable Long id,
                             @Valid @RequestBody ScoreRequest request) {
-        return matchService.finish(actor(principal), id, request);
+        return matchService.finish(MatchActor.from(principal), id, request);
     }
 
     @GetMapping("/{id}")
@@ -51,18 +50,11 @@ public class MatchController {
 
     @GetMapping("/{id}/agent-key")
     public AgentKeyResponse agentKey(@AuthenticationPrincipal UserDetails principal, @PathVariable Long id) {
-        return matchService.agentKey(actor(principal), id);
+        return matchService.agentKey(MatchActor.from(principal), id);
     }
 
     @GetMapping("/{id}/events")
     public List<MatchEventResponse> events(@PathVariable Long id) {
         return matchEventLogger.findByMatch(id);
-    }
-
-    private static MatchActor actor(UserDetails principal) {
-        boolean isAdmin = principal.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .anyMatch("ROLE_ADMIN"::equals);
-        return new MatchActor(principal.getUsername(), isAdmin);
     }
 }
