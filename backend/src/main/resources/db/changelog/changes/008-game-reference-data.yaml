@@ -1,0 +1,133 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 022-add-game-rank-type
+      author: dino
+      changes:
+        - addColumn:
+            tableName: games
+            columns:
+              - column: { name: rank_type, type: VARCHAR(10), defaultValue: NONE, constraints: { nullable: false } }
+
+  - changeSet:
+      id: 023-create-game-regions
+      author: dino
+      changes:
+        - createTable:
+            tableName: game_regions
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: game_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: code, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: label, type: VARCHAR(40), constraints: { nullable: false } }
+        - addForeignKeyConstraint: { baseTableName: game_regions, baseColumnNames: game_id, referencedTableName: games, referencedColumnNames: id, constraintName: fk_game_regions_game }
+        - addUniqueConstraint: { tableName: game_regions, columnNames: "game_id, code", constraintName: uq_game_regions_game_code }
+
+  - changeSet:
+      id: 024-create-game-positions
+      author: dino
+      changes:
+        - createTable:
+            tableName: game_positions
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: game_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: code, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: label, type: VARCHAR(40), constraints: { nullable: false } }
+        - addForeignKeyConstraint: { baseTableName: game_positions, baseColumnNames: game_id, referencedTableName: games, referencedColumnNames: id, constraintName: fk_game_positions_game }
+        - addUniqueConstraint: { tableName: game_positions, columnNames: "game_id, code", constraintName: uq_game_positions_game_code }
+
+  - changeSet:
+      id: 025-create-game-ranks
+      author: dino
+      changes:
+        - createTable:
+            tableName: game_ranks
+            columns:
+              - column: { name: id, type: BIGINT, autoIncrement: true, constraints: { primaryKey: true, nullable: false } }
+              - column: { name: game_id, type: BIGINT, constraints: { nullable: false } }
+              - column: { name: code, type: VARCHAR(20), constraints: { nullable: false } }
+              - column: { name: label, type: VARCHAR(40), constraints: { nullable: false } }
+              - column: { name: ordinal, type: INT }
+        - addForeignKeyConstraint: { baseTableName: game_ranks, baseColumnNames: game_id, referencedTableName: games, referencedColumnNames: id, constraintName: fk_game_ranks_game }
+        - addUniqueConstraint: { tableName: game_ranks, columnNames: "game_id, code", constraintName: uq_game_ranks_game_code }
+
+  - changeSet:
+      id: 026-seed-game-rank-type
+      author: dino
+      changes:
+        - update: { tableName: games, columns: [ { column: { name: rank_type, value: TIER } } ], where: "code='LOL'" }
+        - update: { tableName: games, columns: [ { column: { name: rank_type, value: TIER } } ], where: "code='VALORANT'" }
+        - update: { tableName: games, columns: [ { column: { name: rank_type, value: NUMERIC } } ], where: "code='CS2'" }
+        - update: { tableName: games, columns: [ { column: { name: rank_type, value: NUMERIC } } ], where: "code='DOTA2'" }
+
+  - changeSet:
+      id: 027-seed-game-reference-data
+      author: dino
+      changes:
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: EUW } }, { column: { name: label, value: EUW } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: EUNE } }, { column: { name: label, value: EUNE } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: NA } }, { column: { name: label, value: NA } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: KR } }, { column: { name: label, value: KR } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: BR } }, { column: { name: label, value: BR } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: LAN } }, { column: { name: label, value: LAN } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: LAS } }, { column: { name: label, value: LAS } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: OCE } }, { column: { name: label, value: OCE } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: TR } }, { column: { name: label, value: TR } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: RU } }, { column: { name: label, value: RU } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: JP } }, { column: { name: label, value: JP } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: TOP } }, { column: { name: label, value: TOP } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: JUNGLE } }, { column: { name: label, value: JUNGLE } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: MID } }, { column: { name: label, value: MID } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: ADC } }, { column: { name: label, value: ADC } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: SUPPORT } }, { column: { name: label, value: SUPPORT } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: IRON } }, { column: { name: label, value: IRON } }, { column: { name: ordinal, valueNumeric: 1 } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: BRONZE } }, { column: { name: label, value: BRONZE } }, { column: { name: ordinal, valueNumeric: 2 } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: SILVER } }, { column: { name: label, value: SILVER } }, { column: { name: ordinal, valueNumeric: 3 } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: GOLD } }, { column: { name: label, value: GOLD } }, { column: { name: ordinal, valueNumeric: 4 } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: PLATINUM } }, { column: { name: label, value: PLATINUM } }, { column: { name: ordinal, valueNumeric: 5 } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: EMERALD } }, { column: { name: label, value: EMERALD } }, { column: { name: ordinal, valueNumeric: 6 } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: DIAMOND } }, { column: { name: label, value: DIAMOND } }, { column: { name: ordinal, valueNumeric: 7 } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: MASTER } }, { column: { name: label, value: MASTER } }, { column: { name: ordinal, valueNumeric: 8 } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: GRANDMASTER } }, { column: { name: label, value: GRANDMASTER } }, { column: { name: ordinal, valueNumeric: 9 } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='LOL')" } }, { column: { name: code, value: CHALLENGER } }, { column: { name: label, value: CHALLENGER } }, { column: { name: ordinal, valueNumeric: 10 } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: EU } }, { column: { name: label, value: EU } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: NA } }, { column: { name: label, value: NA } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: AP } }, { column: { name: label, value: AP } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: KR } }, { column: { name: label, value: KR } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: BR } }, { column: { name: label, value: BR } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: LATAM } }, { column: { name: label, value: LATAM } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: DUELIST } }, { column: { name: label, value: DUELIST } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: INITIATOR } }, { column: { name: label, value: INITIATOR } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: CONTROLLER } }, { column: { name: label, value: CONTROLLER } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: SENTINEL } }, { column: { name: label, value: SENTINEL } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: IRON } }, { column: { name: label, value: IRON } }, { column: { name: ordinal, valueNumeric: 1 } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: BRONZE } }, { column: { name: label, value: BRONZE } }, { column: { name: ordinal, valueNumeric: 2 } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: SILVER } }, { column: { name: label, value: SILVER } }, { column: { name: ordinal, valueNumeric: 3 } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: GOLD } }, { column: { name: label, value: GOLD } }, { column: { name: ordinal, valueNumeric: 4 } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: PLATINUM } }, { column: { name: label, value: PLATINUM } }, { column: { name: ordinal, valueNumeric: 5 } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: DIAMOND } }, { column: { name: label, value: DIAMOND } }, { column: { name: ordinal, valueNumeric: 6 } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: ASCENDANT } }, { column: { name: label, value: ASCENDANT } }, { column: { name: ordinal, valueNumeric: 7 } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: IMMORTAL } }, { column: { name: label, value: IMMORTAL } }, { column: { name: ordinal, valueNumeric: 8 } } ] }
+        - insert: { tableName: game_ranks, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='VALORANT')" } }, { column: { name: code, value: RADIANT } }, { column: { name: label, value: RADIANT } }, { column: { name: ordinal, valueNumeric: 9 } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='CS2')" } }, { column: { name: code, value: EU } }, { column: { name: label, value: EU } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='CS2')" } }, { column: { name: code, value: NA } }, { column: { name: label, value: NA } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='CS2')" } }, { column: { name: code, value: SA } }, { column: { name: label, value: SA } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='CS2')" } }, { column: { name: code, value: ASIA } }, { column: { name: label, value: ASIA } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='CS2')" } }, { column: { name: code, value: OCE } }, { column: { name: label, value: OCE } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='CS2')" } }, { column: { name: code, value: IGL } }, { column: { name: label, value: IGL } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='CS2')" } }, { column: { name: code, value: ENTRY } }, { column: { name: label, value: ENTRY } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='CS2')" } }, { column: { name: code, value: AWP } }, { column: { name: label, value: AWP } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='CS2')" } }, { column: { name: code, value: SUPPORT } }, { column: { name: label, value: SUPPORT } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='CS2')" } }, { column: { name: code, value: LURKER } }, { column: { name: label, value: LURKER } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='DOTA2')" } }, { column: { name: code, value: EU } }, { column: { name: label, value: EU } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='DOTA2')" } }, { column: { name: code, value: NA } }, { column: { name: label, value: NA } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='DOTA2')" } }, { column: { name: code, value: SA } }, { column: { name: label, value: SA } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='DOTA2')" } }, { column: { name: code, value: SEA } }, { column: { name: label, value: SEA } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='DOTA2')" } }, { column: { name: code, value: CN } }, { column: { name: label, value: CN } } ] }
+        - insert: { tableName: game_regions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='DOTA2')" } }, { column: { name: code, value: CIS } }, { column: { name: label, value: CIS } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='DOTA2')" } }, { column: { name: code, value: CARRY } }, { column: { name: label, value: CARRY } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='DOTA2')" } }, { column: { name: code, value: MID } }, { column: { name: label, value: MID } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='DOTA2')" } }, { column: { name: code, value: OFFLANE } }, { column: { name: label, value: OFFLANE } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='DOTA2')" } }, { column: { name: code, value: SOFT_SUPPORT } }, { column: { name: label, value: SOFT_SUPPORT } } ] }
+        - insert: { tableName: game_positions, columns: [ { column: { name: game_id, valueComputed: "(SELECT id FROM games WHERE code='DOTA2')" } }, { column: { name: code, value: HARD_SUPPORT } }, { column: { name: label, value: HARD_SUPPORT } } ] }
