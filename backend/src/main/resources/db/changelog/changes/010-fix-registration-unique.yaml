@@ -1,0 +1,8 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 030-fix-reg-unique
+      author: dino
+      changes:
+        - dropUniqueConstraint: { tableName: tournament_registrations, constraintName: uq_reg_tournament_team }
+        - addUniqueConstraint: { tableName: tournament_registrations, columnNames: "tournament_id, team_id", constraintName: uq_reg_tournament_team }
