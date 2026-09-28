@@ -81,7 +81,10 @@ public final class AgentMain {
     }
 
     private static SnapshotSource createSource(AgentConfig config) {
-        throw new IllegalStateException("mod jos nije podrzan");
+        if (config.mock()) {
+            return new MockSnapshotSource(config);
+        }
+        throw new IllegalStateException("stvarni mod jos nije podrzan, koristi --mock");
     }
 
     private static String clock(Integer seconds) {
