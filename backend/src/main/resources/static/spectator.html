@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="bs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EsportsHub Spectator</title>
+<style>
+  :root {
+    --bg: #0b0e14;
+    --panel: #121722;
+    --card: #171d2b;
+    --line: #232b3d;
+    --text: #e6e9f2;
+    --muted: #8590a8;
+    --accent: #3dd6c6;
+    --live: #ff4d5e;
+    --win: #f5c542;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: radial-gradient(1200px 600px at 20% -10%, #16203a 0%, var(--bg) 60%);
+    color: var(--text);
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+  }
+  header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--line);
+    background: rgba(11, 14, 20, 0.8);
+    position: sticky;
+    top: 0;
+    backdrop-filter: blur(6px);
+    z-index: 2;
+  }
+  .brand { font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; }
+  .brand span { color: var(--accent); }
+  .controls { display: flex; gap: 8px; align-items: center; }
+  input {
+    width: 140px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--line);
+    background: var(--panel);
+    color: var(--text);
+    font-size: 14px;
+  }
+  button {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 0;
+    background: var(--accent);
+    color: #051614;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.5; cursor: default; }
+  .pill {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    color: var(--muted);
+  }
+  .pill.on { color: var(--accent); border-color: var(--accent); }
+  .pill.err { color: var(--live); border-color: var(--live); }
+  #title { margin-left: auto; color: var(--muted); font-size: 14px; }
+  main {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 16px;
+    padding: 16px 24px;
+  }
+  .bracket {
+    display: flex;
+    gap: 24px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    min-width: 0;
+  }
+  .round { display: flex; flex-direction: column; gap: 16px; min-width: 220px; justify-content: space-around; }
+  .round h3 {
+    margin: 0 0 4px;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .match {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.3s, box-shadow 0.3s;
+  }
+  .match.flash { box-shadow: 0 0 0 2px var(--accent); }
+  .match.live { border-color: var(--live); animation: pulse 1.6s infinite; }
+  @keyframes pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(255, 77, 94, 0.35); }
+    50% { box-shadow: 0 0 0 6px rgba(255, 77, 94, 0); }
+  }
+  .meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 6px 10px;
+    border-bottom: 1px solid var(--line);
+  }
+  .status { font-weight: 700; letter-spacing: 0.06em; }
+  .status.LIVE { color: var(--live); }
+  .status.FINISHED { color: var(--accent); }
+  .team {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    gap: 8px;
+  }
+  .team + .team { border-top: 1px solid var(--line); }
+  .team .name { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .team .tag { color: var(--muted); font-size: 11px; margin-left: 6px; }
+  .team .score { font-weight: 800; font-variant-numeric: tabular-nums; min-width: 20px; text-align: right; }
+  .team.tbd .name { color: var(--muted); font-style: italic; }
+  .team.winner { background: rgba(245, 197, 66, 0.08); }
+  .team.winner .name, .team.winner .score { color: var(--win); }
+  .team.loser { opacity: 0.45; }
+  aside {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 110px);
+    position: sticky;
+    top: 86px;
+  }
+  aside h2 {
+    margin: 0;
+    padding: 12px 14px;
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--line);
+  }
+  #log { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; }
+  #log li { padding: 10px 14px; border-bottom: 1px solid var(--line); font-size: 13px; }
+  #log .type { font-weight: 700; color: var(--accent); }
+  #log .type.STARTED { color: var(--live); }
+  #log .type.TOURNAMENT_COMPLETED { color: var(--win); }
+  #log .sub { color: var(--muted); font-size: 12px; margin-top: 2px; }
+  .empty { color: var(--muted); padding: 24px; }
+  @media (max-width: 800px) {
+    header { padding: 12px 16px; }
+    main { grid-template-columns: 1fr; padding: 12px 16px; }
+    aside { position: static; max-height: 360px; }
+    #title { margin-left: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">Esports<span>Hub</span> Live</div>
+  <div class="controls">
+    <input id="tid" type="number" min="1" placeholder="ID turnira">
+    <button id="connect">Connect</button>
+  </div>
+  <span id="conn" class="pill">offline</span>
+  <div id="title"></div>
+</header>
+<main>
+  <section id="bracket" class="bracket"><div class="empty">Unesi ID turnira i klikni Connect.</div></section>
+  <aside>
+    <h2>Event log</h2>
+    <ul id="log"></ul>
+  </aside>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7/bundles/stomp.umd.min.js"></script>
+<script>
+  const els = {
+    tid: document.getElementById('tid'),
+    connect: document.getElementById('connect'),
+    conn: document.getElementById('conn'),
+    title: document.getElementById('title'),
+    bracket: document.getElementById('bracket'),
+    log: document.getElementById('log')
+  };
+  const cards = new Map();
+  let client = null;
+
+  function el(tag, className, text) {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined && text !== null) node.textContent = text;
+    return node;
+  }
+
+  function setConn(text, cls) {
+    els.conn.textContent = text;
+    els.conn.className = 'pill' + (cls ? ' ' + cls : '');
+  }
+
+  function teamRow(team, score, match) {
+    const row = el('div', 'team');
+    if (!team) {
+      row.classList.add('tbd');
+      row.append(el('span', 'name', 'TBD'), el('span', 'score', ''));
+      return row;
+    }
+    if (match.status === 'FINISHED' && match.winnerTeamId) {
+      row.classList.add(match.winnerTeamId === team.id ? 'winner' : 'loser');
+    }
+    const name = el('span', 'name', team.name);
+    name.append(el('span', 'tag', team.tag));
+    row.append(name, el('span', 'score', match.status === 'SCHEDULED' ? '' : score));
+    return row;
+  }
+
+  function fillCard(card, match) {
+    card.replaceChildren();
+    card.className = 'match' + (match.status === 'LIVE' ? ' live' : '');
+    const meta = el('div', 'meta');
+    meta.append(el('span', null, 'Mec #' + match.id), el('span', 'status ' + match.status, match.status));
+    card.append(meta, teamRow(match.teamA, match.scoreA, match), teamRow(match.teamB, match.scoreB, match));
+  }
+
+  function renderBracket(data) {
+    els.title.textContent = data.tournamentName + ' · ' + data.status;
+    els.bracket.replaceChildren();
+    cards.clear();
+    if (!data.rounds.length) {
+      els.bracket.append(el('div', 'empty', 'Bracket jos nije generisan.'));
+      return;
+    }
+    for (const round of data.rounds) {
+      const col = el('div', 'round');
+      col.append(el('h3', null, round.name));
+      for (const match of round.matches) {
+        const card = el('div', 'match');
+        fillCard(card, match);
+        cards.set(match.id, card);
+        col.append(card);
+      }
+      els.bracket.append(col);
+    }
+  }
+
+  function addLog(msg) {
+    const item = el('li');
+    const time = new Date(msg.at).toLocaleTimeString();
+    item.append(el('div', 'type ' + msg.type, msg.type));
+    item.append(el('div', 'sub', 'Mec #' + msg.matchId + ' · ' + (msg.actor || 'sistem') + ' · ' + time));
+    if (msg.match && msg.match.status !== 'SCHEDULED') {
+      item.append(el('div', 'sub', 'Rezultat ' + msg.match.scoreA + ' : ' + msg.match.scoreB));
+    }
+    els.log.prepend(item);
+  }
+
+  function onMessage(frame) {
+    const msg = JSON.parse(frame.body);
+    const card = cards.get(msg.matchId);
+    if (card && msg.match) {
+      fillCard(card, msg.match);
+      card.classList.add('flash');
+      setTimeout(() => card.classList.remove('flash'), 800);
+    }
+    if (msg.type === 'TOURNAMENT_COMPLETED') {
+      els.title.textContent = els.title.textContent.replace(/· \w+$/, '· COMPLETED');
+    }
+    addLog(msg);
+  }
+
+  async function connect() {
+    const id = els.tid.value.trim();
+    if (!id) return;
+    if (client) await client.deactivate();
+    els.log.replaceChildren();
+
+    const res = await fetch('/api/tournaments/' + encodeURIComponent(id) + '/bracket');
+    if (!res.ok) {
+      setConn('turnir ne postoji', 'err');
+      return;
+    }
+    renderBracket(await res.json());
+    history.replaceState(null, '', '?t=' + encodeURIComponent(id));
+
+    const scheme = location.protocol === 'https:' ? 'wss://' : 'ws://';
+    client = new StompJs.Client({
+      brokerURL: scheme + location.host + '/ws',
+      reconnectDelay: 3000,
+      onConnect: () => {
+        setConn('live · turnir ' + id, 'on');
+        client.subscribe('/topic/tournaments/' + id, onMessage);
+      },
+      onWebSocketClose: () => setConn('reconnecting...', 'err'),
+      onStompError: frame => setConn('greska: ' + frame.headers.message, 'err')
+    });
+    setConn('connecting...');
+    client.activate();
+  }
+
+  els.connect.addEventListener('click', connect);
+  els.tid.addEventListener('keydown', e => { if (e.key === 'Enter') connect(); });
+
+  const initial = new URLSearchParams(location.search).get('t');
+  if (initial) {
+    els.tid.value = initial;
+    connect();
+  }
+</script>
+</body>
+</html>
