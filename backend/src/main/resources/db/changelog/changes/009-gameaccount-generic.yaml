@@ -1,0 +1,28 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 028-gameacc-generic-columns
+      author: dino
+      changes:
+        - addColumn:
+            tableName: game_accounts
+            columns:
+              - column: { name: region_id, type: BIGINT }
+              - column: { name: position_id, type: BIGINT }
+              - column: { name: rank_id, type: BIGINT }
+              - column: { name: rating, type: INT }
+        - addForeignKeyConstraint: { baseTableName: game_accounts, baseColumnNames: region_id, referencedTableName: game_regions, referencedColumnNames: id, constraintName: fk_gameacc_region }
+        - addForeignKeyConstraint: { baseTableName: game_accounts, baseColumnNames: position_id, referencedTableName: game_positions, referencedColumnNames: id, constraintName: fk_gameacc_position }
+        - addForeignKeyConstraint: { baseTableName: game_accounts, baseColumnNames: rank_id, referencedTableName: game_ranks, referencedColumnNames: id, constraintName: fk_gameacc_rank }
+
+  - changeSet:
+      id: 029-gameacc-drop-enum-columns
+      author: dino
+      changes:
+        - dropColumn:
+            tableName: game_accounts
+            columns:
+              - column: { name: region }
+              - column: { name: rank }
+              - column: { name: position }
+              - column: { name: division }
