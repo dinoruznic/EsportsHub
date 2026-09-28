@@ -248,7 +248,7 @@
   }
 
   function clock(seconds) {
-    if (seconds === null || seconds === undefined) return '-';
+    if (seconds === null || seconds === undefined) return '–';
     const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return m + ':' + String(s).padStart(2, '0');
@@ -256,7 +256,7 @@
 
   function pair(a, b, format) {
     const f = format || (v => v);
-    if (a === null || a === undefined || b === null || b === undefined) return '-';
+    if (a === null || a === undefined || b === null || b === undefined) return '–';
     return f(a) + '-' + f(b);
   }
 
