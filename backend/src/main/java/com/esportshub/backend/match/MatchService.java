@@ -4,6 +4,9 @@ import com.esportshub.backend.bracket.Match;
 import com.esportshub.backend.bracket.MatchRepository;
 import com.esportshub.backend.bracket.MatchStatus;
 import com.esportshub.backend.bracket.MatchView;
+import com.esportshub.backend.tournament.Tournament;
+import com.esportshub.backend.tournament.TournamentRepository;
+import com.esportshub.backend.tournament.TournamentStatus;
 import com.esportshub.backend.user.User;
 import com.esportshub.backend.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +27,7 @@ public class MatchService {
 
     private final MatchRepository matchRepository;
     private final UserRepository userRepository;
+    private final TournamentRepository tournamentRepository;
 
     public MatchView assignReferee(MatchActor actor, Long matchId, AssignRefereeRequest request) {
         Match match = findMatch(matchId);
@@ -81,12 +86,38 @@ public class MatchService {
         match.setScoreB(request.scoreB());
         match.setWinnerTeam(request.scoreA() > request.scoreB() ? match.getTeamA() : match.getTeamB());
         match.setEndedAt(Instant.now());
-        return MatchView.from(matchRepository.save(match));
+        matchRepository.save(match);
+
+        if (match.getNextMatchId() != null) {
+            advanceWinner(match);
+        } else {
+            completeTournament(match.getTournament());
+        }
+
+        return MatchView.from(match);
     }
 
     @Transactional(readOnly = true)
     public MatchView get(Long matchId) {
         return MatchView.from(findMatch(matchId));
+    }
+
+    private void advanceWinner(Match match) {
+        Match next = findMatch(match.getNextMatchId());
+        List<Match> feeders = matchRepository.findByNextMatchIdOrderByIdAsc(next.getId());
+
+        if (feeders.get(0).getId().equals(match.getId())) {
+            next.setTeamA(match.getWinnerTeam());
+        } else {
+            next.setTeamB(match.getWinnerTeam());
+        }
+
+        matchRepository.save(next);
+    }
+
+    private void completeTournament(Tournament tournament) {
+        tournament.setStatus(TournamentStatus.COMPLETED);
+        tournamentRepository.save(tournament);
     }
 
     private void transition(Match match, MatchStatus target) {
