@@ -19,6 +19,7 @@ public class MatchEventLogger {
     private static final String SOURCE_REFEREE = "REFEREE";
     private static final String SOURCE_ORGANIZER = "ORGANIZER";
     private static final String SOURCE_ADMIN = "ADMIN";
+    private static final String SOURCE_RIOT = "RIOT";
 
     private final MatchEventRecordRepository matchEventRecordRepository;
     private final MatchRepository matchRepository;
@@ -27,6 +28,10 @@ public class MatchEventLogger {
 
     @EventListener
     public void on(MatchEvent event) {
+        if (MatchEvent.LIVE_SNAPSHOT.equals(event.type())) {
+            return;
+        }
+
         User actor = event.actor() == null ? null : userRepository.findByUsername(event.actor()).orElse(null);
         Match match = matchRepository.getReferenceById(event.matchId());
 
@@ -54,6 +59,9 @@ public class MatchEventLogger {
     }
 
     private static String sourceOf(String actor, Match match) {
+        if (MatchEvent.RIOT_AGENT.equals(actor)) {
+            return SOURCE_RIOT;
+        }
         if (match.getReferee() != null && match.getReferee().getUsername().equals(actor)) {
             return SOURCE_REFEREE;
         }

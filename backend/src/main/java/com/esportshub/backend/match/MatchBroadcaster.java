@@ -39,8 +39,8 @@ public class MatchBroadcaster {
         MatchView view = matchService.get(matchId);
 
         messagingTemplate.convertAndSend("/topic/matches/" + matchId,
-                new MatchTopicMessage(event.type(), event.actor(), view, at));
+                new MatchTopicMessage(event.type(), event.actor(), view, event.data(), at));
         messagingTemplate.convertAndSend("/topic/tournaments/" + event.tournamentId(),
-                new TournamentTopicMessage(event.type(), matchId, event.actor(), view, at));
+                new TournamentTopicMessage(event.type(), matchId, event.actor(), view, event.data(), at));
     }
 }

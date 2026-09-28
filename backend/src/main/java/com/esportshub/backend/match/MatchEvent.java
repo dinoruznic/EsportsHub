@@ -15,4 +15,7 @@ public record MatchEvent(
     public static final String FINISHED = "FINISHED";
     public static final String WINNER_ADVANCED = "WINNER_ADVANCED";
     public static final String TOURNAMENT_COMPLETED = "TOURNAMENT_COMPLETED";
+    public static final String LIVE_SNAPSHOT = "LIVE_SNAPSHOT";
+
+    public static final String RIOT_AGENT = "riot-agent";
 }
