@@ -1,0 +1,408 @@
+### EsportsHub — Live mec (state machine + sudija + prolazak pobjednika + event log)
+### Run all (⏩). Odigra cijeli turnir od 4 tima: polufinala -> finale -> COMPLETED.
+### Seeding: team1..team4 prijavljeni redom -> PF1 = team1 vs team4, PF2 = team2 vs team3.
+
+@host = http://localhost:8080
+
+### 0. Igre + identiteti
+GET {{host}}/api/games
+
+> {%
+    var r = Math.floor(Math.random() * 1000000);
+    client.global.set("org", "org" + r);
+    client.global.set("ref", "ref" + r);
+    for (var i = 1; i <= 4; i++) {
+        client.global.set("cap" + i, "cap" + i + "m" + r);
+        client.global.set("tag" + i, String.fromCharCode(64 + i) + (r % 1000));
+    }
+    response.body.forEach(function (g) { if (g.code === "LOL") client.global.set("lolId", g.id); });
+%}
+
+### 1. Admin login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "admin", "password": "admin12345" }
+
+> {% client.global.set("tA", response.body.token); %}
+
+### 2. Organizator register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{org}}", "email": "{{org}}@esportshub.local", "password": "lozinka123", "displayName": "Org" }
+
+### 3. Organizator login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{org}}", "password": "lozinka123" }
+
+> {% client.global.set("tO", response.body.token); %}
+
+### 4. Sudija register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{ref}}", "email": "{{ref}}@esportshub.local", "password": "lozinka123", "displayName": "Sudija" }
+
+### 5. Sudija login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{ref}}", "password": "lozinka123" }
+
+> {% client.global.set("tR", response.body.token); %}
+
+### 6. Organizator (nije admin) pokusa dodijeliti ulogu -> 403
+POST {{host}}/api/admin/users/{{ref}}/roles
+Content-Type: application/json
+Authorization: Bearer {{tO}}
+
+{ "role": "REFEREE" }
+
+> {% client.test("ne-admin dodjela uloge 403", function(){ client.assert(response.status===403); }); %}
+
+### 7. Admin dodijeli nepostojecu ulogu -> 400
+POST {{host}}/api/admin/users/{{ref}}/roles
+Content-Type: application/json
+Authorization: Bearer {{tA}}
+
+{ "role": "KRALJ" }
+
+> {% client.test("nepostojeca uloga 400", function(){ client.assert(response.status===400); }); %}
+
+### 8. Admin dodijeli REFEREE -> 200 (sad ima PLAYER + REFEREE)
+POST {{host}}/api/admin/users/{{ref}}/roles
+Content-Type: application/json
+Authorization: Bearer {{tA}}
+
+{ "role": "REFEREE" }
+
+> {%
+    client.test("dodjela 200", function(){ client.assert(response.status===200); });
+    client.test("vise uloga (user_roles fix)", function(){ client.assert(JSON.stringify(response.body).indexOf("REFEREE") >= 0 && JSON.stringify(response.body).indexOf("PLAYER") >= 0); });
+%}
+
+### 9. Turnir (4 tima)
+POST {{host}}/api/tournaments
+Content-Type: application/json
+Authorization: Bearer {{tO}}
+
+{ "name": "Live Kup {{org}}", "gameId": {{lolId}}, "format": "SINGLE_ELIMINATION", "maxTeams": 4 }
+
+> {% client.global.set("tid", response.body.id); %}
+
+### 10. Admin odobri
+POST {{host}}/api/tournaments/{{tid}}/approve
+Authorization: Bearer {{tA}}
+
+### ---------- 4 kapitena: register, login, tim, prijava ----------
+### 11. cap1 register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{cap1}}", "email": "{{cap1}}@esportshub.local", "password": "lozinka123", "displayName": "K1" }
+
+### 12. cap1 login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{cap1}}", "password": "lozinka123" }
+
+> {% client.global.set("t1", response.body.token); %}
+
+### 13. cap1 tim
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{t1}}
+
+{ "name": "Tim {{cap1}}", "tag": "{{tag1}}", "gameId": {{lolId}}, "region": "EUW" }
+
+> {% client.global.set("team1", response.body.id); %}
+
+### 14. cap1 prijava
+POST {{host}}/api/tournaments/{{tid}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{t1}}
+
+{ "teamId": {{team1}} }
+
+### 15. cap2 register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{cap2}}", "email": "{{cap2}}@esportshub.local", "password": "lozinka123", "displayName": "K2" }
+
+### 16. cap2 login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{cap2}}", "password": "lozinka123" }
+
+> {% client.global.set("t2", response.body.token); %}
+
+### 17. cap2 tim
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{t2}}
+
+{ "name": "Tim {{cap2}}", "tag": "{{tag2}}", "gameId": {{lolId}}, "region": "EUW" }
+
+> {% client.global.set("team2", response.body.id); %}
+
+### 18. cap2 prijava
+POST {{host}}/api/tournaments/{{tid}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{t2}}
+
+{ "teamId": {{team2}} }
+
+### 19. cap3 register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{cap3}}", "email": "{{cap3}}@esportshub.local", "password": "lozinka123", "displayName": "K3" }
+
+### 20. cap3 login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{cap3}}", "password": "lozinka123" }
+
+> {% client.global.set("t3", response.body.token); %}
+
+### 21. cap3 tim
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{t3}}
+
+{ "name": "Tim {{cap3}}", "tag": "{{tag3}}", "gameId": {{lolId}}, "region": "EUW" }
+
+> {% client.global.set("team3", response.body.id); %}
+
+### 22. cap3 prijava
+POST {{host}}/api/tournaments/{{tid}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{t3}}
+
+{ "teamId": {{team3}} }
+
+### 23. cap4 register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{cap4}}", "email": "{{cap4}}@esportshub.local", "password": "lozinka123", "displayName": "K4" }
+
+### 24. cap4 login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{cap4}}", "password": "lozinka123" }
+
+> {% client.global.set("t4", response.body.token); %}
+
+### 25. cap4 tim
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{t4}}
+
+{ "name": "Tim {{cap4}}", "tag": "{{tag4}}", "gameId": {{lolId}}, "region": "EUW" }
+
+> {% client.global.set("team4", response.body.id); %}
+
+### 26. cap4 prijava
+POST {{host}}/api/tournaments/{{tid}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{t4}}
+
+{ "teamId": {{team4}} }
+
+### ---------- BRACKET ----------
+### 27. Organizator generise bracket -> pf1, pf2, final
+POST {{host}}/api/tournaments/{{tid}}/bracket
+Authorization: Bearer {{tO}}
+
+> {%
+    client.test("bracket 201", function(){ client.assert(response.status===201); });
+    client.global.set("pf1", response.body.rounds[0].matches[0].id);
+    client.global.set("pf2", response.body.rounds[0].matches[1].id);
+    client.global.set("fin", response.body.rounds[1].matches[0].id);
+%}
+
+### ---------- SUDIJA ----------
+### 28. Dodijeli sudiju korisniku koji NIJE sudija (cap1) -> 400
+PUT {{host}}/api/matches/{{pf1}}/referee
+Content-Type: application/json
+Authorization: Bearer {{tO}}
+
+{ "username": "{{cap1}}" }
+
+> {% client.test("nije sudija 400", function(){ client.assert(response.status===400); }); %}
+
+### 29. Kapiten pokusa dodijeliti sudiju -> 403
+PUT {{host}}/api/matches/{{pf1}}/referee
+Content-Type: application/json
+Authorization: Bearer {{t1}}
+
+{ "username": "{{ref}}" }
+
+> {% client.test("kapiten dodjela sudije 403", function(){ client.assert(response.status===403); }); %}
+
+### 30. Organizator dodijeli sudiju PF1
+PUT {{host}}/api/matches/{{pf1}}/referee
+Content-Type: application/json
+Authorization: Bearer {{tO}}
+
+{ "username": "{{ref}}" }
+
+> {% client.test("sudija PF1 200", function(){ client.assert(response.status===200); }); %}
+
+### 31. Organizator dodijeli sudiju PF2
+PUT {{host}}/api/matches/{{pf2}}/referee
+Content-Type: application/json
+Authorization: Bearer {{tO}}
+
+{ "username": "{{ref}}" }
+
+### 32. Organizator dodijeli sudiju FINALU
+PUT {{host}}/api/matches/{{fin}}/referee
+Content-Type: application/json
+Authorization: Bearer {{tO}}
+
+{ "username": "{{ref}}" }
+
+### ---------- STATE MACHINE: zabranjeni prelazi ----------
+### 33. Rezultat prije starta -> 409
+PUT {{host}}/api/matches/{{pf1}}/score
+Content-Type: application/json
+Authorization: Bearer {{tR}}
+
+{ "scoreA": 1, "scoreB": 0 }
+
+> {% client.test("score prije starta 409", function(){ client.assert(response.status===409); }); %}
+
+### 34. SCHEDULED -> FINISHED direktno -> 409
+POST {{host}}/api/matches/{{pf1}}/finish
+Content-Type: application/json
+Authorization: Bearer {{tR}}
+
+{ "scoreA": 2, "scoreB": 0 }
+
+> {% client.test("SCHEDULED->FINISHED 409", function(){ client.assert(response.status===409); }); %}
+
+### 35. Kapiten pokusa startovati -> 403
+POST {{host}}/api/matches/{{pf1}}/start
+Authorization: Bearer {{t1}}
+
+> {% client.test("kapiten start 403", function(){ client.assert(response.status===403); }); %}
+
+### 36. Finale bez timova -> start 409
+POST {{host}}/api/matches/{{fin}}/start
+Authorization: Bearer {{tR}}
+
+> {% client.test("finale bez timova 409", function(){ client.assert(response.status===409); }); %}
+
+### ---------- POLUFINALE 1 ----------
+### 37. Sudija startuje PF1 -> LIVE
+POST {{host}}/api/matches/{{pf1}}/start
+Authorization: Bearer {{tR}}
+
+> {% client.test("PF1 LIVE", function(){ client.assert(response.body.status==="LIVE"); }); %}
+
+### 38. Start opet (LIVE -> LIVE) -> 409
+POST {{host}}/api/matches/{{pf1}}/start
+Authorization: Bearer {{tR}}
+
+> {% client.test("LIVE->LIVE 409", function(){ client.assert(response.status===409); }); %}
+
+### 39. Uzivo rezultat 1:0
+PUT {{host}}/api/matches/{{pf1}}/score
+Content-Type: application/json
+Authorization: Bearer {{tR}}
+
+{ "scoreA": 1, "scoreB": 0 }
+
+> {% client.test("score 1:0", function(){ client.assert(response.body.scoreA===1 && response.body.scoreB===0); }); %}
+
+### 40. Nerijeseno -> 400
+POST {{host}}/api/matches/{{pf1}}/finish
+Content-Type: application/json
+Authorization: Bearer {{tR}}
+
+{ "scoreA": 1, "scoreB": 1 }
+
+> {% client.test("nerijeseno 400", function(){ client.assert(response.status===400); }); %}
+
+### 41. Kraj PF1 2:1 -> pobjednik team1
+POST {{host}}/api/matches/{{pf1}}/finish
+Content-Type: application/json
+Authorization: Bearer {{tR}}
+
+{ "scoreA": 2, "scoreB": 1 }
+
+> {%
+    client.test("PF1 FINISHED", function(){ client.assert(response.body.status==="FINISHED"); });
+    client.test("pobjednik team1", function(){ client.assert(response.body.winnerTeamId === client.global.get("team1")); });
+%}
+
+### ---------- POLUFINALE 2 ----------
+### 42. Start PF2
+POST {{host}}/api/matches/{{pf2}}/start
+Authorization: Bearer {{tR}}
+
+### 43. Kraj PF2 0:2 -> pobjednik team3 (tim B)
+POST {{host}}/api/matches/{{pf2}}/finish
+Content-Type: application/json
+Authorization: Bearer {{tR}}
+
+{ "scoreA": 0, "scoreB": 2 }
+
+> {% client.test("pobjednik team3", function(){ client.assert(response.body.winnerTeamId === client.global.get("team3")); }); %}
+
+### ---------- FINALE ----------
+### 44. Finale sad ima team1 (A) i team3 (B)
+GET {{host}}/api/matches/{{fin}}
+
+> {%
+    client.test("finale A = team1", function(){ client.assert(response.body.teamA.id === client.global.get("team1")); });
+    client.test("finale B = team3", function(){ client.assert(response.body.teamB.id === client.global.get("team3")); });
+%}
+
+### 45. Start finala
+POST {{host}}/api/matches/{{fin}}/start
+Authorization: Bearer {{tR}}
+
+> {% client.test("finale LIVE", function(){ client.assert(response.body.status==="LIVE"); }); %}
+
+### 46. Kraj finala 3:1 -> team1 prvak
+POST {{host}}/api/matches/{{fin}}/finish
+Content-Type: application/json
+Authorization: Bearer {{tR}}
+
+{ "scoreA": 3, "scoreB": 1 }
+
+> {% client.test("prvak team1", function(){ client.assert(response.body.winnerTeamId === client.global.get("team1")); }); %}
+
+### 47. Turnir -> COMPLETED
+GET {{host}}/api/tournaments/{{tid}}
+
+> {% client.test("turnir COMPLETED", function(){ client.assert(response.body.status==="COMPLETED"); }); %}
+
+### ---------- EVENT LOG (Observer) ----------
+### 48. Event log PF1 (bez tokena)
+GET {{host}}/api/matches/{{pf1}}/events
+
+> {%
+    var s = JSON.stringify(response.body);
+    client.test("events 200", function(){ client.assert(response.status===200); });
+    client.test("ima STARTED", function(){ client.assert(s.indexOf("STARTED") >= 0); });
+    client.test("ima SCORE_UPDATED", function(){ client.assert(s.indexOf("SCORE_UPDATED") >= 0); });
+    client.test("ima FINISHED", function(){ client.assert(s.indexOf("FINISHED") >= 0); });
+    client.test("ima WINNER_ADVANCED", function(){ client.assert(s.indexOf("WINNER_ADVANCED") >= 0); });
+%}
+
+### 49. Event log finala -> TOURNAMENT_COMPLETED
+GET {{host}}/api/matches/{{fin}}/events
+
+> {% client.test("ima TOURNAMENT_COMPLETED", function(){ client.assert(JSON.stringify(response.body).indexOf("TOURNAMENT_COMPLETED") >= 0); }); %}
