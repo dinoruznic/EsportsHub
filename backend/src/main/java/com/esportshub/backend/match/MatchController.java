@@ -8,12 +8,15 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/matches")
 @RequiredArgsConstructor
 public class MatchController {
 
     private final MatchService matchService;
+    private final MatchEventLogger matchEventLogger;
 
     @PutMapping("/{id}/referee")
     public MatchView assignReferee(@AuthenticationPrincipal UserDetails principal,
@@ -44,6 +47,11 @@ public class MatchController {
     @GetMapping("/{id}")
     public MatchView get(@PathVariable Long id) {
         return matchService.get(id);
+    }
+
+    @GetMapping("/{id}/events")
+    public List<MatchEventResponse> events(@PathVariable Long id) {
+        return matchEventLogger.findByMatch(id);
     }
 
     private static MatchActor actor(UserDetails principal) {

@@ -10,13 +10,16 @@ import com.esportshub.backend.tournament.TournamentStatus;
 import com.esportshub.backend.user.User;
 import com.esportshub.backend.user.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.Instant;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +31,7 @@ public class MatchService {
     private final MatchRepository matchRepository;
     private final UserRepository userRepository;
     private final TournamentRepository tournamentRepository;
+    private final ApplicationEventPublisher eventPublisher;
 
     public MatchView assignReferee(MatchActor actor, Long matchId, AssignRefereeRequest request) {
         Match match = findMatch(matchId);
@@ -44,7 +48,10 @@ public class MatchService {
         }
 
         match.setReferee(referee);
-        return MatchView.from(matchRepository.save(match));
+        matchRepository.save(match);
+
+        publish(match, MatchEvent.REFEREE_ASSIGNED, data("referee", referee.getUsername()));
+        return MatchView.from(match);
     }
 
     public MatchView start(MatchActor actor, Long matchId) {
@@ -57,7 +64,12 @@ public class MatchService {
 
         transition(match, MatchStatus.LIVE);
         match.setStartedAt(Instant.now());
-        return MatchView.from(matchRepository.save(match));
+        matchRepository.save(match);
+
+        publish(match, MatchEvent.STARTED, data(
+                "teamAId", match.getTeamA().getId(),
+                "teamBId", match.getTeamB().getId()));
+        return MatchView.from(match);
     }
 
     public MatchView updateScore(MatchActor actor, Long matchId, ScoreRequest request) {
@@ -70,7 +82,12 @@ public class MatchService {
 
         match.setScoreA(request.scoreA());
         match.setScoreB(request.scoreB());
-        return MatchView.from(matchRepository.save(match));
+        matchRepository.save(match);
+
+        publish(match, MatchEvent.SCORE_UPDATED, data(
+                "scoreA", match.getScoreA(),
+                "scoreB", match.getScoreB()));
+        return MatchView.from(match);
     }
 
     public MatchView finish(MatchActor actor, Long matchId, ScoreRequest request) {
@@ -88,10 +105,16 @@ public class MatchService {
         match.setEndedAt(Instant.now());
         matchRepository.save(match);
 
+        publish(match, MatchEvent.FINISHED, data(
+                "scoreA", match.getScoreA(),
+                "scoreB", match.getScoreB(),
+                "winnerTeamId", match.getWinnerTeam().getId(),
+                "nextMatchId", match.getNextMatchId()));
+
         if (match.getNextMatchId() != null) {
             advanceWinner(match);
         } else {
-            completeTournament(match.getTournament());
+            completeTournament(match);
         }
 
         return MatchView.from(match);
@@ -105,19 +128,28 @@ public class MatchService {
     private void advanceWinner(Match match) {
         Match next = findMatch(match.getNextMatchId());
         List<Match> feeders = matchRepository.findByNextMatchIdOrderByIdAsc(next.getId());
+        boolean firstFeeder = feeders.get(0).getId().equals(match.getId());
 
-        if (feeders.get(0).getId().equals(match.getId())) {
+        if (firstFeeder) {
             next.setTeamA(match.getWinnerTeam());
         } else {
             next.setTeamB(match.getWinnerTeam());
         }
-
         matchRepository.save(next);
+
+        publish(match, MatchEvent.WINNER_ADVANCED, data(
+                "winnerTeamId", match.getWinnerTeam().getId(),
+                "nextMatchId", next.getId(),
+                "slot", firstFeeder ? "A" : "B"));
     }
 
-    private void completeTournament(Tournament tournament) {
+    private void completeTournament(Match finalMatch) {
+        Tournament tournament = finalMatch.getTournament();
         tournament.setStatus(TournamentStatus.COMPLETED);
         tournamentRepository.save(tournament);
+
+        publish(finalMatch, MatchEvent.TOURNAMENT_COMPLETED, data(
+                "winnerTeamId", finalMatch.getWinnerTeam().getId()));
     }
 
     private void transition(Match match, MatchStatus target) {
@@ -126,6 +158,18 @@ public class MatchService {
                     "nedozvoljen prelaz: " + match.getStatus() + " -> " + target);
         }
         match.setStatus(target);
+    }
+
+    private void publish(Match match, String type, Map<String, Object> data) {
+        eventPublisher.publishEvent(new MatchEvent(match.getId(), match.getTournament().getId(), type, data));
+    }
+
+    private static Map<String, Object> data(Object... keysAndValues) {
+        Map<String, Object> data = new LinkedHashMap<>();
+        for (int i = 0; i < keysAndValues.length; i += 2) {
+            data.put((String) keysAndValues[i], keysAndValues[i + 1]);
+        }
+        return data;
     }
 
     private void requireControl(MatchActor actor, Match match) {
