@@ -39,6 +39,8 @@ public class SecurityConfig {
                 .requestMatchers("/error").permitAll()
                 .requestMatchers("/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/v3/api-docs.yaml").permitAll()
+                .requestMatchers("/ws/**", "/ws").permitAll()
+                .requestMatchers(HttpMethod.GET, "/spectator.html").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/tournaments/pending").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/tournaments").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/tournaments/{id}").permitAll()
