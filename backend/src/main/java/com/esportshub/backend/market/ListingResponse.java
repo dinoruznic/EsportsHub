@@ -12,6 +12,7 @@ public record ListingResponse(
         String inGameName,
         String rank,
         String position,
+        Integer rating,
         Integer askingPrice,
         String status,
         Instant createdAt
@@ -24,8 +25,9 @@ public record ListingResponse(
                 account.getUser().getUsername(),
                 account.getGame().getCode(),
                 account.getInGameName(),
-                account.getRank() == null ? null : account.getRank().getLabel(),
-                account.getPosition() == null ? null : account.getPosition().getLabel(),
+                account.getRank() != null ? account.getRank().getLabel() : null,
+                account.getPosition() != null ? account.getPosition().getLabel() : null,
+                account.getRating(),
                 listing.getAskingPrice(),
                 listing.getStatus().name(),
                 listing.getCreatedAt());

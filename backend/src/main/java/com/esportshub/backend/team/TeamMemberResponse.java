@@ -9,6 +9,7 @@ public record TeamMemberResponse(
         String ownerUsername,
         String rank,
         String position,
+        Integer rating,
         String roleInTeam,
         boolean active
 ) {
@@ -19,8 +20,9 @@ public record TeamMemberResponse(
                 account.getId(),
                 account.getInGameName(),
                 account.getUser().getUsername(),
-                account.getRank() == null ? null : account.getRank().getLabel(),
-                account.getPosition() == null ? null : account.getPosition().getLabel(),
+                account.getRank() != null ? account.getRank().getLabel() : null,
+                account.getPosition() != null ? account.getPosition().getLabel() : null,
+                account.getRating(),
                 membership.getRoleInTeam() == null ? null : membership.getRoleInTeam().name(),
                 membership.isActive());
     }
