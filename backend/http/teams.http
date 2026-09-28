@@ -54,11 +54,7 @@ Authorization: Bearer {{token}}
 
 {
   "gameId": {{lolId}},
-  "inGameName": "Cap#EUW",
-  "region": "EUW",
-  "rank": "DIAMOND",
-  "division": "II",
-  "position": "MID"
+  "inGameName": "Cap#EUW"
 }
 
 > {%
@@ -74,7 +70,7 @@ Authorization: Bearer {{token}}
 {
   "gameId": {{cs2Id}},
   "inGameName": "cap_awp",
-  "rank": "GOLD"
+  "rating": 2100
 }
 
 > {%

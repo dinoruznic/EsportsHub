@@ -1,0 +1,138 @@
+### EsportsHub — Game accounts (gener-icki model: rankId/regionId/positionId ili rating)
+### Run all (⏩). Pravi svjezeg korisnika svaki put.
+
+@host = http://localhost:8080
+
+### 0. Igre -> lolId, cs2Id + svjez korisnik
+GET {{host}}/api/games
+
+> {%
+    client.test("games 200", function () { client.assert(response.status === 200); });
+    var r = Math.floor(Math.random() * 1000000);
+    client.global.set("user", "acc" + r);
+    response.body.forEach(function (g) {
+        if (g.code === "LOL") { client.global.set("lolId", g.id); client.global.set("lolRankType", g.rankType); }
+        if (g.code === "CS2") { client.global.set("cs2Id", g.id); client.global.set("cs2RankType", g.rankType); }
+    });
+    client.test("LOL je TIER", function(){ client.assert(client.global.get("lolRankType")==="TIER"); });
+    client.test("CS2 je NUMERIC", function(){ client.assert(client.global.get("cs2RankType")==="NUMERIC"); });
+%}
+
+### 1. LoL rankovi -> uzmi DIAMOND id
+GET {{host}}/api/games/{{lolId}}/ranks
+
+> {%
+    client.test("lol ima rankove", function(){ client.assert(response.body.length > 0); });
+    var d = response.body.find(function(x){ return x.code === "DIAMOND"; });
+    client.global.set("lolRankId", d.id);
+%}
+
+### 2. LoL regije -> uzmi EUW id
+GET {{host}}/api/games/{{lolId}}/regions
+
+> {% var e = response.body.find(function(x){ return x.code === "EUW"; }); client.global.set("lolRegionId", e.id); %}
+
+### 3. LoL pozicije -> uzmi MID id
+GET {{host}}/api/games/{{lolId}}/positions
+
+> {% var m = response.body.find(function(x){ return x.code === "MID"; }); client.global.set("lolPositionId", m.id); %}
+
+### 4. CS2 rankovi -> prazno (NUMERIC igra)
+GET {{host}}/api/games/{{cs2Id}}/ranks
+
+> {% client.test("cs2 nema rankova", function(){ client.assert(response.body.length === 0); }); %}
+
+### 5. Register korisnik
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{user}}", "email": "{{user}}@esportshub.local", "password": "lozinka123", "displayName": "Igrac" }
+
+### 6. Login -> token
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{user}}", "password": "lozinka123" }
+
+> {% client.global.set("token", response.body.token); %}
+
+### 7. LoL sa RATING (pogresan tip) -> 400
+POST {{host}}/api/me/game-accounts
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{ "gameId": {{lolId}}, "inGameName": "Test#EUW", "rating": 1500 }
+
+> {% client.test("LoL+rating 400", function(){ client.assert(response.status===400); }); %}
+
+### 8. LoL sa nepostojecim rankId -> 400 (rank ne pripada igri)
+POST {{host}}/api/me/game-accounts
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{ "gameId": {{lolId}}, "inGameName": "Test#EUW", "rankId": 999999 }
+
+> {% client.test("nepostojeci rank 400", function(){ client.assert(response.status===400); }); %}
+
+### 9. LoL sa nepostojecom regijom -> 400
+POST {{host}}/api/me/game-accounts
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{ "gameId": {{lolId}}, "inGameName": "Test#EUW", "regionId": 999999 }
+
+> {% client.test("nepostojeca regija 400", function(){ client.assert(response.status===400); }); %}
+
+### 10. Ispravan LoL nalog -> 201 (DIAMOND / EUW / MID, rating null)
+POST {{host}}/api/me/game-accounts
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{ "gameId": {{lolId}}, "inGameName": "Faker#EUW", "regionId": {{lolRegionId}}, "positionId": {{lolPositionId}}, "rankId": {{lolRankId}} }
+
+> {%
+    client.test("LoL 201", function(){ client.assert(response.status===201); });
+    client.test("rank label DIAMOND", function(){ client.assert(response.body.rank === "DIAMOND"); });
+    client.test("region label EUW", function(){ client.assert(response.body.region === "EUW"); });
+    client.test("position label MID", function(){ client.assert(response.body.position === "MID"); });
+    client.test("rating null", function(){ client.assert(response.body.rating === null); });
+%}
+
+### 11. Drugi LoL nalog -> 409 (jedan po igri)
+POST {{host}}/api/me/game-accounts
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{ "gameId": {{lolId}}, "inGameName": "Drugi#EUW", "rankId": {{lolRankId}} }
+
+> {% client.test("duplikat LoL 409", function(){ client.assert(response.status===409); }); %}
+
+### 12. CS2 sa RANK (pogresan tip) -> 400 (koristi rating, ne rank)
+POST {{host}}/api/me/game-accounts
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{ "gameId": {{cs2Id}}, "inGameName": "cs_guy", "rankId": 1 }
+
+> {% client.test("CS2+rank 400", function(){ client.assert(response.status===400); }); %}
+
+### 13. Ispravan CS2 nalog sa RATING -> 201 (rating 2100, rank null)
+POST {{host}}/api/me/game-accounts
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{ "gameId": {{cs2Id}}, "inGameName": "cs_guy", "rating": 2100 }
+
+> {%
+    client.test("CS2 201", function(){ client.assert(response.status===201); });
+    client.test("rating 2100", function(){ client.assert(response.body.rating === 2100); });
+    client.test("rank null", function(){ client.assert(response.body.rank === null); });
+%}
+
+### 14. Javni profil -> 2 naloga (LoL + CS2)
+GET {{host}}/api/players/{{user}}/game-accounts
+
+> {%
+    client.test("profil 200", function(){ client.assert(response.status===200); });
+    client.test("2 naloga (multi-game)", function(){ client.assert(response.body.length === 2); });
+%}

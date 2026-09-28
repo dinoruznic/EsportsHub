@@ -35,7 +35,7 @@ POST {{host}}/api/me/game-accounts
 Content-Type: application/json
 Authorization: Bearer {{token}}
 
-{ "gameId": {{lolId}}, "inGameName": "Seller#EUW", "region": "EUW", "rank": "DIAMOND", "position": "MID" }
+{ "gameId": {{lolId}}, "inGameName": "Seller#EUW" }
 
 > {% client.test("nalog 201", function(){ client.assert(response.status===201); }); client.global.set("gaId", response.body.id); %}
 
@@ -58,7 +58,7 @@ POST {{host}}/api/me/game-accounts
 Content-Type: application/json
 Authorization: Bearer {{token2}}
 
-{ "gameId": {{lolId}}, "inGameName": "Other#EUW", "region": "EUW", "rank": "GOLD", "position": "TOP" }
+{ "gameId": {{lolId}}, "inGameName": "Other#EUW" }
 
 > {% client.global.set("otherGaId", response.body.id); %}
 

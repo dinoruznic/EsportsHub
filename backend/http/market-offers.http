@@ -42,7 +42,7 @@ POST {{host}}/api/me/game-accounts
 Content-Type: application/json
 Authorization: Bearer {{tokenS}}
 
-{ "gameId": {{lolId}}, "inGameName": "Seller#EUW", "region": "EUW", "rank": "DIAMOND", "position": "MID" }
+{ "gameId": {{lolId}}, "inGameName": "Seller#EUW" }
 
 > {% client.global.set("sellerGaId", response.body.id); %}
 
