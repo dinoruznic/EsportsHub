@@ -1,0 +1,229 @@
+### EsportsHub — Transfer market (DIO 2: ponude + prihvat/Facade + ugovori)
+### Run all (⏩). Pravi svjeze korisnike/timove svaki put, sam hvata id-eve.
+### Uloge: prodavac (listuje se), cap1 (kupac tim1), cap2 (kupac tim2).
+
+@host = http://localhost:8080
+
+### 0. Igre + tri svjeza identiteta + tagovi
+GET {{host}}/api/games
+
+> {%
+    client.test("games 200", function () { client.assert(response.status === 200); });
+    var r = Math.floor(Math.random() * 1000000);
+    client.global.set("seller", "sell" + r);
+    client.global.set("cap1", "capa" + r);
+    client.global.set("cap2", "capb" + r);
+    client.global.set("tagA", "A" + (r % 1000));
+    client.global.set("tagB", "B" + (r % 1000));
+    client.global.set("tagC", "C" + (r % 1000));
+    client.global.set("tagD", "D" + (r % 1000));
+    response.body.forEach(function (g) {
+        if (g.code === "LOL") client.global.set("lolId", g.id);
+        if (g.code === "CS2") client.global.set("cs2Id", g.id);
+    });
+%}
+
+### 1. Prodavac register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{seller}}", "email": "{{seller}}@esportshub.local", "password": "lozinka123", "displayName": "Prodavac" }
+
+### 2. Prodavac login -> tokenS
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{seller}}", "password": "lozinka123" }
+
+> {% client.global.set("tokenS", response.body.token); %}
+
+### 3. Prodavac LoL nalog -> sellerGaId
+POST {{host}}/api/me/game-accounts
+Content-Type: application/json
+Authorization: Bearer {{tokenS}}
+
+{ "gameId": {{lolId}}, "inGameName": "Seller#EUW", "region": "EUW", "rank": "DIAMOND", "position": "MID" }
+
+> {% client.global.set("sellerGaId", response.body.id); %}
+
+### 4. Prodavac se listuje -> listingId
+POST {{host}}/api/market/listings
+Content-Type: application/json
+Authorization: Bearer {{tokenS}}
+
+{ "gameAccountId": {{sellerGaId}}, "askingPrice": 500 }
+
+> {% client.test("oglas 201", function(){ client.assert(response.status===201); }); client.global.set("listingId", response.body.id); %}
+
+### 5. Cap1 register + login -> token1
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{cap1}}", "email": "{{cap1}}@esportshub.local", "password": "lozinka123", "displayName": "Kapiten1" }
+
+### 6. Cap1 login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{cap1}}", "password": "lozinka123" }
+
+> {% client.global.set("token1", response.body.token); %}
+
+### 7. Cap1 pravi LoL tim -> team1Id
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{token1}}
+
+{ "name": "Tim {{cap1}}", "tag": "{{tagA}}", "gameId": {{lolId}}, "region": "EUW" }
+
+> {% client.test("tim1 201", function(){ client.assert(response.status===201); }); client.global.set("team1Id", response.body.id); %}
+
+### 8. Cap2 register + login -> token2
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{cap2}}", "email": "{{cap2}}@esportshub.local", "password": "lozinka123", "displayName": "Kapiten2" }
+
+### 9. Cap2 login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{cap2}}", "password": "lozinka123" }
+
+> {% client.global.set("token2", response.body.token); %}
+
+### 10. Cap2 pravi LoL tim -> team2Id
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{token2}}
+
+{ "name": "Tim {{cap2}}", "tag": "{{tagB}}", "gameId": {{lolId}}, "region": "EUW" }
+
+> {% client.global.set("team2Id", response.body.id); %}
+
+### 11. Cap1 salje ponudu (team1) -> offer1Id (201, PENDING)
+POST {{host}}/api/market/listings/{{listingId}}/offers
+Content-Type: application/json
+Authorization: Bearer {{token1}}
+
+{ "teamId": {{team1Id}}, "amount": 600, "message": "Dobrodosao u tim" }
+
+> {%
+    client.test("ponuda1 201", function(){ client.assert(response.status===201); });
+    client.test("PENDING", function(){ client.assert(response.body.status==="PENDING"); });
+    client.global.set("offer1Id", response.body.id);
+%}
+
+### 12. Cap2 salje ponudu (team2) -> offer2Id (za auto-reject test)
+POST {{host}}/api/market/listings/{{listingId}}/offers
+Content-Type: application/json
+Authorization: Bearer {{token2}}
+
+{ "teamId": {{team2Id}}, "amount": 550, "message": "Mi placamo vise podrske" }
+
+> {% client.test("ponuda2 201", function(){ client.assert(response.status===201); }); client.global.set("offer2Id", response.body.id); %}
+
+### 13. Cap1 pravi CS2 tim -> teamCsId
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{token1}}
+
+{ "name": "CS {{cap1}}", "tag": "{{tagC}}", "gameId": {{cs2Id}}, "region": "EUW" }
+
+> {% client.global.set("teamCsId", response.body.id); %}
+
+### 14. CS2 tim ponuda na LoL oglas -> 400 (provjera igre)
+POST {{host}}/api/market/listings/{{listingId}}/offers
+Content-Type: application/json
+Authorization: Bearer {{token1}}
+
+{ "teamId": {{teamCsId}}, "amount": 100, "message": "pogresna igra" }
+
+> {% client.test("pogresna igra 400", function(){ client.assert(response.status===400); }); %}
+
+### 15. Cap2 ponudi koristeci TUDJI tim (team1) -> 403 (nije kapiten)
+POST {{host}}/api/market/listings/{{listingId}}/offers
+Content-Type: application/json
+Authorization: Bearer {{token2}}
+
+{ "teamId": {{team1Id}}, "amount": 700, "message": "krada tima" }
+
+> {% client.test("nije kapiten 403", function(){ client.assert(response.status===403); }); %}
+
+### 16. Prodavac pravi svoj LoL tim -> teamSId
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{tokenS}}
+
+{ "name": "Self {{seller}}", "tag": "{{tagD}}", "gameId": {{lolId}}, "region": "EUW" }
+
+> {% client.global.set("teamSId", response.body.id); %}
+
+### 17. Prodavac ponudi na SVOJ oglas -> 400
+POST {{host}}/api/market/listings/{{listingId}}/offers
+Content-Type: application/json
+Authorization: Bearer {{tokenS}}
+
+{ "teamId": {{teamSId}}, "amount": 1, "message": "sam sebi" }
+
+> {% client.test("svoj oglas 400", function(){ client.assert(response.status===400); }); %}
+
+### 18. Cap1 (nije vlasnik oglasa) gleda ponude -> 403
+GET {{host}}/api/market/listings/{{listingId}}/offers
+Authorization: Bearer {{token1}}
+
+> {% client.test("tudje ponude 403", function(){ client.assert(response.status===403); }); %}
+
+### 19. Prodavac (vlasnik) gleda ponude -> 200, ima 2 PENDING
+GET {{host}}/api/market/listings/{{listingId}}/offers
+Authorization: Bearer {{tokenS}}
+
+> {%
+    client.test("ponude 200", function(){ client.assert(response.status===200); });
+    client.test("2 ponude", function(){ client.assert(response.body.length === 2); });
+%}
+
+### 20. FACADE: prodavac prihvata ponudu1 -> 200 (ugovor)
+POST {{host}}/api/market/offers/{{offer1Id}}/accept
+Authorization: Bearer {{tokenS}}
+
+> {%
+    client.test("prihvat 200", function(){ client.assert(response.status===200); });
+    client.test("ugovor ACTIVE", function(){ client.assert(response.body.status==="ACTIVE"); });
+    client.test("plata = iznos ponude", function(){ client.assert(response.body.salary === 600); });
+%}
+
+### 21. Prodavac profil -> marketStatus INACTIVE
+GET {{host}}/api/players/{{seller}}/game-accounts
+
+> {% client.test("marketStatus INACTIVE", function(){ client.assert(response.body[0].marketStatus==="INACTIVE"); }); %}
+
+### 22. Tim1 roster -> prodavac je sada clan
+GET {{host}}/api/teams/{{team1Id}}
+
+> {% client.test("prodavac u timu", function(){ client.assert(response.body.members.length === 1); }); %}
+
+### 23. Ugovori tima1 -> 1 aktivan ugovor
+GET {{host}}/api/market/teams/{{team1Id}}/contracts
+
+> {%
+    client.test("ugovori 200", function(){ client.assert(response.status===200); });
+    client.test("1 ugovor", function(){ client.assert(response.body.length === 1); });
+%}
+
+### 24. Ponude oglasa -> ponuda1 ACCEPTED, ponuda2 auto-REJECTED
+GET {{host}}/api/market/listings/{{listingId}}/offers
+Authorization: Bearer {{tokenS}}
+
+> {%
+    var o1 = response.body.find(function(o){ return o.id === client.global.get("offer1Id"); });
+    var o2 = response.body.find(function(o){ return o.id === client.global.get("offer2Id"); });
+    client.test("ponuda1 ACCEPTED", function(){ client.assert(o1.status === "ACCEPTED"); });
+    client.test("ponuda2 auto REJECTED", function(){ client.assert(o2.status === "REJECTED"); });
+%}
+
+### 25. Prihvati ponudu1 opet -> 409 (nije aktivna)
+POST {{host}}/api/market/offers/{{offer1Id}}/accept
+Authorization: Bearer {{tokenS}}
+
+> {% client.test("dupli prihvat 409", function(){ client.assert(response.status===409); }); %}

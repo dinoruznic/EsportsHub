@@ -1,0 +1,203 @@
+### EsportsHub — Prijave timova na turnir (registrations)
+### Run all (⏩). Pravi svjeze korisnike/timove/turnir svaki put.
+### Uloge: organizator (pravi turnir), admin (odobri), cap1 (team1), cap2 (team2).
+
+@host = http://localhost:8080
+
+### 0. Igre + identiteti + tagovi
+GET {{host}}/api/games
+
+> {%
+    client.test("games 200", function () { client.assert(response.status === 200); });
+    var r = Math.floor(Math.random() * 1000000);
+    client.global.set("org", "org" + r);
+    client.global.set("cap1", "capa" + r);
+    client.global.set("cap2", "capb" + r);
+    client.global.set("tagA", "A" + (r % 1000));
+    client.global.set("tagB", "B" + (r % 1000));
+    client.global.set("tagC", "C" + (r % 1000));
+    response.body.forEach(function (g) {
+        if (g.code === "LOL") client.global.set("lolId", g.id);
+        if (g.code === "CS2") client.global.set("cs2Id", g.id);
+    });
+%}
+
+### 1. Organizator register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{org}}", "email": "{{org}}@esportshub.local", "password": "lozinka123", "displayName": "Organizator" }
+
+### 2. Organizator login -> tokenO
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{org}}", "password": "lozinka123" }
+
+> {% client.global.set("tokenO", response.body.token); %}
+
+### 3. Organizator pravi turnir (maxTeams 1) -> tournamentId (PENDING)
+POST {{host}}/api/tournaments
+Content-Type: application/json
+Authorization: Bearer {{tokenO}}
+
+{ "name": "Kup {{org}}", "gameId": {{lolId}}, "format": "SINGLE_ELIMINATION", "maxTeams": 1 }
+
+> {%
+    client.test("turnir 201", function(){ client.assert(response.status===201); });
+    client.test("PENDING", function(){ client.assert(response.body.status==="PENDING"); });
+    client.global.set("tournamentId", response.body.id);
+%}
+
+### 4. Admin login -> tokenAdmin
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "admin", "password": "admin12345" }
+
+> {% client.test("admin login 200", function(){ client.assert(response.status===200); }); client.global.set("tokenAdmin", response.body.token); %}
+
+### 5. Admin odobrava turnir -> REGISTRATION
+POST {{host}}/api/tournaments/{{tournamentId}}/approve
+Authorization: Bearer {{tokenAdmin}}
+
+> {% client.test("approve -> REGISTRATION", function(){ client.assert(response.body.status==="REGISTRATION"); }); %}
+
+### 6. Cap1 register + login -> token1
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{cap1}}", "email": "{{cap1}}@esportshub.local", "password": "lozinka123", "displayName": "Kapiten1" }
+
+### 7. Cap1 login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{cap1}}", "password": "lozinka123" }
+
+> {% client.global.set("token1", response.body.token); %}
+
+### 8. Cap1 LoL tim -> team1Id
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{token1}}
+
+{ "name": "Tim {{cap1}}", "tag": "{{tagA}}", "gameId": {{lolId}}, "region": "EUW" }
+
+> {% client.global.set("team1Id", response.body.id); %}
+
+### 9. Cap2 register + login -> token2
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{cap2}}", "email": "{{cap2}}@esportshub.local", "password": "lozinka123", "displayName": "Kapiten2" }
+
+### 10. Cap2 login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{cap2}}", "password": "lozinka123" }
+
+> {% client.global.set("token2", response.body.token); %}
+
+### 11. Cap2 LoL tim -> team2Id
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{token2}}
+
+{ "name": "Tim {{cap2}}", "tag": "{{tagB}}", "gameId": {{lolId}}, "region": "EUW" }
+
+> {% client.global.set("team2Id", response.body.id); %}
+
+### 12. Cap1 prijavljuje team1 -> 201 REGISTERED
+POST {{host}}/api/tournaments/{{tournamentId}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{token1}}
+
+{ "teamId": {{team1Id}} }
+
+> {%
+    client.test("prijava 201", function(){ client.assert(response.status===201); });
+    client.test("REGISTERED", function(){ client.assert(response.body.status==="REGISTERED"); });
+    client.global.set("regId", response.body.id);
+%}
+
+### 13. Cap1 isti tim opet -> 409 (vec prijavljen)
+POST {{host}}/api/tournaments/{{tournamentId}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{token1}}
+
+{ "teamId": {{team1Id}} }
+
+> {% client.test("duplikat 409", function(){ client.assert(response.status===409); }); %}
+
+### 14. Cap2 prijavljuje team2 -> 409 (turnir je pun, maxTeams=1)
+POST {{host}}/api/tournaments/{{tournamentId}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{token2}}
+
+{ "teamId": {{team2Id}} }
+
+> {% client.test("pun turnir 409", function(){ client.assert(response.status===409); }); %}
+
+### 15. Cap2 prijavljuje TUDJI tim (team1) -> 403
+POST {{host}}/api/tournaments/{{tournamentId}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{token2}}
+
+{ "teamId": {{team1Id}} }
+
+> {% client.test("tudji tim 403", function(){ client.assert(response.status===403); }); %}
+
+### 16. Cap1 pravi CS2 tim -> teamCsId
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{token1}}
+
+{ "name": "CS {{cap1}}", "tag": "{{tagC}}", "gameId": {{cs2Id}}, "region": "EUW" }
+
+> {% client.global.set("teamCsId", response.body.id); %}
+
+### 17. CS2 tim na LoL turnir -> 400 (razlicita igra)
+POST {{host}}/api/tournaments/{{tournamentId}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{token1}}
+
+{ "teamId": {{teamCsId}} }
+
+> {% client.test("razlicita igra 400", function(){ client.assert(response.status===400); }); %}
+
+### 18. Javna lista prijava -> team1 je REGISTERED
+GET {{host}}/api/tournaments/{{tournamentId}}/registrations
+
+> {%
+    client.test("lista 200", function(){ client.assert(response.status===200); });
+    var reg = response.body.find(function(x){ return x.teamId === client.global.get("team1Id"); });
+    client.test("team1 REGISTERED", function(){ client.assert(reg && reg.status === "REGISTERED"); });
+%}
+
+### 19. Cap1 povlaci prijavu -> 204
+DELETE {{host}}/api/tournaments/{{tournamentId}}/registrations/{{regId}}
+Authorization: Bearer {{token1}}
+
+> {% client.test("povlacenje 204", function(){ client.assert(response.status===204); }); %}
+
+### 20. Lista -> team1 sada WITHDRAWN
+GET {{host}}/api/tournaments/{{tournamentId}}/registrations
+
+> {%
+    var reg = response.body.find(function(x){ return x.teamId === client.global.get("team1Id"); });
+    client.test("team1 WITHDRAWN", function(){ client.assert(reg && reg.status === "WITHDRAWN"); });
+%}
+
+### 21. Cap1 se ponovo prijavi -> 201 REGISTERED (REAKTIVACIJA, ne 500!)
+POST {{host}}/api/tournaments/{{tournamentId}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{token1}}
+
+{ "teamId": {{team1Id}} }
+
+> {%
+    client.test("reaktivacija 201", function(){ client.assert(response.status===201); });
+    client.test("opet REGISTERED", function(){ client.assert(response.body.status==="REGISTERED"); });
+%}
