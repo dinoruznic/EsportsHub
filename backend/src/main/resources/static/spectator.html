@@ -15,6 +15,7 @@
     --accent: #3dd6c6;
     --live: #ff4d5e;
     --win: #f5c542;
+    color-scheme: dark;
   }
   * { box-sizing: border-box; }
   body {
@@ -140,7 +141,7 @@
   .stat { padding: 6px 4px; text-align: center; }
   .stat + .stat { border-left: 1px solid var(--line); }
   .stat .label { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-  .stat .value { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
+  .stat .value { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; white-space: nowrap; }
   aside {
     background: var(--panel);
     border: 1px solid var(--line);
@@ -256,7 +257,7 @@
   function pair(a, b, format) {
     const f = format || (v => v);
     if (a === null || a === undefined || b === null || b === undefined) return '-';
-    return f(a) + ' - ' + f(b);
+    return f(a) + '-' + f(b);
   }
 
   function statsRow(stats) {
