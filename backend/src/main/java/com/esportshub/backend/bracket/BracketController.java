@@ -26,4 +26,9 @@ public class BracketController {
         BracketResponse created = bracketService.generate(principal.getUsername(), isAdmin, id);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
+
+    @GetMapping("")
+    public BracketResponse view(@PathVariable Long id) {
+        return bracketService.view(id);
+    }
 }

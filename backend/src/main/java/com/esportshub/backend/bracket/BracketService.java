@@ -101,6 +101,12 @@ public class BracketService {
         return toResponse(tournament);
     }
 
+    @Transactional(readOnly = true)
+    public BracketResponse view(Long tournamentId) {
+        Tournament tournament = tournamentRepository.findById(tournamentId).orElseThrow(BracketService::tournamentNotFound);
+        return toResponse(tournament);
+    }
+
     private BracketResponse toResponse(Tournament tournament) {
         Map<Long, List<MatchView>> matchesByRound = matchRepository
                 .findByTournament_IdOrderByRound_RoundNumberAscIdAsc(tournament.getId()).stream()
