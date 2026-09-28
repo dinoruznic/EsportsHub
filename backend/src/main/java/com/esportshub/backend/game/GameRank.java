@@ -5,24 +5,25 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "games")
+@Table(name = "game_ranks")
 @Getter
 @NoArgsConstructor
-public class Game {
+public class GameRank {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true, length = 20)
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "game_id", nullable = false)
+    private Game game;
+
+    @Column(nullable = false, length = 20)
     private String code;
 
     @Column(nullable = false, length = 40)
-    private String name;
+    private String label;
 
-    @Column(name = "has_live_api", nullable = false)
-    private boolean hasLiveApi;
-
-    @Column(name = "rank_type", nullable = false, length = 10)
-    private String rankType;
+    @Column(name = "ordinal")
+    private Integer ordinal;
 }
