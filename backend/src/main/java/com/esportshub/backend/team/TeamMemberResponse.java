@@ -19,8 +19,8 @@ public record TeamMemberResponse(
                 account.getId(),
                 account.getInGameName(),
                 account.getUser().getUsername(),
-                account.getRank() == null ? null : account.getRank().name(),
-                account.getPosition() == null ? null : account.getPosition().name(),
+                account.getRank() == null ? null : account.getRank().getLabel(),
+                account.getPosition() == null ? null : account.getPosition().getLabel(),
                 membership.getRoleInTeam() == null ? null : membership.getRoleInTeam().name(),
                 membership.isActive());
     }

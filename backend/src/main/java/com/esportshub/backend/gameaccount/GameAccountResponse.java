@@ -8,10 +8,10 @@ public record GameAccountResponse(
         String gameCode,
         String gameName,
         String inGameName,
-        Region region,
-        Rank rank,
-        Position position,
-        Division division,
+        String region,
+        String position,
+        String rank,
+        Integer rating,
         String marketStatus,
         Instant createdAt
 ) {
@@ -22,10 +22,10 @@ public record GameAccountResponse(
                 account.getGame().getCode(),
                 account.getGame().getName(),
                 account.getInGameName(),
-                account.getRegion(),
-                account.getRank(),
-                account.getPosition(),
-                account.getDivision(),
+                account.getRegion() != null ? account.getRegion().getLabel() : null,
+                account.getPosition() != null ? account.getPosition().getLabel() : null,
+                account.getRank() != null ? account.getRank().getLabel() : null,
+                account.getRating(),
                 account.getMarketStatus().name(),
                 account.getCreatedAt());
     }

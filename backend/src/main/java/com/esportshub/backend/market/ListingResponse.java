@@ -24,8 +24,8 @@ public record ListingResponse(
                 account.getUser().getUsername(),
                 account.getGame().getCode(),
                 account.getInGameName(),
-                account.getRank() == null ? null : account.getRank().name(),
-                account.getPosition() == null ? null : account.getPosition().name(),
+                account.getRank() == null ? null : account.getRank().getLabel(),
+                account.getPosition() == null ? null : account.getPosition().getLabel(),
                 listing.getAskingPrice(),
                 listing.getStatus().name(),
                 listing.getCreatedAt());

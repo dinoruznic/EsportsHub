@@ -1,6 +1,9 @@
 package com.esportshub.backend.gameaccount;
 
 import com.esportshub.backend.game.Game;
+import com.esportshub.backend.game.GamePositionRepository;
+import com.esportshub.backend.game.GameRankRepository;
+import com.esportshub.backend.game.GameRegionRepository;
 import com.esportshub.backend.game.GameRepository;
 import com.esportshub.backend.user.User;
 import com.esportshub.backend.user.UserRepository;
@@ -11,21 +14,18 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
-import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class GameAccountService {
 
-    private static final Set<Rank> APEX_RANKS = Set.of(
-            Rank.MASTER,
-            Rank.GRANDMASTER,
-            Rank.CHALLENGER);
-
     private final GameAccountRepository gameAccountRepository;
     private final GameRepository gameRepository;
     private final UserRepository userRepository;
+    private final GameRegionRepository gameRegionRepository;
+    private final GamePositionRepository gamePositionRepository;
+    private final GameRankRepository gameRankRepository;
 
     public GameAccountResponse create(String username, CreateGameAccountRequest request) {
         User owner = userRepository.findByUsername(username)
@@ -38,18 +38,14 @@ public class GameAccountService {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "already have an account for this game");
         }
 
-        validateDivision(request.rank(), request.division());
-
         GameAccount account = GameAccount.builder()
                 .user(owner)
                 .game(game)
                 .inGameName(request.inGameName().trim())
-                .region(request.region())
-                .rank(request.rank())
-                .position(request.position())
-                .division(request.division())
                 .marketStatus(MarketStatus.INACTIVE)
                 .build();
+
+        applyAttributes(account, request.regionId(), request.positionId(), request.rankId(), request.rating());
 
         return GameAccountResponse.from(gameAccountRepository.save(account));
     }
@@ -65,13 +61,9 @@ public class GameAccountService {
         GameAccount account = gameAccountRepository.findByIdAndUser_Username(id, username)
                 .orElseThrow(GameAccountService::notFound);
 
-        validateDivision(request.rank(), request.division());
+        applyAttributes(account, request.regionId(), request.positionId(), request.rankId(), request.rating());
 
         account.setInGameName(request.inGameName().trim());
-        account.setRegion(request.region());
-        account.setRank(request.rank());
-        account.setPosition(request.position());
-        account.setDivision(request.division());
         account.setMarketStatus(request.marketStatus());
 
         return GameAccountResponse.from(gameAccountRepository.save(account));
@@ -95,10 +87,44 @@ public class GameAccountService {
                 .toList();
     }
 
-    private static void validateDivision(Rank rank, Division division) {
-        if (rank != null && division != null && APEX_RANKS.contains(rank)) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "apex tier has no division");
+    private void applyAttributes(GameAccount account, Long regionId, Long positionId, Long rankId, Integer rating) {
+        Game game = account.getGame();
+        Long gameId = game.getId();
+
+        account.setRegion(regionId == null ? null : gameRegionRepository.findByIdAndGame_Id(regionId, gameId)
+                .orElseThrow(() -> badRequest("regija ne pripada igri")));
+
+        account.setPosition(positionId == null ? null : gamePositionRepository.findByIdAndGame_Id(positionId, gameId)
+                .orElseThrow(() -> badRequest("pozicija ne pripada igri")));
+
+        switch (game.getRankType()) {
+            case "TIER" -> {
+                if (rating != null) {
+                    throw badRequest("ova igra koristi rank, ne rating");
+                }
+                account.setRank(rankId == null ? null : gameRankRepository.findByIdAndGame_Id(rankId, gameId)
+                        .orElseThrow(() -> badRequest("rank ne pripada igri")));
+                account.setRating(null);
+            }
+            case "NUMERIC" -> {
+                if (rankId != null) {
+                    throw badRequest("ova igra koristi rating, ne rank");
+                }
+                account.setRank(null);
+                account.setRating(rating);
+            }
+            default -> {
+                if (rankId != null || rating != null) {
+                    throw badRequest("ova igra nema rank");
+                }
+                account.setRank(null);
+                account.setRating(null);
+            }
         }
+    }
+
+    private static ResponseStatusException badRequest(String message) {
+        return new ResponseStatusException(HttpStatus.BAD_REQUEST, message);
     }
 
     private static ResponseStatusException notFound() {

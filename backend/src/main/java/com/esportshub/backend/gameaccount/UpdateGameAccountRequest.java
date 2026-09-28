@@ -6,10 +6,10 @@ import jakarta.validation.constraints.Size;
 
 public record UpdateGameAccountRequest(
         @NotBlank @Size(max = 60) String inGameName,
-        Region region,
-        Rank rank,
-        Position position,
-        Division division,
+        Long regionId,
+        Long positionId,
+        Long rankId,
+        Integer rating,
         @NotNull MarketStatus marketStatus
 ) {
 }
