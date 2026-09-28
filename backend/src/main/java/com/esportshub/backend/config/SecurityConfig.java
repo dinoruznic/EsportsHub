@@ -45,6 +45,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/tournaments/*/registrations").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/players/*/game-accounts").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/games").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/games/*/regions", "/api/games/*/positions", "/api/games/*/ranks").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/teams", "/api/teams/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/market/listings").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/market/teams/*/contracts").permitAll()
