@@ -139,6 +139,35 @@ public class TournamentService {
         return RegistrationResponse.from(tournamentRegistrationRepository.save(registration));
     }
 
+    @Transactional(readOnly = true)
+    public List<RegistrationResponse> listRegistrations(Long tournamentId) {
+        tournamentRepository.findById(tournamentId).orElseThrow(TournamentService::notFound);
+
+        return tournamentRegistrationRepository.findByTournament_Id(tournamentId).stream()
+                .map(RegistrationResponse::from)
+                .toList();
+    }
+
+    public void withdraw(String username, Long tournamentId, Long registrationId) {
+        TournamentRegistration registration = tournamentRegistrationRepository.findById(registrationId)
+                .orElseThrow(TournamentService::registrationNotFound);
+
+        if (!registration.getTournament().getId().equals(tournamentId)) {
+            throw registrationNotFound();
+        }
+
+        if (!registration.getTeam().getCaptain().getUsername().equals(username)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "nisi kapiten tima");
+        }
+
+        if (registration.getTournament().getStatus() != TournamentStatus.REGISTRATION) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "ne mozes se povuci nakon zdrijeba");
+        }
+
+        registration.setStatus(RegistrationStatus.WITHDRAWN);
+        tournamentRegistrationRepository.save(registration);
+    }
+
     private boolean canSeeHidden(Tournament tournament, Authentication authentication) {
         if (authentication == null || !authentication.isAuthenticated()) {
             return false;
@@ -154,5 +183,9 @@ public class TournamentService {
 
     private static ResponseStatusException notFound() {
         return new ResponseStatusException(HttpStatus.NOT_FOUND, "Turnir ne postoji");
+    }
+
+    private static ResponseStatusException registrationNotFound() {
+        return new ResponseStatusException(HttpStatus.NOT_FOUND, "prijava ne postoji");
     }
 }

@@ -61,4 +61,17 @@ public class TournamentController {
         RegistrationResponse created = tournamentService.register(principal.getUsername(), id, request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
+
+    @GetMapping("/{id}/registrations")
+    public List<RegistrationResponse> listRegistrations(@PathVariable Long id) {
+        return tournamentService.listRegistrations(id);
+    }
+
+    @DeleteMapping("/{id}/registrations/{registrationId}")
+    public ResponseEntity<Void> withdraw(@AuthenticationPrincipal UserDetails principal,
+                                         @PathVariable Long id,
+                                         @PathVariable Long registrationId) {
+        tournamentService.withdraw(principal.getUsername(), id, registrationId);
+        return ResponseEntity.noContent().build();
+    }
 }
