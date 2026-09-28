@@ -74,6 +74,7 @@
     grid-template-columns: 1fr 320px;
     gap: 16px;
     padding: 16px 24px;
+    align-items: start;
   }
   .bracket {
     display: flex;
@@ -82,9 +83,10 @@
     padding-bottom: 8px;
     min-width: 0;
   }
-  .round { display: flex; flex-direction: column; gap: 16px; min-width: 220px; justify-content: space-around; }
+  .round { display: flex; flex-direction: column; min-width: 220px; }
+  .round .matches { display: flex; flex-direction: column; gap: 16px; justify-content: space-around; flex: 1; }
   .round h3 {
-    margin: 0 0 4px;
+    margin: 0 0 12px;
     font-size: 12px;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -240,13 +242,14 @@
     }
     for (const round of data.rounds) {
       const col = el('div', 'round');
-      col.append(el('h3', null, round.name));
+      const list = el('div', 'matches');
       for (const match of round.matches) {
         const card = el('div', 'match');
         fillCard(card, match);
         cards.set(match.id, card);
-        col.append(card);
+        list.append(card);
       }
+      col.append(el('h3', null, round.name), list);
       els.bracket.append(col);
     }
   }
