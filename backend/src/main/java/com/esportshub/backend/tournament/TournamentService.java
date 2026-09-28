@@ -2,6 +2,8 @@ package com.esportshub.backend.tournament;
 
 import com.esportshub.backend.game.Game;
 import com.esportshub.backend.game.GameRepository;
+import com.esportshub.backend.team.Team;
+import com.esportshub.backend.team.TeamRepository;
 import com.esportshub.backend.user.User;
 import com.esportshub.backend.user.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 
@@ -28,6 +31,8 @@ public class TournamentService {
     private final TournamentRepository tournamentRepository;
     private final GameRepository gameRepository;
     private final UserRepository userRepository;
+    private final TournamentRegistrationRepository tournamentRegistrationRepository;
+    private final TeamRepository teamRepository;
 
     public TournamentResponse create(String username, CreateTournamentRequest request) {
         User organizer = userRepository.findByUsername(username)
@@ -92,6 +97,46 @@ public class TournamentService {
 
         tournament.setStatus(target);
         return TournamentResponse.from(tournamentRepository.save(tournament));
+    }
+
+    public RegistrationResponse register(String username, Long tournamentId, RegisterTeamRequest request) {
+        Tournament tournament = tournamentRepository.findById(tournamentId).orElseThrow(TournamentService::notFound);
+
+        if (tournament.getStatus() != TournamentStatus.REGISTRATION) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "prijave nisu otvorene");
+        }
+
+        Team team = teamRepository.findById(request.teamId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "tim ne postoji"));
+
+        if (!team.getCaptain().getUsername().equals(username)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "nisi kapiten tima");
+        }
+
+        if (!team.getGame().getId().equals(tournament.getGame().getId())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "tim i turnir nisu ista igra");
+        }
+
+        if (tournamentRegistrationRepository.existsByTournament_IdAndTeam_IdAndStatus(tournamentId, team.getId(), RegistrationStatus.REGISTERED)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "tim je vec prijavljen");
+        }
+
+        if (tournament.getMaxTeams() != null
+                && tournamentRegistrationRepository.countByTournament_IdAndStatus(tournamentId, RegistrationStatus.REGISTERED) >= tournament.getMaxTeams()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "turnir je pun");
+        }
+
+        TournamentRegistration registration = tournamentRegistrationRepository
+                .findByTournament_IdAndTeam_Id(tournamentId, team.getId())
+                .orElseGet(() -> TournamentRegistration.builder()
+                        .tournament(tournament)
+                        .team(team)
+                        .build());
+
+        registration.setStatus(RegistrationStatus.REGISTERED);
+        registration.setRegisteredAt(Instant.now());
+
+        return RegistrationResponse.from(tournamentRegistrationRepository.save(registration));
     }
 
     private boolean canSeeHidden(Tournament tournament, Authentication authentication) {

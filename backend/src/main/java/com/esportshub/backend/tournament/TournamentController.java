@@ -53,4 +53,12 @@ public class TournamentController {
     public TournamentResponse getOne(@PathVariable Long id, Authentication authentication) {
         return tournamentService.getOne(id, authentication);
     }
+
+    @PostMapping("/{id}/registrations")
+    public ResponseEntity<RegistrationResponse> register(@AuthenticationPrincipal UserDetails principal,
+                                                         @PathVariable Long id,
+                                                         @Valid @RequestBody RegisterTeamRequest request) {
+        RegistrationResponse created = tournamentService.register(principal.getUsername(), id, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    }
 }
