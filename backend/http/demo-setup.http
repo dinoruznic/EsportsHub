@@ -1,0 +1,236 @@
+### DEMO 1/2 — priprema turnira za gledanje uzivo
+### Pokreni SVE (⏩). Na kraju u Run panelu (tab "Console"/log) pise link za spectator stranicu.
+### Onda otvori taj link u browseru i predji na demo-play.http.
+
+@host = http://localhost:8080
+
+### Igre + identiteti
+GET {{host}}/api/games
+
+> {%
+    var r = Math.floor(Math.random() * 1000000);
+    client.global.set("dOrg", "dorg" + r);
+    client.global.set("dRef", "dref" + r);
+    var names = ["Balkan Wolves", "Sarajevo Snipers", "Neretva Nexus", "Una Unicorns"];
+    for (var i = 1; i <= 4; i++) {
+        client.global.set("dCap" + i, "dcap" + i + "x" + r);
+        client.global.set("dTag" + i, String.fromCharCode(64 + i) + (r % 1000));
+        client.global.set("dName" + i, names[i - 1] + " " + (r % 100));
+    }
+    response.body.forEach(function (g) { if (g.code === "LOL") client.global.set("dLol", g.id); });
+%}
+
+### Admin login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "admin", "password": "admin12345" }
+
+> {% client.global.set("dTA", response.body.token); %}
+
+### Organizator
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{dOrg}}", "email": "{{dOrg}}@esportshub.local", "password": "lozinka123", "displayName": "Organizator" }
+
+###
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{dOrg}}", "password": "lozinka123" }
+
+> {% client.global.set("dTO", response.body.token); %}
+
+### Sudija
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{dRef}}", "email": "{{dRef}}@esportshub.local", "password": "lozinka123", "displayName": "Sudija" }
+
+###
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{dRef}}", "password": "lozinka123" }
+
+> {% client.global.set("dTR", response.body.token); %}
+
+###
+POST {{host}}/api/admin/users/{{dRef}}/roles
+Content-Type: application/json
+Authorization: Bearer {{dTA}}
+
+{ "role": "REFEREE" }
+
+### Turnir
+POST {{host}}/api/tournaments
+Content-Type: application/json
+Authorization: Bearer {{dTO}}
+
+{ "name": "Balkan LoL Kup", "gameId": {{dLol}}, "format": "SINGLE_ELIMINATION", "maxTeams": 4 }
+
+> {% client.global.set("dTid", response.body.id); %}
+
+###
+POST {{host}}/api/tournaments/{{dTid}}/approve
+Authorization: Bearer {{dTA}}
+
+### ---- tim 1 ----
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{dCap1}}", "email": "{{dCap1}}@esportshub.local", "password": "lozinka123", "displayName": "K1" }
+
+###
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{dCap1}}", "password": "lozinka123" }
+
+> {% client.global.set("dT1", response.body.token); %}
+
+###
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{dT1}}
+
+{ "name": "{{dName1}}", "tag": "{{dTag1}}", "gameId": {{dLol}}, "region": "EUW" }
+
+> {% client.global.set("dTeam1", response.body.id); %}
+
+###
+POST {{host}}/api/tournaments/{{dTid}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{dT1}}
+
+{ "teamId": {{dTeam1}} }
+
+### ---- tim 2 ----
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{dCap2}}", "email": "{{dCap2}}@esportshub.local", "password": "lozinka123", "displayName": "K2" }
+
+###
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{dCap2}}", "password": "lozinka123" }
+
+> {% client.global.set("dT2", response.body.token); %}
+
+###
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{dT2}}
+
+{ "name": "{{dName2}}", "tag": "{{dTag2}}", "gameId": {{dLol}}, "region": "EUW" }
+
+> {% client.global.set("dTeam2", response.body.id); %}
+
+###
+POST {{host}}/api/tournaments/{{dTid}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{dT2}}
+
+{ "teamId": {{dTeam2}} }
+
+### ---- tim 3 ----
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{dCap3}}", "email": "{{dCap3}}@esportshub.local", "password": "lozinka123", "displayName": "K3" }
+
+###
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{dCap3}}", "password": "lozinka123" }
+
+> {% client.global.set("dT3", response.body.token); %}
+
+###
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{dT3}}
+
+{ "name": "{{dName3}}", "tag": "{{dTag3}}", "gameId": {{dLol}}, "region": "EUW" }
+
+> {% client.global.set("dTeam3", response.body.id); %}
+
+###
+POST {{host}}/api/tournaments/{{dTid}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{dT3}}
+
+{ "teamId": {{dTeam3}} }
+
+### ---- tim 4 ----
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{dCap4}}", "email": "{{dCap4}}@esportshub.local", "password": "lozinka123", "displayName": "K4" }
+
+###
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{dCap4}}", "password": "lozinka123" }
+
+> {% client.global.set("dT4", response.body.token); %}
+
+###
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{dT4}}
+
+{ "name": "{{dName4}}", "tag": "{{dTag4}}", "gameId": {{dLol}}, "region": "EUW" }
+
+> {% client.global.set("dTeam4", response.body.id); %}
+
+###
+POST {{host}}/api/tournaments/{{dTid}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{dT4}}
+
+{ "teamId": {{dTeam4}} }
+
+### Bracket
+POST {{host}}/api/tournaments/{{dTid}}/bracket
+Authorization: Bearer {{dTO}}
+
+> {%
+    client.global.set("dPf1", response.body.rounds[0].matches[0].id);
+    client.global.set("dPf2", response.body.rounds[0].matches[1].id);
+    client.global.set("dFin", response.body.rounds[1].matches[0].id);
+%}
+
+### Sudija na sva 3 meca
+PUT {{host}}/api/matches/{{dPf1}}/referee
+Content-Type: application/json
+Authorization: Bearer {{dTO}}
+
+{ "username": "{{dRef}}" }
+
+###
+PUT {{host}}/api/matches/{{dPf2}}/referee
+Content-Type: application/json
+Authorization: Bearer {{dTO}}
+
+{ "username": "{{dRef}}" }
+
+###
+PUT {{host}}/api/matches/{{dFin}}/referee
+Content-Type: application/json
+Authorization: Bearer {{dTO}}
+
+{ "username": "{{dRef}}" }
+
+> {%
+    client.log("================================================");
+    client.log("OTVORI U BROWSERU:");
+    client.log("http://localhost:8080/spectator.html?t=" + client.global.get("dTid"));
+    client.log("pa pokreci demo-play.http korak po korak (klik na > pored svakog)");
+    client.log("================================================");
+%}

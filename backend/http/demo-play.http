@@ -1,0 +1,74 @@
+### DEMO 2/2 — odigraj turnir UZIVO
+### NE "Run all"! Klikni zeleni > pored svakog koraka, jedan po jedan,
+### i gledaj spectator stranicu u browseru kako se sama mijenja.
+### (varijable dolaze iz demo-setup.http — prvo pokreni njega)
+
+@host = http://localhost:8080
+
+### 1. Polufinale 1 pocinje (kartica postaje LIVE)
+POST {{host}}/api/matches/{{dPf1}}/start
+Authorization: Bearer {{dTR}}
+
+### 2. PF1 rezultat 1:0
+PUT {{host}}/api/matches/{{dPf1}}/score
+Content-Type: application/json
+Authorization: Bearer {{dTR}}
+
+{ "scoreA": 1, "scoreB": 0 }
+
+### 3. PF1 rezultat 1:1
+PUT {{host}}/api/matches/{{dPf1}}/score
+Content-Type: application/json
+Authorization: Bearer {{dTR}}
+
+{ "scoreA": 1, "scoreB": 1 }
+
+### 4. PF1 kraj 2:1 (pobjednik ulazi u finale)
+POST {{host}}/api/matches/{{dPf1}}/finish
+Content-Type: application/json
+Authorization: Bearer {{dTR}}
+
+{ "scoreA": 2, "scoreB": 1 }
+
+### 5. Polufinale 2 pocinje
+POST {{host}}/api/matches/{{dPf2}}/start
+Authorization: Bearer {{dTR}}
+
+### 6. PF2 rezultat 0:1
+PUT {{host}}/api/matches/{{dPf2}}/score
+Content-Type: application/json
+Authorization: Bearer {{dTR}}
+
+{ "scoreA": 0, "scoreB": 1 }
+
+### 7. PF2 kraj 0:2 (drugi finalista)
+POST {{host}}/api/matches/{{dPf2}}/finish
+Content-Type: application/json
+Authorization: Bearer {{dTR}}
+
+{ "scoreA": 0, "scoreB": 2 }
+
+### 8. FINALE pocinje
+POST {{host}}/api/matches/{{dFin}}/start
+Authorization: Bearer {{dTR}}
+
+### 9. Finale 1:0
+PUT {{host}}/api/matches/{{dFin}}/score
+Content-Type: application/json
+Authorization: Bearer {{dTR}}
+
+{ "scoreA": 1, "scoreB": 0 }
+
+### 10. Finale 2:1
+PUT {{host}}/api/matches/{{dFin}}/score
+Content-Type: application/json
+Authorization: Bearer {{dTR}}
+
+{ "scoreA": 2, "scoreB": 1 }
+
+### 11. FINALE kraj 3:1 — imamo prvaka, turnir COMPLETED
+POST {{host}}/api/matches/{{dFin}}/finish
+Content-Type: application/json
+Authorization: Bearer {{dTR}}
+
+{ "scoreA": 3, "scoreB": 1 }
