@@ -1,0 +1,8 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 023-fix-user-roles-pk
+      author: dino
+      changes:
+        - dropPrimaryKey: { tableName: user_roles, constraintName: pk_user_roles }
+        - addPrimaryKey: { tableName: user_roles, columnNames: "user_id, role_id", constraintName: pk_user_roles }
