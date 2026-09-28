@@ -42,6 +42,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/tournaments/pending").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/tournaments").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/tournaments/{id}").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/tournaments/*/registrations").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/players/*/game-accounts").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/games").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/teams", "/api/teams/*").permitAll()
