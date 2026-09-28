@@ -1,7 +1,6 @@
 package com.esportshub.backend.team;
 
 import com.esportshub.backend.game.Game;
-import com.esportshub.backend.gameaccount.Region;
 import com.esportshub.backend.user.User;
 import jakarta.persistence.*;
 import lombok.*;
@@ -30,9 +29,8 @@ public class Team {
     @Column(name = "logo_url", length = 255)
     private String logoUrl;
 
-    @Enumerated(EnumType.STRING)
     @Column(name = "region", length = 10)
-    private Region region;
+    private String region;
 
     @ManyToOne(optional = false)
     @JoinColumn(name = "game_id", nullable = false)

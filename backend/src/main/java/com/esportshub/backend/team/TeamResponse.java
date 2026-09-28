@@ -20,7 +20,7 @@ public record TeamResponse(
                 team.getName(),
                 team.getTag(),
                 team.getLogoUrl(),
-                team.getRegion() == null ? null : team.getRegion().name(),
+                team.getRegion(),
                 team.getGame().getCode(),
                 team.getCaptain().getUsername(),
                 team.getBudget(),
