@@ -1,5 +1,6 @@
 package com.esportshub.backend.match;
 
+import com.esportshub.backend.TestcontainersConfiguration;
 import com.esportshub.backend.auth.JwtService;
 import com.esportshub.backend.bracket.BracketResponse;
 import com.esportshub.backend.bracket.BracketService;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.messaging.converter.JacksonJsonMessageConverter;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
@@ -45,6 +47,7 @@ import java.util.concurrent.TimeUnit;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@Import(TestcontainersConfiguration.class)
 class MatchBroadcastIntegrationTest {
 
     @Value("${local.server.port}")
