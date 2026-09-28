@@ -19,9 +19,9 @@ services:
   rabbitmq:
     image: rabbitmq:3-management
     container_name: esportshub-rabbitmq
-    environment:
-      RABBITMQ_DEFAULT_USER: esportshub
-      RABBITMQ_DEFAULT_PASS: esportshub
+    volumes:
+      - ./infra/rabbitmq/rabbitmq.conf:/etc/rabbitmq/conf.d/20-esportshub.conf:ro
+      - ./infra/rabbitmq/definitions.json:/etc/rabbitmq/definitions.json:ro
     ports:
       - "5672:5672"
       - "15672:15672"

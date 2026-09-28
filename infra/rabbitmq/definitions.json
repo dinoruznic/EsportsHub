@@ -1,0 +1,39 @@
+{
+  "users": [
+    {
+      "name": "esportshub",
+      "password_hash": "YyHvA/gK4vWVVMRSxMfj7nyW9xdiqfJg0fNSa0KFBUyQuLVg",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": [
+        "administrator"
+      ]
+    },
+    {
+      "name": "agent",
+      "password_hash": "crJ0pYH1t0zyKa3PbHQov/+DZLhvkluO4NcRb6Je6VnsjFLO",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": []
+    }
+  ],
+  "vhosts": [
+    {
+      "name": "/"
+    }
+  ],
+  "permissions": [
+    {
+      "user": "esportshub",
+      "vhost": "/",
+      "configure": ".*",
+      "write": ".*",
+      "read": ".*"
+    },
+    {
+      "user": "agent",
+      "vhost": "/",
+      "configure": "^$",
+      "write": "^esportshub\\.live$",
+      "read": "^$"
+    }
+  ]
+}
