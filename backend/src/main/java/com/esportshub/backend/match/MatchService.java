@@ -121,6 +121,13 @@ public class MatchService {
     }
 
     @Transactional(readOnly = true)
+    public AgentKeyResponse agentKey(MatchActor actor, Long matchId) {
+        Match match = findMatch(matchId);
+        requireControl(actor, match);
+        return new AgentKeyResponse(match.getSpectatorKey());
+    }
+
+    @Transactional(readOnly = true)
     public MatchView get(Long matchId) {
         return MatchView.from(findMatch(matchId));
     }

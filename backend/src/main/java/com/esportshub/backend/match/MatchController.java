@@ -49,6 +49,11 @@ public class MatchController {
         return matchService.get(id);
     }
 
+    @GetMapping("/{id}/agent-key")
+    public AgentKeyResponse agentKey(@AuthenticationPrincipal UserDetails principal, @PathVariable Long id) {
+        return matchService.agentKey(actor(principal), id);
+    }
+
     @GetMapping("/{id}/events")
     public List<MatchEventResponse> events(@PathVariable Long id) {
         return matchEventLogger.findByMatch(id);
