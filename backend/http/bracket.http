@@ -215,7 +215,7 @@ Authorization: Bearer {{tokenO}}
     client.test("oba polufinala vode u finale", function(){
         client.assert(sf[0].nextMatchId === fin.id && sf[1].nextMatchId === fin.id);
     });
-    client.test("spectatorKey postoji", function(){ client.assert(sf[0].spectatorKey && sf[0].spectatorKey.length > 0); });
+    client.test("kljuc meca NIJE javan", function(){ client.assert(sf[0].spectatorKey === undefined || sf[0].spectatorKey === null); });
 %}
 
 ### 24. Generisi opet -> 409 (bracket vec postoji)

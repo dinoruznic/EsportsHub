@@ -1,0 +1,244 @@
+### EsportsHub — Live podaci kroz RabbitMQ (simulator = lazni agent)
+### Run all (⏩). RabbitMQ mora raditi: docker compose up -d
+### Turnir od 2 tima -> jedan mec (Finale). Sudija ga starta, simulator salje snapshote kroz RabbitMQ.
+
+@host = http://localhost:8080
+
+### 0. Igre + identiteti
+GET {{host}}/api/games
+
+> {%
+    var r = Math.floor(Math.random() * 1000000);
+    client.global.set("lOrg", "lorg" + r);
+    client.global.set("lRef", "lref" + r);
+    client.global.set("lCap1", "lcap1x" + r);
+    client.global.set("lCap2", "lcap2x" + r);
+    client.global.set("lTag1", "L" + (r % 1000));
+    client.global.set("lTag2", "M" + (r % 1000));
+    response.body.forEach(function (g) { if (g.code === "LOL") client.global.set("lLol", g.id); });
+%}
+
+### 1. Admin login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "admin", "password": "admin12345" }
+
+> {% client.global.set("lTA", response.body.token); %}
+
+### 2. Organizator
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{lOrg}}", "email": "{{lOrg}}@esportshub.local", "password": "lozinka123", "displayName": "Org" }
+
+###
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{lOrg}}", "password": "lozinka123" }
+
+> {% client.global.set("lTO", response.body.token); %}
+
+### 3. Sudija (+ uloga REFEREE)
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{lRef}}", "email": "{{lRef}}@esportshub.local", "password": "lozinka123", "displayName": "Sudija" }
+
+###
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{lRef}}", "password": "lozinka123" }
+
+> {% client.global.set("lTR", response.body.token); %}
+
+###
+POST {{host}}/api/admin/users/{{lRef}}/roles
+Content-Type: application/json
+Authorization: Bearer {{lTA}}
+
+{ "role": "REFEREE" }
+
+### 4. Turnir za 2 tima + odobrenje
+POST {{host}}/api/tournaments
+Content-Type: application/json
+Authorization: Bearer {{lTO}}
+
+{ "name": "Live Test {{lOrg}}", "gameId": {{lLol}}, "format": "SINGLE_ELIMINATION", "maxTeams": 2 }
+
+> {% client.global.set("lTid", response.body.id); %}
+
+###
+POST {{host}}/api/tournaments/{{lTid}}/approve
+Authorization: Bearer {{lTA}}
+
+### 5. Kapiten 1 + tim + prijava
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{lCap1}}", "email": "{{lCap1}}@esportshub.local", "password": "lozinka123", "displayName": "K1" }
+
+###
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{lCap1}}", "password": "lozinka123" }
+
+> {% client.global.set("lT1", response.body.token); %}
+
+###
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{lT1}}
+
+{ "name": "Blue Side {{lCap1}}", "tag": "{{lTag1}}", "gameId": {{lLol}}, "region": "EUW" }
+
+> {% client.global.set("lTeam1", response.body.id); %}
+
+###
+POST {{host}}/api/tournaments/{{lTid}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{lT1}}
+
+{ "teamId": {{lTeam1}} }
+
+### 6. Kapiten 2 + tim + prijava
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{lCap2}}", "email": "{{lCap2}}@esportshub.local", "password": "lozinka123", "displayName": "K2" }
+
+###
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{lCap2}}", "password": "lozinka123" }
+
+> {% client.global.set("lT2", response.body.token); %}
+
+###
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{lT2}}
+
+{ "name": "Red Side {{lCap2}}", "tag": "{{lTag2}}", "gameId": {{lLol}}, "region": "EUW" }
+
+> {% client.global.set("lTeam2", response.body.id); %}
+
+###
+POST {{host}}/api/tournaments/{{lTid}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{lT2}}
+
+{ "teamId": {{lTeam2}} }
+
+### 7. Bracket (2 tima -> 1 mec, Finale) + sudija
+POST {{host}}/api/tournaments/{{lTid}}/bracket
+Authorization: Bearer {{lTO}}
+
+> {%
+    client.test("bracket 201", function(){ client.assert(response.status===201); });
+    client.global.set("lMatch", response.body.rounds[0].matches[0].id);
+%}
+
+###
+PUT {{host}}/api/matches/{{lMatch}}/referee
+Content-Type: application/json
+Authorization: Bearer {{lTO}}
+
+{ "username": "{{lRef}}" }
+
+### ---------- KLJUC MECA (sigurnost) ----------
+### 8. Javni pregled meca NE smije sadrzavati kljuc
+GET {{host}}/api/matches/{{lMatch}}
+
+> {% client.test("kljuc nije javan", function(){ client.assert(response.body.spectatorKey === undefined || response.body.spectatorKey === null); }); %}
+
+### 9. agent-key bez tokena -> 401
+GET {{host}}/api/matches/{{lMatch}}/agent-key
+
+> {% client.test("agent-key bez tokena 401", function(){ client.assert(response.status===401); }); %}
+
+### 10. agent-key kao kapiten -> 403
+GET {{host}}/api/matches/{{lMatch}}/agent-key
+Authorization: Bearer {{lT1}}
+
+> {% client.test("agent-key kapiten 403", function(){ client.assert(response.status===403); }); %}
+
+### 11. agent-key kao sudija -> 200 + kljuc
+GET {{host}}/api/matches/{{lMatch}}/agent-key
+Authorization: Bearer {{lTR}}
+
+> {%
+    client.test("agent-key sudija 200", function(){ client.assert(response.status===200); });
+    client.test("kljuc postoji", function(){ client.assert(response.body.matchKey && response.body.matchKey.length > 0); });
+    client.global.set("lKey", response.body.matchKey);
+    client.log("KLJUC MECA ZA AGENTA: " + response.body.matchKey);
+%}
+
+### ---------- SNAPSHOTI KROZ RABBITMQ ----------
+### 12. Prije ijednog snapshota /live -> 204
+GET {{host}}/api/matches/{{lMatch}}/live
+
+> {% client.test("nema snapshota 204", function(){ client.assert(response.status===204); }); %}
+
+### 13. Kapiten pokusa simulirati -> 403
+POST {{host}}/api/matches/{{lMatch}}/simulate-snapshot
+Authorization: Bearer {{lT1}}
+
+> {% client.test("simulator kapiten 403", function(){ client.assert(response.status===403); }); %}
+
+### 14. Sudija startuje mec -> LIVE
+POST {{host}}/api/matches/{{lMatch}}/start
+Authorization: Bearer {{lTR}}
+
+> {% client.test("LIVE", function(){ client.assert(response.body.status==="LIVE"); }); %}
+
+### 15. Snapshot #1 (ide u RabbitMQ red) -> 202
+POST {{host}}/api/matches/{{lMatch}}/simulate-snapshot
+Authorization: Bearer {{lTR}}
+
+> {% client.test("snapshot1 202", function(){ client.assert(response.status===202); }); %}
+
+### 16. Snapshot #2 -> 202
+POST {{host}}/api/matches/{{lMatch}}/simulate-snapshot
+Authorization: Bearer {{lTR}}
+
+> {% client.test("snapshot2 202", function(){ client.assert(response.status===202); }); %}
+
+### 17. Snapshot #3 -> 202
+POST {{host}}/api/matches/{{lMatch}}/simulate-snapshot
+Authorization: Bearer {{lTR}}
+
+> {% client.test("snapshot3 202", function(){ client.assert(response.status===202); }); %}
+
+### 18. Zadnji snapshot (javno) -> 200 (consumer ga je obradio iz reda)
+GET {{host}}/api/matches/{{lMatch}}/live
+
+> {%
+    client.test("live 200", function(){ client.assert(response.status===200); });
+    client.log("ZADNJI SNAPSHOT: " + JSON.stringify(response.body));
+%}
+
+### 19. Event log meca -> nema LIVE_SNAPSHOT (snapshoti imaju svoju tabelu)
+GET {{host}}/api/matches/{{lMatch}}/events
+
+> {% client.test("log bez LIVE_SNAPSHOT", function(){ client.assert(JSON.stringify(response.body).indexOf("LIVE_SNAPSHOT") < 0); }); %}
+
+### 20. Kraj meca
+POST {{host}}/api/matches/{{lMatch}}/finish
+Content-Type: application/json
+Authorization: Bearer {{lTR}}
+
+{ "scoreA": 1, "scoreB": 0 }
+
+> {% client.test("FINISHED", function(){ client.assert(response.body.status==="FINISHED"); }); %}
+
+### 21. Snapshot poslije kraja -> 202, ali consumer ga odbija u DLQ
+### Provjeri rucno: http://localhost:15672 (esportshub/esportshub) -> Queues -> live.snapshots.dlq
+POST {{host}}/api/matches/{{lMatch}}/simulate-snapshot
+Authorization: Bearer {{lTR}}
+
+> {% client.test("poslan 202 (zavrsit ce u DLQ)", function(){ client.assert(response.status===202); }); %}

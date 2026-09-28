@@ -1,7 +1,8 @@
 ### DEMO 2/2 — odigraj turnir UZIVO
 ### NE "Run all"! Klikni zeleni > pored svakog koraka, jedan po jedan,
 ### i gledaj spectator stranicu u browseru kako se sama mijenja.
-### (varijable dolaze iz demo-setup.http — prvo pokreni njega)
+### "Riot podaci" koraci salju snapshot kroz RabbitMQ (vrijeme, kills, gold, tornjevi ispod kartice).
+### (varijable dolaze iz demo-setup.http — prvo pokreni njega; RabbitMQ mora raditi)
 
 @host = http://localhost:8080
 
@@ -9,64 +10,89 @@
 POST {{host}}/api/matches/{{dPf1}}/start
 Authorization: Bearer {{dTR}}
 
-### 2. PF1 rezultat 1:0
+### 2. PF1 Riot podaci
+POST {{host}}/api/matches/{{dPf1}}/simulate-snapshot
+Authorization: Bearer {{dTR}}
+
+### 3. PF1 Riot podaci
+POST {{host}}/api/matches/{{dPf1}}/simulate-snapshot
+Authorization: Bearer {{dTR}}
+
+### 4. PF1 rezultat 1:0
 PUT {{host}}/api/matches/{{dPf1}}/score
 Content-Type: application/json
 Authorization: Bearer {{dTR}}
 
 { "scoreA": 1, "scoreB": 0 }
 
-### 3. PF1 rezultat 1:1
-PUT {{host}}/api/matches/{{dPf1}}/score
-Content-Type: application/json
+### 5. PF1 Riot podaci
+POST {{host}}/api/matches/{{dPf1}}/simulate-snapshot
 Authorization: Bearer {{dTR}}
 
-{ "scoreA": 1, "scoreB": 1 }
-
-### 4. PF1 kraj 2:1 (pobjednik ulazi u finale)
+### 6. PF1 kraj 2:1 (pobjednik ulazi u finale)
 POST {{host}}/api/matches/{{dPf1}}/finish
 Content-Type: application/json
 Authorization: Bearer {{dTR}}
 
 { "scoreA": 2, "scoreB": 1 }
 
-### 5. Polufinale 2 pocinje
+### 7. Polufinale 2 pocinje
 POST {{host}}/api/matches/{{dPf2}}/start
 Authorization: Bearer {{dTR}}
 
-### 6. PF2 rezultat 0:1
+### 8. PF2 Riot podaci
+POST {{host}}/api/matches/{{dPf2}}/simulate-snapshot
+Authorization: Bearer {{dTR}}
+
+### 9. PF2 rezultat 0:1
 PUT {{host}}/api/matches/{{dPf2}}/score
 Content-Type: application/json
 Authorization: Bearer {{dTR}}
 
 { "scoreA": 0, "scoreB": 1 }
 
-### 7. PF2 kraj 0:2 (drugi finalista)
+### 10. PF2 Riot podaci
+POST {{host}}/api/matches/{{dPf2}}/simulate-snapshot
+Authorization: Bearer {{dTR}}
+
+### 11. PF2 kraj 0:2 (drugi finalista)
 POST {{host}}/api/matches/{{dPf2}}/finish
 Content-Type: application/json
 Authorization: Bearer {{dTR}}
 
 { "scoreA": 0, "scoreB": 2 }
 
-### 8. FINALE pocinje
+### 12. FINALE pocinje
 POST {{host}}/api/matches/{{dFin}}/start
 Authorization: Bearer {{dTR}}
 
-### 9. Finale 1:0
+### 13. Finale Riot podaci
+POST {{host}}/api/matches/{{dFin}}/simulate-snapshot
+Authorization: Bearer {{dTR}}
+
+### 14. Finale 1:0
 PUT {{host}}/api/matches/{{dFin}}/score
 Content-Type: application/json
 Authorization: Bearer {{dTR}}
 
 { "scoreA": 1, "scoreB": 0 }
 
-### 10. Finale 2:1
+### 15. Finale Riot podaci
+POST {{host}}/api/matches/{{dFin}}/simulate-snapshot
+Authorization: Bearer {{dTR}}
+
+### 16. Finale 2:1
 PUT {{host}}/api/matches/{{dFin}}/score
 Content-Type: application/json
 Authorization: Bearer {{dTR}}
 
 { "scoreA": 2, "scoreB": 1 }
 
-### 11. FINALE kraj 3:1 — imamo prvaka, turnir COMPLETED
+### 17. Finale Riot podaci
+POST {{host}}/api/matches/{{dFin}}/simulate-snapshot
+Authorization: Bearer {{dTR}}
+
+### 18. FINALE kraj 3:1 — imamo prvaka, turnir COMPLETED
 POST {{host}}/api/matches/{{dFin}}/finish
 Content-Type: application/json
 Authorization: Bearer {{dTR}}
