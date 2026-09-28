@@ -1,0 +1,242 @@
+### EsportsHub — Bracket (Strategy + Builder)
+### Run all (⏩). Organizator pravi turnir, admin odobri, 4 kapitena prijave timove, generise se bracket.
+
+@host = http://localhost:8080
+
+### 0. Igre + identiteti
+GET {{host}}/api/games
+
+> {%
+    var r = Math.floor(Math.random() * 1000000);
+    client.global.set("org", "org" + r);
+    for (var i = 1; i <= 4; i++) {
+        client.global.set("cap" + i, "cap" + i + "x" + r);
+        client.global.set("tag" + i, String.fromCharCode(64 + i) + (r % 1000));
+    }
+    response.body.forEach(function (g) { if (g.code === "LOL") client.global.set("lolId", g.id); });
+%}
+
+### 1. Organizator register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{org}}", "email": "{{org}}@esportshub.local", "password": "lozinka123", "displayName": "Org" }
+
+### 2. Organizator login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{org}}", "password": "lozinka123" }
+
+> {% client.global.set("tokenO", response.body.token); %}
+
+### 3. Turnir (4 tima, single elimination)
+POST {{host}}/api/tournaments
+Content-Type: application/json
+Authorization: Bearer {{tokenO}}
+
+{ "name": "Bracket Kup {{org}}", "gameId": {{lolId}}, "format": "SINGLE_ELIMINATION", "maxTeams": 4 }
+
+> {% client.global.set("tid", response.body.id); %}
+
+### 4. Admin login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "admin", "password": "admin12345" }
+
+> {% client.global.set("tokenA", response.body.token); %}
+
+### 5. Admin odobri -> REGISTRATION
+POST {{host}}/api/tournaments/{{tid}}/approve
+Authorization: Bearer {{tokenA}}
+
+> {% client.test("REGISTRATION", function(){ client.assert(response.body.status==="REGISTRATION"); }); %}
+
+### ---------- KAPITEN 1 ----------
+### 6. cap1 register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{cap1}}", "email": "{{cap1}}@esportshub.local", "password": "lozinka123", "displayName": "K1" }
+
+### 7. cap1 login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{cap1}}", "password": "lozinka123" }
+
+> {% client.global.set("t1", response.body.token); %}
+
+### 8. cap1 tim
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{t1}}
+
+{ "name": "Tim {{cap1}}", "tag": "{{tag1}}", "gameId": {{lolId}}, "region": "EUW" }
+
+> {% client.global.set("team1", response.body.id); %}
+
+### 9. cap1 prijava (seed 1)
+POST {{host}}/api/tournaments/{{tid}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{t1}}
+
+{ "teamId": {{team1}} }
+
+> {% client.test("prijava1 201", function(){ client.assert(response.status===201); }); %}
+
+### ---------- KAPITEN 2 ----------
+### 10. cap2 register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{cap2}}", "email": "{{cap2}}@esportshub.local", "password": "lozinka123", "displayName": "K2" }
+
+### 11. cap2 login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{cap2}}", "password": "lozinka123" }
+
+> {% client.global.set("t2", response.body.token); %}
+
+### 12. cap2 tim
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{t2}}
+
+{ "name": "Tim {{cap2}}", "tag": "{{tag2}}", "gameId": {{lolId}}, "region": "EUW" }
+
+> {% client.global.set("team2", response.body.id); %}
+
+### 13. cap2 prijava (seed 2) — DRUGI tim na istom turniru (ovo je bio bug!)
+POST {{host}}/api/tournaments/{{tid}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{t2}}
+
+{ "teamId": {{team2}} }
+
+> {% client.test("prijava2 201 (vise timova radi)", function(){ client.assert(response.status===201); }); %}
+
+### ---------- KAPITEN 3 ----------
+### 14. cap3 register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{cap3}}", "email": "{{cap3}}@esportshub.local", "password": "lozinka123", "displayName": "K3" }
+
+### 15. cap3 login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{cap3}}", "password": "lozinka123" }
+
+> {% client.global.set("t3", response.body.token); %}
+
+### 16. cap3 tim
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{t3}}
+
+{ "name": "Tim {{cap3}}", "tag": "{{tag3}}", "gameId": {{lolId}}, "region": "EUW" }
+
+> {% client.global.set("team3", response.body.id); %}
+
+### 17. cap3 prijava (seed 3)
+POST {{host}}/api/tournaments/{{tid}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{t3}}
+
+{ "teamId": {{team3}} }
+
+> {% client.test("prijava3 201", function(){ client.assert(response.status===201); }); %}
+
+### ---------- KAPITEN 4 ----------
+### 18. cap4 register
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{cap4}}", "email": "{{cap4}}@esportshub.local", "password": "lozinka123", "displayName": "K4" }
+
+### 19. cap4 login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "{{cap4}}", "password": "lozinka123" }
+
+> {% client.global.set("t4", response.body.token); %}
+
+### 20. cap4 tim
+POST {{host}}/api/teams
+Content-Type: application/json
+Authorization: Bearer {{t4}}
+
+{ "name": "Tim {{cap4}}", "tag": "{{tag4}}", "gameId": {{lolId}}, "region": "EUW" }
+
+> {% client.global.set("team4", response.body.id); %}
+
+### 21. cap4 prijava (seed 4)
+POST {{host}}/api/tournaments/{{tid}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{t4}}
+
+{ "teamId": {{team4}} }
+
+> {% client.test("prijava4 201", function(){ client.assert(response.status===201); }); %}
+
+### ---------- BRACKET ----------
+### 22. Kapiten pokusa generisati -> 403 (samo organizator/admin)
+POST {{host}}/api/tournaments/{{tid}}/bracket
+Authorization: Bearer {{t1}}
+
+> {% client.test("kapiten 403", function(){ client.assert(response.status===403); }); %}
+
+### 23. Organizator generise bracket -> 201
+POST {{host}}/api/tournaments/{{tid}}/bracket
+Authorization: Bearer {{tokenO}}
+
+> {%
+    client.test("generisanje 201", function(){ client.assert(response.status===201); });
+    client.test("turnir ONGOING", function(){ client.assert(response.body.status==="ONGOING"); });
+    var rounds = response.body.rounds;
+    client.test("2 runde", function(){ client.assert(rounds.length === 2); });
+    client.test("runda 1 = Polufinale", function(){ client.assert(rounds[0].name === "Polufinale"); });
+    client.test("runda 2 = Finale", function(){ client.assert(rounds[1].name === "Finale"); });
+    var sf = rounds[0].matches, fin = rounds[1].matches[0];
+    client.test("2 polufinala", function(){ client.assert(sf.length === 2); });
+    client.test("seeding: seed1 vs seed4", function(){
+        client.assert(sf[0].teamA.id === client.global.get("team1") && sf[0].teamB.id === client.global.get("team4"));
+    });
+    client.test("seeding: seed2 vs seed3", function(){
+        client.assert(sf[1].teamA.id === client.global.get("team2") && sf[1].teamB.id === client.global.get("team3"));
+    });
+    client.test("finale je prazno", function(){ client.assert(fin.teamA === null && fin.teamB === null); });
+    client.test("oba polufinala vode u finale", function(){
+        client.assert(sf[0].nextMatchId === fin.id && sf[1].nextMatchId === fin.id);
+    });
+    client.test("spectatorKey postoji", function(){ client.assert(sf[0].spectatorKey && sf[0].spectatorKey.length > 0); });
+%}
+
+### 24. Generisi opet -> 409 (bracket vec postoji)
+POST {{host}}/api/tournaments/{{tid}}/bracket
+Authorization: Bearer {{tokenO}}
+
+> {% client.test("drugo generisanje 409", function(){ client.assert(response.status===409); }); %}
+
+### 25. Javni pregled bracketa (bez tokena) -> 200
+GET {{host}}/api/tournaments/{{tid}}/bracket
+
+> {%
+    client.test("pregled 200", function(){ client.assert(response.status===200); });
+    client.test("2 runde u pregledu", function(){ client.assert(response.body.rounds.length === 2); });
+%}
+
+### 26. Prijava nakon zdrijeba -> 409 (turnir vise nije u fazi prijava)
+POST {{host}}/api/tournaments/{{tid}}/registrations
+Content-Type: application/json
+Authorization: Bearer {{t1}}
+
+{ "teamId": {{team1}} }
+
+> {% client.test("prijava nakon zdrijeba 409", function(){ client.assert(response.status===409); }); %}
