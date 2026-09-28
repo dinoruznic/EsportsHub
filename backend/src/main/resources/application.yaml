@@ -21,6 +21,12 @@ spring:
   liquibase:
     change-log: classpath:/db/changelog/db.changelog-master.yaml
 
+  rabbitmq:
+    host: ${RABBITMQ_HOST:localhost}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USER:esportshub}
+    password: ${RABBITMQ_PASSWORD:esportshub}
+
   web:
     error:
       include-stacktrace: never
