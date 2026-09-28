@@ -131,6 +131,16 @@
   .team.winner { background: rgba(245, 197, 66, 0.08); }
   .team.winner .name, .team.winner .score { color: var(--win); }
   .team.loser { opacity: 0.45; }
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    border-top: 1px solid var(--line);
+    background: rgba(61, 214, 198, 0.05);
+  }
+  .stat { padding: 6px 4px; text-align: center; }
+  .stat + .stat { border-left: 1px solid var(--line); }
+  .stat .label { font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+  .stat .value { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 2px; }
   aside {
     background: var(--panel);
     border: 1px solid var(--line);
@@ -194,6 +204,7 @@
     log: document.getElementById('log')
   };
   const cards = new Map();
+  const liveStats = new Map();
   let client = null;
 
   function el(tag, className, text) {
@@ -230,12 +241,56 @@
     const meta = el('div', 'meta');
     meta.append(el('span', null, 'Mec #' + match.id), el('span', 'status ' + match.status, match.status));
     card.append(meta, teamRow(match.teamA, match.scoreA, match), teamRow(match.teamB, match.scoreB, match));
+    if (liveStats.has(match.id)) {
+      card.append(statsRow(liveStats.get(match.id)));
+    }
+  }
+
+  function clock(seconds) {
+    if (seconds === null || seconds === undefined) return '-';
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return m + ':' + String(s).padStart(2, '0');
+  }
+
+  function pair(a, b, format) {
+    const f = format || (v => v);
+    if (a === null || a === undefined || b === null || b === undefined) return '-';
+    return f(a) + ' - ' + f(b);
+  }
+
+  function statsRow(stats) {
+    const row = el('div', 'stats');
+    const items = [
+      ['Vrijeme', clock(stats.gameTimeSeconds)],
+      ['Kills', pair(stats.killsA, stats.killsB)],
+      ['Gold', pair(stats.goldA, stats.goldB, v => (v / 1000).toFixed(1) + 'k')],
+      ['Tornjevi', pair(stats.towersA, stats.towersB)]
+    ];
+    for (const [label, value] of items) {
+      const stat = el('div', 'stat');
+      stat.append(el('div', 'label', label), el('div', 'value', value));
+      row.append(stat);
+    }
+    return row;
+  }
+
+  async function loadLiveStats(matches) {
+    for (const match of matches.filter(m => m.status === 'LIVE')) {
+      const res = await fetch('/api/matches/' + match.id + '/live');
+      if (res.status === 200) {
+        liveStats.set(match.id, await res.json());
+        const card = cards.get(match.id);
+        if (card) fillCard(card, match);
+      }
+    }
   }
 
   function renderBracket(data) {
     els.title.textContent = data.tournamentName + ' · ' + data.status;
     els.bracket.replaceChildren();
     cards.clear();
+    liveStats.clear();
     if (!data.rounds.length) {
       els.bracket.append(el('div', 'empty', 'Bracket jos nije generisan.'));
       return;
@@ -252,6 +307,7 @@
       col.append(el('h3', null, round.name), list);
       els.bracket.append(col);
     }
+    loadLiveStats(data.rounds.flatMap(r => r.matches));
   }
 
   function addLog(msg) {
@@ -268,6 +324,11 @@
   function onMessage(frame) {
     const msg = JSON.parse(frame.body);
     const card = cards.get(msg.matchId);
+    if (msg.type === 'LIVE_SNAPSHOT') {
+      liveStats.set(msg.matchId, msg.data);
+      if (card && msg.match) fillCard(card, msg.match);
+      return;
+    }
     if (card && msg.match) {
       fillCard(card, msg.match);
       card.classList.add('flash');

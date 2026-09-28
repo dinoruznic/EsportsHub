@@ -13,10 +13,18 @@ import org.springframework.web.bind.annotation.*;
 public class LiveController {
 
     private final LiveSimulatorService liveSimulatorService;
+    private final LiveSnapshotService liveSnapshotService;
 
     @PostMapping("/{id}/simulate-snapshot")
     public ResponseEntity<LiveSnapshotMessage> simulate(@AuthenticationPrincipal UserDetails principal,
                                                         @PathVariable Long id) {
         return ResponseEntity.accepted().body(liveSimulatorService.simulate(MatchActor.from(principal), id));
+    }
+
+    @GetMapping("/{id}/live")
+    public ResponseEntity<LiveSnapshotResponse> latest(@PathVariable Long id) {
+        return liveSnapshotService.latest(id)
+                .map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
     }
 }
