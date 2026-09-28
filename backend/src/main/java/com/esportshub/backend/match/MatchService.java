@@ -50,7 +50,7 @@ public class MatchService {
         match.setReferee(referee);
         matchRepository.save(match);
 
-        publish(match, MatchEvent.REFEREE_ASSIGNED, data("referee", referee.getUsername()));
+        publish(match, actor, MatchEvent.REFEREE_ASSIGNED, data("referee", referee.getUsername()));
         return MatchView.from(match);
     }
 
@@ -66,7 +66,7 @@ public class MatchService {
         match.setStartedAt(Instant.now());
         matchRepository.save(match);
 
-        publish(match, MatchEvent.STARTED, data(
+        publish(match, actor, MatchEvent.STARTED, data(
                 "teamAId", match.getTeamA().getId(),
                 "teamBId", match.getTeamB().getId()));
         return MatchView.from(match);
@@ -84,7 +84,7 @@ public class MatchService {
         match.setScoreB(request.scoreB());
         matchRepository.save(match);
 
-        publish(match, MatchEvent.SCORE_UPDATED, data(
+        publish(match, actor, MatchEvent.SCORE_UPDATED, data(
                 "scoreA", match.getScoreA(),
                 "scoreB", match.getScoreB()));
         return MatchView.from(match);
@@ -105,16 +105,16 @@ public class MatchService {
         match.setEndedAt(Instant.now());
         matchRepository.save(match);
 
-        publish(match, MatchEvent.FINISHED, data(
+        publish(match, actor, MatchEvent.FINISHED, data(
                 "scoreA", match.getScoreA(),
                 "scoreB", match.getScoreB(),
                 "winnerTeamId", match.getWinnerTeam().getId(),
                 "nextMatchId", match.getNextMatchId()));
 
         if (match.getNextMatchId() != null) {
-            advanceWinner(match);
+            advanceWinner(actor, match);
         } else {
-            completeTournament(match);
+            completeTournament(actor, match);
         }
 
         return MatchView.from(match);
@@ -125,7 +125,7 @@ public class MatchService {
         return MatchView.from(findMatch(matchId));
     }
 
-    private void advanceWinner(Match match) {
+    private void advanceWinner(MatchActor actor, Match match) {
         Match next = findMatch(match.getNextMatchId());
         List<Match> feeders = matchRepository.findByNextMatchIdOrderByIdAsc(next.getId());
         boolean firstFeeder = feeders.get(0).getId().equals(match.getId());
@@ -137,18 +137,18 @@ public class MatchService {
         }
         matchRepository.save(next);
 
-        publish(match, MatchEvent.WINNER_ADVANCED, data(
+        publish(match, actor, MatchEvent.WINNER_ADVANCED, data(
                 "winnerTeamId", match.getWinnerTeam().getId(),
                 "nextMatchId", next.getId(),
                 "slot", firstFeeder ? "A" : "B"));
     }
 
-    private void completeTournament(Match finalMatch) {
+    private void completeTournament(MatchActor actor, Match finalMatch) {
         Tournament tournament = finalMatch.getTournament();
         tournament.setStatus(TournamentStatus.COMPLETED);
         tournamentRepository.save(tournament);
 
-        publish(finalMatch, MatchEvent.TOURNAMENT_COMPLETED, data(
+        publish(finalMatch, actor, MatchEvent.TOURNAMENT_COMPLETED, data(
                 "winnerTeamId", finalMatch.getWinnerTeam().getId()));
     }
 
@@ -160,8 +160,8 @@ public class MatchService {
         match.setStatus(target);
     }
 
-    private void publish(Match match, String type, Map<String, Object> data) {
-        eventPublisher.publishEvent(new MatchEvent(match.getId(), match.getTournament().getId(), type, data));
+    private void publish(Match match, MatchActor actor, String type, Map<String, Object> data) {
+        eventPublisher.publishEvent(new MatchEvent(match.getId(), match.getTournament().getId(), type, actor.username(), data));
     }
 
     private static Map<String, Object> data(Object... keysAndValues) {

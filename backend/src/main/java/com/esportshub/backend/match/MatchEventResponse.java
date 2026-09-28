@@ -9,6 +9,7 @@ public record MatchEventResponse(
         Long matchId,
         String type,
         String source,
+        String actor,
         JsonNode data,
         Instant createdAt
 ) {

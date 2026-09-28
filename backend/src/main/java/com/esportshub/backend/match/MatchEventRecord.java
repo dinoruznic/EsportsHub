@@ -1,5 +1,6 @@
 package com.esportshub.backend.match;
 
+import com.esportshub.backend.user.User;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -33,8 +34,9 @@ public class MatchEventRecord {
     @Column(name = "payload", columnDefinition = "jsonb")
     private String payload;
 
-    @Column(name = "created_by")
-    private Long createdBy;
+    @ManyToOne
+    @JoinColumn(name = "created_by")
+    private User createdBy;
 
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;

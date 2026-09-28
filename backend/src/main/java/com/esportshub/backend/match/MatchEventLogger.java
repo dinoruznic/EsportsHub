@@ -1,5 +1,9 @@
 package com.esportshub.backend.match;
 
+import com.esportshub.backend.bracket.Match;
+import com.esportshub.backend.bracket.MatchRepository;
+import com.esportshub.backend.user.User;
+import com.esportshub.backend.user.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -12,17 +16,25 @@ import java.util.List;
 @RequiredArgsConstructor
 public class MatchEventLogger {
 
-    private static final String SOURCE = "REFEREE";
+    private static final String SOURCE_REFEREE = "REFEREE";
+    private static final String SOURCE_ORGANIZER = "ORGANIZER";
+    private static final String SOURCE_ADMIN = "ADMIN";
 
     private final MatchEventRecordRepository matchEventRecordRepository;
+    private final MatchRepository matchRepository;
+    private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
 
     @EventListener
     public void on(MatchEvent event) {
+        User actor = event.actor() == null ? null : userRepository.findByUsername(event.actor()).orElse(null);
+        Match match = matchRepository.getReferenceById(event.matchId());
+
         matchEventRecordRepository.save(MatchEventRecord.builder()
                 .matchId(event.matchId())
                 .type(event.type())
-                .source(SOURCE)
+                .source(sourceOf(event.actor(), match))
+                .createdBy(actor)
                 .payload(objectMapper.writeValueAsString(event.data()))
                 .build());
     }
@@ -35,8 +47,19 @@ public class MatchEventLogger {
                         record.getMatchId(),
                         record.getType(),
                         record.getSource(),
+                        record.getCreatedBy() == null ? null : record.getCreatedBy().getUsername(),
                         record.getPayload() == null ? null : objectMapper.readTree(record.getPayload()),
                         record.getCreatedAt()))
                 .toList();
+    }
+
+    private static String sourceOf(String actor, Match match) {
+        if (match.getReferee() != null && match.getReferee().getUsername().equals(actor)) {
+            return SOURCE_REFEREE;
+        }
+        if (match.getTournament().getOrganizer().getUsername().equals(actor)) {
+            return SOURCE_ORGANIZER;
+        }
+        return SOURCE_ADMIN;
     }
 }

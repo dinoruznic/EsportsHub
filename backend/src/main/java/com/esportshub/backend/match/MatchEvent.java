@@ -6,6 +6,7 @@ public record MatchEvent(
         Long matchId,
         Long tournamentId,
         String type,
+        String actor,
         Map<String, Object> data
 ) {
     public static final String REFEREE_ASSIGNED = "REFEREE_ASSIGNED";
