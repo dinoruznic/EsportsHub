@@ -115,7 +115,8 @@ public class Api {
         try {
             HttpResponse<String> response = http.send(request.build(), HttpResponse.BodyHandlers.ofString());
             String raw = response.body();
-            JsonNode json = raw == null || raw.isBlank() ? MissingNode.getInstance() : jsonMapper.readTree(raw);
+            boolean isJson = response.headers().firstValue("Content-Type").orElse("").contains("json");
+            JsonNode json = !isJson || raw == null || raw.isBlank() ? MissingNode.getInstance() : jsonMapper.readTree(raw);
             return new Response(response.statusCode(), json, raw);
         } catch (IOException e) {
             throw new IllegalStateException("HTTP poziv " + method + " " + path + " nije uspio", e);
