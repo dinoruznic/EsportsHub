@@ -1,11 +1,11 @@
 package com.esportshub.backend.match;
 
-import com.esportshub.backend.TestcontainersConfiguration;
 import com.esportshub.backend.auth.JwtService;
 import com.esportshub.backend.bracket.BracketResponse;
 import com.esportshub.backend.bracket.BracketService;
 import com.esportshub.backend.game.Game;
 import com.esportshub.backend.game.GameRepository;
+import com.esportshub.backend.support.AbstractIntegrationTest;
 import com.esportshub.backend.team.Team;
 import com.esportshub.backend.team.TeamRepository;
 import com.esportshub.backend.tournament.RegistrationStatus;
@@ -20,9 +20,6 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.messaging.converter.JacksonJsonMessageConverter;
 import org.springframework.messaging.simp.stomp.StompFrameHandler;
 import org.springframework.messaging.simp.stomp.StompHeaders;
@@ -46,12 +43,7 @@ import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
-@Import(TestcontainersConfiguration.class)
-class MatchBroadcastIntegrationTest {
-
-    @Value("${local.server.port}")
-    private int port;
+class MatchBroadcastIntegrationTest extends AbstractIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
