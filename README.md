@@ -2,7 +2,6 @@
 
 > eSports tournament platform for **League of Legends** (multi-game ready) — a player transfer market, tournaments with live brackets, and real-time match tracking. Built with **Spring Boot** and **Angular**.
 
-[![CI](https://github.com/dinoruznic/EsportsHub/actions/workflows/ci.yml/badge.svg)](https://github.com/dinoruznic/EsportsHub/actions/workflows/ci.yml)
 ![Java](https://img.shields.io/badge/Java-21-ED8B00?style=flat-square&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot-4.1-6DB33F?style=flat-square&logo=springboot&logoColor=white)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=flat-square&logo=postgresql&logoColor=white)
