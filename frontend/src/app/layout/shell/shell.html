@@ -1,0 +1,42 @@
+<div class="shell">
+  <nav class="rail" aria-label="Glavna navigacija">
+    <a class="logo" routerLink="/turniri" aria-label="EsportsHub početna">
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <path class="hex" d="M16 2.5 27.7 9.25v13.5L16 29.5 4.3 22.75V9.25Z" />
+        <path class="hex-inner" d="M16 9.5 21.6 12.75v6.5L16 22.5l-5.6-3.25v-6.5Z" />
+      </svg>
+    </a>
+    <ul class="nav">
+      @for (item of nav; track item.path) {
+        <li>
+          <a
+            class="nav-item"
+            [routerLink]="item.path"
+            routerLinkActive="active"
+            ariaCurrentWhenActive="page"
+          >
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              @for (d of item.icon; track $index) {
+                <path [attr.d]="d" />
+              }
+            </svg>
+            <span>{{ item.label }}</span>
+          </a>
+        </li>
+      }
+    </ul>
+  </nav>
+
+  <div class="main">
+    <header class="topbar">
+      <p class="crumb">
+        <span class="eyebrow">EsportsHub</span>
+        <span class="area">{{ area() }}</span>
+      </p>
+      <a class="btn btn-gold" routerLink="/prijava">Prijava</a>
+    </header>
+    <main class="content">
+      <router-outlet />
+    </main>
+  </div>
+</div>
