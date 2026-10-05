@@ -138,6 +138,16 @@ On startup Liquibase builds the schema and a default **admin** account is create
 | Live spectator page | http://localhost:8080/spectator.html?t=&lt;tournamentId&gt; |
 | RabbitMQ management | http://localhost:15672 (`esportshub` / `esportshub`) |
 
+**Frontend** (Angular, requires Node 24.15+; version in `frontend/.nvmrc`):
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+Open http://localhost:4200. The backend must be running on `:8080`, because the dev server proxies `/api` and `/ws` to it (`frontend/proxy.conf.json`).
+
 **Live demo:** run `backend/http/demo-setup.http` (creates a 4-team tournament and prints the spectator link), open the link, then step through `backend/http/demo-play.http` request by request and watch the bracket update without refreshing.
 
 **Riot agent** (see [`agent/README.md`](agent/README.md)):
