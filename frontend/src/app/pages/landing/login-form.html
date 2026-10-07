@@ -1,0 +1,68 @@
+<h2 class="title">Prijava</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  @if (serverError(); as message) {
+    <p class="banner" role="alert">{{ message }}</p>
+  }
+
+  <div class="field">
+    <label class="field-label" for="login-identifier">Korisničko ime ili email</label>
+    <input
+      #firstField
+      id="login-identifier"
+      class="field-input"
+      type="text"
+      formControlName="usernameOrEmail"
+      autocomplete="username"
+      autocapitalize="none"
+      spellcheck="false"
+      [attr.aria-invalid]="error('usernameOrEmail') ? true : null"
+      [attr.aria-describedby]="error('usernameOrEmail') ? 'login-identifier-error' : null"
+    />
+    @if (error('usernameOrEmail'); as message) {
+      <p class="field-error" id="login-identifier-error">{{ message }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="login-password">Lozinka</label>
+    <div class="password">
+      <input
+        id="login-password"
+        class="field-input"
+        [type]="passwordVisible() ? 'text' : 'password'"
+        formControlName="password"
+        autocomplete="current-password"
+        [attr.aria-invalid]="error('password') ? true : null"
+        [attr.aria-describedby]="error('password') ? 'login-password-error' : null"
+      />
+      <button
+        type="button"
+        class="reveal"
+        [attr.aria-label]="passwordVisible() ? 'Sakrij lozinku' : 'Prikaži lozinku'"
+        [attr.aria-pressed]="passwordVisible()"
+        (click)="passwordVisible.set(!passwordVisible())"
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+          <path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+          @if (passwordVisible()) {
+            <path d="M4 4l16 16" />
+          }
+        </svg>
+      </button>
+    </div>
+    @if (error('password'); as message) {
+      <p class="field-error" id="login-password-error">{{ message }}</p>
+    }
+  </div>
+
+  <button type="submit" class="btn btn-gold submit" [disabled]="submitting()">
+    {{ submitting() ? 'Prijava u toku…' : 'Prijavi se' }}
+  </button>
+</form>
+
+<p class="switch">
+  Nemaš nalog?
+  <button type="button" class="link" (click)="switchForm.emit()">Registruj se</button>
+</p>

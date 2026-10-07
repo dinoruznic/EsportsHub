@@ -11,8 +11,10 @@
     <div class="auth">
       <div class="actions">
         <button
+          #loginButton
           type="button"
           class="btn"
+          aria-controls="auth-card"
           [class.btn-gold]="mode() !== 'registracija'"
           [class.btn-ghost]="mode() === 'registracija'"
           [class.active]="mode() === 'prijava'"
@@ -22,8 +24,10 @@
           Prijava
         </button>
         <button
+          #registerButton
           type="button"
           class="btn"
+          aria-controls="auth-card"
           [class.btn-gold]="mode() === 'registracija'"
           [class.btn-ghost]="mode() !== 'registracija'"
           [class.active]="mode() === 'registracija'"
@@ -33,6 +37,19 @@
           Registracija
         </button>
       </div>
+
+      @if (mode(); as current) {
+        <section id="auth-card" class="card panel" [attr.aria-label]="current === 'prijava' ? 'Prijava' : 'Registracija'">
+          <button type="button" class="close" aria-label="Zatvori" (click)="close()">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
+          </button>
+          @if (current === 'prijava') {
+            <app-login-form (switchForm)="open('registracija')" />
+          } @else {
+            <app-register-form (switchForm)="open('prijava')" />
+          }
+        </section>
+      }
     </div>
   </main>
 

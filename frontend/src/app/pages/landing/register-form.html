@@ -1,0 +1,103 @@
+<h2 class="title">Registracija</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  @if (serverError(); as message) {
+    <p class="banner" role="alert">{{ message }}</p>
+  }
+
+  <div class="field">
+    <label class="field-label" for="register-username">Korisničko ime</label>
+    <input
+      #firstField
+      id="register-username"
+      class="field-input"
+      type="text"
+      formControlName="username"
+      autocomplete="username"
+      autocapitalize="none"
+      spellcheck="false"
+      [attr.aria-invalid]="error('username') ? true : null"
+      [attr.aria-describedby]="error('username') ? 'register-username-error' : null"
+    />
+    @if (error('username'); as message) {
+      <p class="field-error" id="register-username-error">{{ message }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="register-email">Email</label>
+    <input
+      id="register-email"
+      class="field-input"
+      type="email"
+      formControlName="email"
+      autocomplete="email"
+      spellcheck="false"
+      [attr.aria-invalid]="error('email') ? true : null"
+      [attr.aria-describedby]="error('email') ? 'register-email-error' : null"
+    />
+    @if (error('email'); as message) {
+      <p class="field-error" id="register-email-error">{{ message }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="register-display-name">
+      Ime za prikaz
+      <span class="field-hint">neobavezno</span>
+    </label>
+    <input
+      id="register-display-name"
+      class="field-input"
+      type="text"
+      formControlName="displayName"
+      autocomplete="nickname"
+      [attr.aria-invalid]="error('displayName') ? true : null"
+      [attr.aria-describedby]="error('displayName') ? 'register-display-name-error' : null"
+    />
+    @if (error('displayName'); as message) {
+      <p class="field-error" id="register-display-name-error">{{ message }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="register-password">Lozinka</label>
+    <input
+      id="register-password"
+      class="field-input"
+      type="password"
+      formControlName="password"
+      autocomplete="new-password"
+      [attr.aria-invalid]="error('password') ? true : null"
+      [attr.aria-describedby]="error('password') ? 'register-password-error' : null"
+    />
+    @if (error('password'); as message) {
+      <p class="field-error" id="register-password-error">{{ message }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="register-confirm">Ponovi lozinku</label>
+    <input
+      id="register-confirm"
+      class="field-input"
+      type="password"
+      formControlName="confirmPassword"
+      autocomplete="new-password"
+      [attr.aria-invalid]="error('confirmPassword') ? true : null"
+      [attr.aria-describedby]="error('confirmPassword') ? 'register-confirm-error' : null"
+    />
+    @if (error('confirmPassword'); as message) {
+      <p class="field-error" id="register-confirm-error">{{ message }}</p>
+    }
+  </div>
+
+  <button type="submit" class="btn btn-gold submit" [disabled]="submitting()">
+    {{ submitting() ? 'Pravim nalog…' : 'Napravi nalog' }}
+  </button>
+</form>
+
+<p class="switch">
+  Već imaš nalog?
+  <button type="button" class="link" (click)="switchForm.emit()">Prijavi se</button>
+</p>

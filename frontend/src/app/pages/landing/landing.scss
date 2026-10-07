@@ -82,6 +82,48 @@
   }
 }
 
+.card {
+  position: relative;
+  margin-top: 16px;
+  padding: 26px;
+  text-align: left;
+  background: rgb(18 24 33 / 0.78);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 0.45);
+  animation: card-in 0.24s ease-out both;
+}
+
+.close {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--raise);
+    color: var(--text);
+  }
+
+  svg {
+    width: 18px;
+    height: 18px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+}
+
 footer {
   max-width: 640px;
   margin: 32px auto 0;
@@ -91,8 +133,19 @@ footer {
   color: var(--faint);
 }
 
+@keyframes card-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
 @media (max-width: 420px) {
   .actions {
     grid-template-columns: 1fr;
+  }
+
+  .card {
+    padding: 22px 18px;
   }
 }
