@@ -2,7 +2,7 @@
   <div class="columns">
     @for (image of images(); track image.src; let i = $index) {
       <figure class="column" [style.animation-delay.ms]="i * 120">
-        <img [src]="image.src" alt="" decoding="async" />
+        <img [src]="image.src" [style.object-position]="image.position" alt="" decoding="async" />
         <figcaption>{{ image.game }}</figcaption>
       </figure>
     }
