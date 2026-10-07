@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
+import { AuthService } from '../../core/auth/auth.service';
 
 interface NavItem {
   label: string;
@@ -17,6 +18,9 @@ interface NavItem {
 })
 export class Shell {
   private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
+
+  protected readonly user = this.auth.currentUser;
 
   protected readonly nav: NavItem[] = [
     {
@@ -70,6 +74,11 @@ export class Shell {
     ),
     { initialValue: '' },
   );
+
+  protected logout(): void {
+    this.auth.logout();
+    void this.router.navigateByUrl('/');
+  }
 
   private currentArea(): string {
     let route = this.router.routerState.snapshot.root;

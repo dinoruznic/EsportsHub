@@ -33,7 +33,17 @@
         <span class="eyebrow">EsportsHub</span>
         <span class="area">{{ area() }}</span>
       </p>
-      <a class="btn btn-gold" routerLink="/prijava">Prijava</a>
+      @if (user(); as user) {
+        <div class="account">
+          <span class="username">{{ user.username }}</span>
+          <ul class="roles" aria-label="Uloge">
+            @for (role of user.roles; track role) {
+              <li class="role">{{ role }}</li>
+            }
+          </ul>
+          <button type="button" class="btn btn-ghost" (click)="logout()">Odjava</button>
+        </div>
+      }
     </header>
     <main class="content">
       <router-outlet />
