@@ -6,9 +6,8 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-rows: 1fr auto;
   min-height: 100dvh;
-  padding: 40px 16px 20px;
+  padding: 40px 16px;
 }
 
 .content {
@@ -144,15 +143,6 @@
     stroke-width: 2;
     stroke-linecap: round;
   }
-}
-
-footer {
-  max-width: 640px;
-  margin: 32px auto 0;
-  font-size: 11.5px;
-  line-height: 1.5;
-  text-align: center;
-  color: var(--faint);
 }
 
 @keyframes card-in {

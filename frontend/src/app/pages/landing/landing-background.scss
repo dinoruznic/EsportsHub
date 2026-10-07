@@ -51,13 +51,14 @@ img {
 
 figcaption {
   position: absolute;
-  inset: auto 0 clamp(72px, 11dvh, 112px);
+  inset: auto 0 clamp(24px, 4dvh, 40px);
   z-index: 1;
   font: 500 11px/1 var(--mono);
   letter-spacing: 0.18em;
   text-align: center;
   text-transform: uppercase;
   color: rgb(232 236 242 / 0.62);
+  white-space: nowrap;
   transform: skewX(6deg);
 }
 
