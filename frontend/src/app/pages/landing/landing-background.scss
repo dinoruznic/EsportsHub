@@ -157,6 +157,14 @@ figcaption {
   .column:nth-child(2) figcaption {
     padding-right: 6dvh;
   }
+
+  figcaption {
+    letter-spacing: 0.12em;
+  }
+
+  .column:first-child figcaption {
+    padding-left: 12dvh;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
