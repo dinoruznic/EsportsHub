@@ -1,12 +1,18 @@
-const numberFormat = new Intl.NumberFormat('bs-BA', { maximumFractionDigits: 0 });
-const dateFormat = new Intl.DateTimeFormat('bs-BA', { day: 'numeric', month: 'short', year: 'numeric' });
+const MONTHS = ['jan', 'feb', 'mar', 'apr', 'maj', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+
+export function formatNumber(value: number): string {
+  const sign = value < 0 ? '-' : '';
+  const digits = String(Math.round(Math.abs(value)));
+  return sign + digits.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
 
 export function formatKm(value: number): string {
-  return `${numberFormat.format(value)} KM`;
+  return `${formatNumber(value)} KM`;
 }
 
 export function formatDate(value: string): string {
-  return dateFormat.format(new Date(value));
+  const date = new Date(value);
+  return `${date.getDate()}. ${MONTHS[date.getMonth()]} ${date.getFullYear()}.`;
 }
 
 export function isPowerOfTwo(value: number): boolean {
