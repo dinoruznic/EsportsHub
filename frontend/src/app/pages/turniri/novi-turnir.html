@@ -1,0 +1,121 @@
+<a class="back" routerLink="/turniri">← Turniri</a>
+
+<header class="head">
+  <p class="eyebrow">Takmičenja</p>
+  <h1 class="display-title">Novi turnir</h1>
+  <p class="lead">Turnir postaje javan i otvara prijave tek kada ga administrator odobri.</p>
+</header>
+
+<form class="panel form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  @if (serverError(); as message) {
+    <p class="banner" role="alert">{{ message }}</p>
+  }
+
+  @if (games.error()) {
+    <app-error-state [message]="gamesError()" (retry)="games.reload()" />
+  }
+
+  <div class="field wide">
+    <label class="field-label" for="tournament-name">
+      Naziv
+      <span class="field-hint">do 80 znakova</span>
+    </label>
+    <input
+      id="tournament-name"
+      class="field-input"
+      type="text"
+      formControlName="name"
+      autocomplete="off"
+      [attr.aria-invalid]="error('name') ? true : null"
+      [attr.aria-describedby]="error('name') ? 'tournament-name-error' : null"
+    />
+    @if (error('name'); as message) {
+      <p class="field-error" id="tournament-name-error">{{ message }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="tournament-game">Igra</label>
+    <select
+      id="tournament-game"
+      class="field-input"
+      formControlName="gameId"
+      [attr.aria-invalid]="error('gameId') ? true : null"
+      [attr.aria-describedby]="error('gameId') ? 'tournament-game-error' : null"
+    >
+      <option value="" disabled>{{ games.isLoading() ? 'Učitavam igre…' : 'Izaberi igru' }}</option>
+      @if (games.hasValue()) {
+        @for (game of games.value(); track game.id) {
+          <option [value]="game.id">{{ game.name }}</option>
+        }
+      }
+    </select>
+    @if (error('gameId'); as message) {
+      <p class="field-error" id="tournament-game-error">{{ message }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="tournament-format">Format</label>
+    <select id="tournament-format" class="field-input" formControlName="format">
+      @for (format of formats; track format.value) {
+        <option [value]="format.value">{{ format.label }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="tournament-teams">Broj timova</label>
+    <select id="tournament-teams" class="field-input" formControlName="maxTeams">
+      @for (count of teamCounts; track count) {
+        <option [value]="count">{{ count }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="tournament-prize">
+      Nagradni fond (KM)
+      <span class="field-hint">neobavezno</span>
+    </label>
+    <input
+      id="tournament-prize"
+      class="field-input"
+      type="text"
+      inputmode="numeric"
+      formControlName="prizePool"
+      autocomplete="off"
+      [attr.aria-invalid]="error('prizePool') ? true : null"
+      [attr.aria-describedby]="error('prizePool') ? 'tournament-prize-error' : null"
+    />
+    @if (error('prizePool'); as message) {
+      <p class="field-error" id="tournament-prize-error">{{ message }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="tournament-start">
+      Datum početka
+      <span class="field-hint">neobavezno</span>
+    </label>
+    <input
+      id="tournament-start"
+      class="field-input"
+      type="date"
+      formControlName="startDate"
+      [min]="today"
+      [attr.aria-invalid]="error('startDate') ? true : null"
+      [attr.aria-describedby]="error('startDate') ? 'tournament-start-error' : null"
+    />
+    @if (error('startDate'); as message) {
+      <p class="field-error" id="tournament-start-error">{{ message }}</p>
+    }
+  </div>
+
+  <div class="actions wide">
+    <a class="btn btn-ghost" routerLink="/turniri">Odustani</a>
+    <button type="submit" class="btn btn-gold submit" [disabled]="submitting()">
+      {{ submitting() ? 'Kreiram…' : 'Kreiraj turnir' }}
+    </button>
+  </div>
+</form>
