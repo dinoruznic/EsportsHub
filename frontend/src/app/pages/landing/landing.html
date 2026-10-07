@@ -1,7 +1,7 @@
 <app-landing-background [images]="images" />
 
-<div class="page">
-  <main class="content">
+<main class="page">
+  <div class="view hero-view" [class.hidden]="mode()" [attr.inert]="mode() ? '' : null">
     <header class="hero">
       <p class="eyebrow">Turniri · Timovi · Transfer market · Uživo</p>
       <h1 class="wordmark">
@@ -14,48 +14,37 @@
       <p class="lead">Platforma za amaterske esports turnire, od prijave tima do finala uživo.</p>
     </header>
 
-    <div class="auth">
-      <div class="actions">
-        <button
-          #loginButton
-          type="button"
-          class="btn"
-          aria-controls="auth-card"
-          [class.btn-gold]="mode() !== 'registracija'"
-          [class.btn-ghost]="mode() === 'registracija'"
-          [class.active]="mode() === 'prijava'"
-          [attr.aria-expanded]="mode() === 'prijava'"
-          (click)="toggle('prijava')"
-        >
-          Prijava
-        </button>
-        <button
-          #registerButton
-          type="button"
-          class="btn"
-          aria-controls="auth-card"
-          [class.btn-gold]="mode() === 'registracija'"
-          [class.btn-ghost]="mode() !== 'registracija'"
-          [class.active]="mode() === 'registracija'"
-          [attr.aria-expanded]="mode() === 'registracija'"
-          (click)="toggle('registracija')"
-        >
-          Registracija
-        </button>
-      </div>
-
-      @if (mode(); as current) {
-        <section id="auth-card" class="card panel" [attr.aria-label]="current === 'prijava' ? 'Prijava' : 'Registracija'">
-          <button type="button" class="close" aria-label="Zatvori" (click)="close()">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" /></svg>
-          </button>
-          @if (current === 'prijava') {
-            <app-login-form (switchForm)="open('registracija')" />
-          } @else {
-            <app-register-form (switchForm)="open('prijava')" />
-          }
-        </section>
-      }
+    <div class="actions">
+      <button #loginButton type="button" class="btn btn-gold" (click)="open('prijava')">
+        Prijava
+      </button>
+      <button #registerButton type="button" class="btn btn-ghost" (click)="open('registracija')">
+        Registracija
+      </button>
     </div>
-  </main>
-</div>
+  </div>
+
+  <div class="view form-view" [class.hidden]="!mode()" [attr.inert]="mode() ? null : ''">
+    <button type="button" class="back" aria-label="Nazad na početnu" (click)="back()">← Nazad</button>
+
+    <section
+      id="auth-card"
+      class="card panel"
+      [attr.aria-label]="cardMode() === 'registracija' ? 'Registracija' : 'Prijava'"
+    >
+      <div
+        class="card-frame"
+        [class.switching]="switching()"
+        [style.height.px]="switching() ? cardHeight() : null"
+      >
+        <div #cardBody class="card-body">
+          @if (cardMode() === 'prijava') {
+            <app-login-form animate.leave="leaving" (switchForm)="open('registracija')" />
+          } @else if (cardMode() === 'registracija') {
+            <app-register-form animate.leave="leaving" (switchForm)="open('prijava')" />
+          }
+        </div>
+      </div>
+    </section>
+  </div>
+</main>

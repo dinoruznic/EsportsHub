@@ -1,4 +1,4 @@
-import { Component, ElementRef, afterNextRender, inject, output, signal, viewChild } from '@angular/core';
+import { Component, inject, output, signal } from '@angular/core';
 import { FormControl, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { toApiError } from '../../core/api/api-error';
@@ -14,7 +14,6 @@ import { FieldMessages, applyServerErrors, errorMessage, notBlank } from './auth
 export class LoginForm {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly firstField = viewChild.required<ElementRef<HTMLInputElement>>('firstField');
 
   readonly switchForm = output<void>();
 
@@ -32,10 +31,6 @@ export class LoginForm {
     usernameOrEmail: { required: 'Obavezno polje.' },
     password: { required: 'Obavezno polje.' },
   };
-
-  constructor() {
-    afterNextRender(() => this.firstField().nativeElement.focus());
-  }
 
   protected error(name: keyof typeof this.form.controls): string | null {
     const control = this.form.controls[name];

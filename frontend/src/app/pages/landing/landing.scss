@@ -6,18 +6,56 @@
   position: relative;
   z-index: 1;
   display: grid;
-  min-height: 100dvh;
-  padding: 40px 16px;
+  grid-template: minmax(0, 1fr) / minmax(0, 1fr);
+  place-items: center;
+  height: 100dvh;
+  padding: 24px 16px;
+  overflow: hidden;
 }
 
-.content {
+.view {
+  grid-area: 1 / 1;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 28px;
   min-width: 0;
+  min-height: 0;
+  max-height: 100%;
+  transition: visibility 0s linear 0s;
+
+  &.hidden {
+    visibility: hidden;
+    transition: visibility 0s linear 0.25s;
+  }
+}
+
+.hero-view {
+  align-items: center;
+  gap: 28px;
+  width: 100%;
   text-align: center;
+}
+
+.form-view {
+  gap: 10px;
+  width: min(100%, 420px);
+}
+
+.hero,
+.back,
+.card {
+  transition:
+    opacity 0.25s ease-out,
+    transform 0.25s ease-out;
+}
+
+.hero-view.hidden :is(.hero, .btn) {
+  opacity: 0;
+  transform: translateY(-12px);
+}
+
+.form-view.hidden :is(.back, .card) {
+  opacity: 0;
+  transform: translateY(12px);
 }
 
 .hero {
@@ -73,18 +111,21 @@
   text-shadow: 0 1px 12px rgb(10 14 20 / 0.95);
 }
 
-.auth {
-  width: min(100%, 460px);
-}
-
 .actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+  width: min(100%, 460px);
 
   .btn {
     height: 44px;
     font-size: 14px;
+    transition:
+      opacity 0.25s ease-out,
+      transform 0.25s ease-out,
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      color 0.15s ease;
   }
 
   .btn-ghost {
@@ -95,60 +136,69 @@
   .btn-ghost:hover {
     background: var(--raise);
   }
+}
 
-  .active {
-    box-shadow:
-      0 0 0 1px var(--ink),
-      0 0 0 3px rgb(226 177 84 / 0.45);
+.back {
+  align-self: flex-start;
+  margin-left: -6px;
+  padding: 6px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--gold);
+  font: 600 14px/1 var(--body);
+  text-shadow: 0 1px 10px rgb(10 14 20 / 0.9);
+  cursor: pointer;
+
+  &:hover {
+    color: #f0c97c;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
   }
 }
 
 .card {
-  position: relative;
-  margin-top: 16px;
-  padding: 26px;
-  text-align: left;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   background: rgb(18 24 33 / 0.78);
   backdrop-filter: blur(14px);
   box-shadow: 0 24px 60px rgb(0 0 0 / 0.45);
-  animation: card-in 0.24s ease-out both;
 }
 
-.close {
-  position: absolute;
-  top: 14px;
-  right: 14px;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  border: 0;
-  border-radius: 8px;
-  background: transparent;
-  color: var(--muted);
-  cursor: pointer;
+.card-frame {
+  flex: none;
+  margin: -4px;
+  overflow: hidden;
 
-  &:hover {
-    background: var(--raise);
-    color: var(--text);
-  }
-
-  svg {
-    width: 18px;
-    height: 18px;
-    fill: none;
-    stroke: currentColor;
-    stroke-width: 2;
-    stroke-linecap: round;
+  &.switching {
+    transition: height 0.2s ease-out;
   }
 }
 
-@keyframes card-in {
-  from {
+.card-body {
+  position: relative;
+  padding: 4px;
+
+  > .leaving {
+    position: absolute;
+    inset: 4px 4px auto;
+    pointer-events: none;
+    animation: fade-out 0.2s ease-out both;
+  }
+}
+
+@keyframes fade-out {
+  to {
     opacity: 0;
-    transform: translateY(-6px);
   }
 }
 
@@ -158,6 +208,23 @@
   }
 
   .card {
-    padding: 22px 18px;
+    padding: 20px 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .view,
+  .view.hidden,
+  .hero,
+  .actions .btn,
+  .back,
+  .card,
+  .card-frame.switching {
+    transition: none;
+  }
+
+  .card-body > .leaving {
+    display: none;
+    animation: none;
   }
 }

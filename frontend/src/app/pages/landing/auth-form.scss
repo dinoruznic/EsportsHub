@@ -1,10 +1,10 @@
 :host {
   display: block;
-  animation: form-in 0.22s ease-out both;
+  animation: form-in 0.2s ease-out both;
 }
 
 .title {
-  margin-bottom: 18px;
+  margin-bottom: 14px;
   font: 800 24px/1 var(--display);
   letter-spacing: 0.02em;
   text-transform: uppercase;
@@ -12,7 +12,7 @@
 
 form {
   display: grid;
-  gap: 14px;
+  gap: 12px;
 }
 
 .banner {
@@ -76,7 +76,7 @@ form {
 }
 
 .switch {
-  margin-top: 16px;
+  margin-top: 14px;
   font-size: 13px;
   text-align: center;
   color: var(--muted);
@@ -97,6 +97,5 @@ form {
 @keyframes form-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
   }
 }

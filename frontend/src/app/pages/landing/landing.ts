@@ -1,4 +1,15 @@
-import { Component, ElementRef, inject, viewChild } from '@angular/core';
+import {
+  Component,
+  DestroyRef,
+  ElementRef,
+  Injector,
+  afterNextRender,
+  effect,
+  inject,
+  linkedSignal,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router } from '@angular/router';
 import { map } from 'rxjs';
@@ -9,49 +20,87 @@ import { RegisterForm } from './register-form';
 
 export type FormMode = 'prijava' | 'registracija';
 
+const FIRST_FIELD: Record<FormMode, string> = {
+  prijava: 'login-identifier',
+  registracija: 'register-username',
+};
+
 @Component({
   selector: 'app-landing',
   imports: [LandingBackground, LoginForm, RegisterForm],
   templateUrl: './landing.html',
   styleUrl: './landing.scss',
-  host: { '(document:keydown.escape)': 'close()' },
+  host: { '(document:keydown.escape)': 'back()' },
 })
 export default class LandingPage {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly injector = inject(Injector);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly loginButton = viewChild.required<ElementRef<HTMLButtonElement>>('loginButton');
   private readonly registerButton = viewChild.required<ElementRef<HTMLButtonElement>>('registerButton');
+  private readonly cardBody = viewChild.required<ElementRef<HTMLElement>>('cardBody');
 
   protected readonly images = LANDING_IMAGES;
   protected readonly mode = toSignal(
     this.route.queryParamMap.pipe(map((params) => toMode(params.get('forma')))),
     { initialValue: null },
   );
+  protected readonly cardMode = linkedSignal<FormMode | null, FormMode | null>({
+    source: this.mode,
+    computation: (mode, previous) => mode ?? previous?.value ?? null,
+  });
+  protected readonly cardHeight = signal<number | null>(null);
+  protected readonly switching = signal(false);
 
-  protected toggle(mode: FormMode): void {
-    if (this.mode() === mode) {
-      this.close();
-    } else {
-      this.open(mode);
-    }
-  }
+  private previousMode: FormMode | null = null;
+  private openedWith: FormMode | null = null;
 
-  protected open(mode: FormMode | null): void {
-    void this.router.navigate([], {
-      relativeTo: this.route,
-      queryParams: { forma: mode },
-      replaceUrl: true,
+  constructor() {
+    effect(() => {
+      const mode = this.mode();
+      const previous = this.previousMode;
+      this.previousMode = mode;
+      this.switching.set(mode !== null && previous !== null);
+      if (mode && !previous) {
+        this.openedWith = mode;
+      }
+      if (mode !== previous) {
+        afterNextRender(() => this.moveFocus(mode, previous), { injector: this.injector });
+      }
+    });
+
+    afterNextRender(() => {
+      if (typeof ResizeObserver === 'undefined') {
+        return;
+      }
+      const observer = new ResizeObserver(([entry]) =>
+        this.cardHeight.set(Math.ceil(entry.borderBoxSize[0]?.blockSize ?? entry.contentRect.height)),
+      );
+      observer.observe(this.cardBody().nativeElement);
+      this.destroyRef.onDestroy(() => observer.disconnect());
     });
   }
 
-  protected close(): void {
-    const current = this.mode();
-    if (!current) {
-      return;
+  protected open(mode: FormMode): void {
+    void this.router.navigate([], { relativeTo: this.route, queryParams: { forma: mode } });
+  }
+
+  protected back(): void {
+    if (this.mode()) {
+      void this.router.navigate([], { relativeTo: this.route, queryParams: {} });
     }
-    this.open(null);
-    const button = current === 'prijava' ? this.loginButton() : this.registerButton();
-    button.nativeElement.focus();
+  }
+
+  private moveFocus(mode: FormMode | null, previous: FormMode | null): void {
+    if (mode) {
+      this.host.nativeElement.querySelector<HTMLInputElement>(`#${FIRST_FIELD[mode]}`)?.focus();
+    } else if (previous) {
+      const opener = this.openedWith ?? previous;
+      const button = opener === 'prijava' ? this.loginButton() : this.registerButton();
+      button.nativeElement.focus();
+    }
   }
 }
 

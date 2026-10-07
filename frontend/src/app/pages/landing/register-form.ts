@@ -1,4 +1,4 @@
-import { Component, ElementRef, afterNextRender, inject, output, signal, viewChild } from '@angular/core';
+import { Component, inject, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -15,7 +15,6 @@ import { FieldMessages, applyServerErrors, errorMessage, matches, notBlank } fro
 export class RegisterForm {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
-  private readonly firstField = viewChild.required<ElementRef<HTMLInputElement>>('firstField');
 
   readonly switchForm = output<void>();
 
@@ -61,7 +60,6 @@ export class RegisterForm {
   };
 
   constructor() {
-    afterNextRender(() => this.firstField().nativeElement.focus());
     this.form.controls.password.valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe(() => this.form.controls.confirmPassword.updateValueAndValidity());
