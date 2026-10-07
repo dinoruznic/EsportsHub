@@ -29,21 +29,23 @@
 
   <div class="main">
     <header class="topbar">
-      <p class="crumb">
-        <span class="eyebrow">EsportsHub</span>
-        <span class="area">{{ area() }}</span>
-      </p>
-      @if (user(); as user) {
-        <div class="account">
-          <span class="username">{{ user.username }}</span>
-          <ul class="roles" aria-label="Uloge">
-            @for (role of user.roles; track role) {
-              <li class="role">{{ role }}</li>
-            }
-          </ul>
-          <button type="button" class="btn btn-ghost" (click)="logout()">Odjava</button>
-        </div>
-      }
+      <div class="topbar-inner">
+        <p class="crumb">
+          <span class="eyebrow">EsportsHub</span>
+          <span class="area">{{ area() }}</span>
+        </p>
+        @if (user(); as user) {
+          <div class="account">
+            <span class="username">{{ user.username }}</span>
+            <ul class="roles" aria-label="Uloge">
+              @for (role of user.roles; track role) {
+                <li class="role">{{ role }}</li>
+              }
+            </ul>
+            <button type="button" class="btn btn-ghost" (click)="logout()">Odjava</button>
+          </div>
+        }
+      </div>
     </header>
     <main class="content">
       <router-outlet />

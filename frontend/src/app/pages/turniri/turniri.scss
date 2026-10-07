@@ -1,7 +1,6 @@
 :host {
   display: grid;
   gap: 24px;
-  max-width: 1400px;
 }
 
 .head {
@@ -49,8 +48,7 @@
 }
 
 .search {
-  flex: 1 1 220px;
-  max-width: 340px;
+  flex: 1 1 260px;
 
   .field-input {
     height: 38px;
@@ -89,25 +87,13 @@
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 16px;
-}
-
-@media (max-width: 1199.98px) {
-  .grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
+  grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
+  gap: 20px;
 }
 
 @media (max-width: 719.98px) {
-  .grid {
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .game-filter,
-  .search {
+  .game-filter {
     width: 100%;
-    max-width: none;
   }
 
   .filter {

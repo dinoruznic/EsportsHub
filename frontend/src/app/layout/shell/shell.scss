@@ -110,15 +110,25 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  background: rgb(10 14 20 / 0.85);
+  backdrop-filter: blur(8px);
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.topbar-inner,
+.content {
+  width: 100%;
+  max-width: 1680px;
+  margin-inline: auto;
+  padding-inline: clamp(24px, 3vw, 48px);
+}
+
+.topbar-inner {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
   height: 56px;
-  padding: 0 24px;
-  background: rgb(10 14 20 / 0.85);
-  backdrop-filter: blur(8px);
-  border-bottom: 1px solid var(--line-soft);
 }
 
 .crumb {
@@ -178,7 +188,7 @@
 
 .content {
   flex: 1;
-  padding: 32px 24px 48px;
+  padding-block: 32px 48px;
 }
 
 @media (max-width: 759.98px) {
@@ -213,11 +223,12 @@
     padding: 7px 8px 5px;
   }
 
-  .topbar {
-    padding: 0 16px;
+  .topbar-inner,
+  .content {
+    padding-inline: 16px;
   }
 
   .content {
-    padding: 24px 16px calc(96px + env(safe-area-inset-bottom));
+    padding-block: 24px calc(96px + env(safe-area-inset-bottom));
   }
 }
