@@ -15,11 +15,12 @@ import { ErrorState } from '../../shared/error-state/error-state';
 import { formatDate, formatKm, isPowerOfTwo } from '../../shared/format';
 import { Skeleton } from '../../shared/skeleton/skeleton';
 import { StatusChip } from '../../shared/status-chip/status-chip';
+import { BracketView } from './bracket/bracket-view';
 import { RegisteredTeams } from './registered-teams';
 
 @Component({
   selector: 'app-turnir-detalji',
-  imports: [RouterLink, ConfirmInline, EmptyState, ErrorState, Skeleton, StatusChip, RegisteredTeams],
+  imports: [RouterLink, BracketView, ConfirmInline, EmptyState, ErrorState, Skeleton, StatusChip, RegisteredTeams],
   templateUrl: './turnir-detalji.html',
   styleUrl: './turnir-detalji.scss',
 })
@@ -52,6 +53,9 @@ export default class TurnirDetalji {
     (this.registrations.hasValue() ? this.registrations.value() : [])
       .filter((r) => r.status === 'REGISTERED')
       .sort((a, b) => (a.seed ?? 999) - (b.seed ?? 999) || a.registeredAt.localeCompare(b.registeredAt)),
+  );
+  protected readonly seeds = computed(() =>
+    Object.fromEntries(this.active().filter((r) => r.seed !== null).map((r) => [r.teamId, r.seed!])),
   );
   protected readonly hasBracket = computed(() => this.bracket.hasValue() && this.bracket.value().rounds.length > 0);
 

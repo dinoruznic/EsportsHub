@@ -1,0 +1,55 @@
+<div class="scroller">
+  <div class="inner" #inner>
+    <svg class="lines" aria-hidden="true">
+      @for (line of connectors(); track line.key) {
+        <path [attr.d]="line.d" [class.decided]="line.decided" />
+      }
+    </svg>
+
+    @for (column of columns(); track column.roundNumber) {
+      <section class="round" [attr.aria-label]="column.label">
+        <h3 class="round-name">{{ column.label }}</h3>
+        <div class="slots">
+          @for (match of column.matches; track match.id) {
+            <div class="slot">
+              <article
+                class="match"
+                [attr.data-match-id]="match.id"
+                [attr.data-status]="match.status"
+                [class.live]="match.status === 'LIVE'"
+              >
+                <header class="match-head">
+                  <span class="num">M{{ match.number }}</span>
+                  <span class="match-status">
+                    @if (match.status === 'LIVE') {
+                      <span class="live-dot" aria-hidden="true"></span>
+                    }
+                    {{ match.statusLabel }}
+                  </span>
+                </header>
+                @for (slot of match.slots; track $index) {
+                  <div
+                    class="row"
+                    [class.winner]="slot.winner"
+                    [class.loser]="slot.loser"
+                    [class.tbd]="!slot.team"
+                  >
+                    <span class="num seed">{{ slot.seed ?? '' }}</span>
+                    @if (slot.team; as team) {
+                      <span class="mono" aria-hidden="true">{{ slot.monogram }}</span>
+                      <span class="team" [title]="team.name">{{ team.name }}</span>
+                    } @else {
+                      <span class="mono empty" aria-hidden="true"></span>
+                      <span class="team">{{ slot.placeholder }}</span>
+                    }
+                    <span class="num score">{{ slot.score ?? '–' }}</span>
+                  </div>
+                }
+              </article>
+            </div>
+          }
+        </div>
+      </section>
+    }
+  </div>
+</div>

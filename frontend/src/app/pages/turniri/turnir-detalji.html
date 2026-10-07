@@ -141,6 +141,8 @@
             ') ili administrator kada je prijavljeno 2, 4, 8 ili 16 timova.'
           "
         />
+      } @else {
+        <app-bracket-view [bracket]="bracket.value()" [seeds]="seeds()" />
       }
     </section>
 
