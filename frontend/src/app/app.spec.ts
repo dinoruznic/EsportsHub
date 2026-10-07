@@ -1,15 +1,21 @@
 import { TestBed } from '@angular/core/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter, Router } from '@angular/router';
 import { App } from './app';
 import { routes } from './app.routes';
+import { storeSession } from './testing/fake-session';
 
 describe('App', () => {
   beforeEach(() => {
+    localStorage.clear();
     TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter(routes)],
+      providers: [provideRouter(routes), provideHttpClient(), provideHttpClientTesting()],
     });
   });
+
+  afterEach(() => localStorage.clear());
 
   async function renderAt(url: string) {
     const fixture = TestBed.createComponent(App);
@@ -19,7 +25,29 @@ describe('App', () => {
     return { element: fixture.nativeElement as HTMLElement, router };
   }
 
-  it('renders the five nav links with correct hrefs', async () => {
+  it('shows the landing page without navigation to guests', async () => {
+    const { element, router } = await renderAt('/');
+
+    expect(router.url).toBe('/');
+    expect(element.querySelector('h1')?.textContent).toContain('ESPORTS');
+    expect(element.querySelector('nav')).toBeNull();
+  });
+
+  it('sends guests from a protected page to the landing page', async () => {
+    const { router } = await renderAt('/turniri');
+
+    expect(router.url).toBe('/');
+  });
+
+  it('sends logged-in users from the landing page to /turniri', async () => {
+    storeSession();
+    const { router } = await renderAt('/');
+
+    expect(router.url).toBe('/turniri');
+  });
+
+  it('renders the five nav links with correct hrefs for a logged-in user', async () => {
+    storeSession();
     const { element } = await renderAt('/turniri');
     const links = Array.from(element.querySelectorAll<HTMLAnchorElement>('a.nav-item'));
 
@@ -37,13 +65,6 @@ describe('App', () => {
       'Timovi',
       'Profil',
     ]);
-  });
-
-  it('redirects the empty path to /turniri', async () => {
-    const { element, router } = await renderAt('');
-
-    expect(router.url).toBe('/turniri');
-    expect(element.querySelector('h1')?.textContent).toContain('Turniri');
     expect(element.querySelector('a.nav-item.active')?.getAttribute('href')).toBe('/turniri');
   });
 
