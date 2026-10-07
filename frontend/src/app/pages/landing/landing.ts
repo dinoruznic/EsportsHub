@@ -1,13 +1,11 @@
 import {
   Component,
-  DestroyRef,
   ElementRef,
   Injector,
   afterNextRender,
   effect,
   inject,
   linkedSignal,
-  signal,
   viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -36,11 +34,9 @@ export default class LandingPage {
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
   private readonly injector = inject(Injector);
-  private readonly destroyRef = inject(DestroyRef);
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly loginButton = viewChild.required<ElementRef<HTMLButtonElement>>('loginButton');
   private readonly registerButton = viewChild.required<ElementRef<HTMLButtonElement>>('registerButton');
-  private readonly cardBody = viewChild.required<ElementRef<HTMLElement>>('cardBody');
 
   protected readonly images = LANDING_IMAGES;
   protected readonly mode = toSignal(
@@ -51,8 +47,6 @@ export default class LandingPage {
     source: this.mode,
     computation: (mode, previous) => mode ?? previous?.value ?? null,
   });
-  protected readonly cardHeight = signal<number | null>(null);
-  protected readonly switching = signal(false);
 
   private previousMode: FormMode | null = null;
   private openedWith: FormMode | null = null;
@@ -62,24 +56,12 @@ export default class LandingPage {
       const mode = this.mode();
       const previous = this.previousMode;
       this.previousMode = mode;
-      this.switching.set(mode !== null && previous !== null);
       if (mode && !previous) {
         this.openedWith = mode;
       }
       if (mode !== previous) {
         afterNextRender(() => this.moveFocus(mode, previous), { injector: this.injector });
       }
-    });
-
-    afterNextRender(() => {
-      if (typeof ResizeObserver === 'undefined') {
-        return;
-      }
-      const observer = new ResizeObserver(([entry]) =>
-        this.cardHeight.set(Math.ceil(entry.borderBoxSize[0]?.blockSize ?? entry.contentRect.height)),
-      );
-      observer.observe(this.cardBody().nativeElement);
-      this.destroyRef.onDestroy(() => observer.disconnect());
     });
   }
 

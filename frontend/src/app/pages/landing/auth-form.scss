@@ -1,6 +1,7 @@
 :host {
   display: block;
-  animation: form-in 0.2s ease-out both;
+  flex: none;
+  animation: form-in 0.18s ease-out both;
 }
 
 .title {
@@ -97,5 +98,11 @@ form {
 @keyframes form-in {
   from {
     opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :host {
+    animation: none;
   }
 }

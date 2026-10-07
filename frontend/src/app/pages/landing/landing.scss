@@ -174,34 +174,6 @@
   box-shadow: 0 24px 60px rgb(0 0 0 / 0.45);
 }
 
-.card-frame {
-  flex: none;
-  margin: -4px;
-  overflow: hidden;
-
-  &.switching {
-    transition: height 0.2s ease-out;
-  }
-}
-
-.card-body {
-  position: relative;
-  padding: 4px;
-
-  > .leaving {
-    position: absolute;
-    inset: 4px 4px auto;
-    pointer-events: none;
-    animation: fade-out 0.2s ease-out both;
-  }
-}
-
-@keyframes fade-out {
-  to {
-    opacity: 0;
-  }
-}
-
 @media (max-width: 420px) {
   .actions {
     grid-template-columns: 1fr;
@@ -218,13 +190,7 @@
   .hero,
   .actions .btn,
   .back,
-  .card,
-  .card-frame.switching {
+  .card {
     transition: none;
-  }
-
-  .card-body > .leaving {
-    display: none;
-    animation: none;
   }
 }

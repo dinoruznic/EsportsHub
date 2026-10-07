@@ -32,19 +32,11 @@
       class="card panel"
       [attr.aria-label]="cardMode() === 'registracija' ? 'Registracija' : 'Prijava'"
     >
-      <div
-        class="card-frame"
-        [class.switching]="switching()"
-        [style.height.px]="switching() ? cardHeight() : null"
-      >
-        <div #cardBody class="card-body">
-          @if (cardMode() === 'prijava') {
-            <app-login-form animate.leave="leaving" (switchForm)="open('registracija')" />
-          } @else if (cardMode() === 'registracija') {
-            <app-register-form animate.leave="leaving" (switchForm)="open('prijava')" />
-          }
-        </div>
-      </div>
+      @if (cardMode() === 'prijava') {
+        <app-login-form (switchForm)="open('registracija')" />
+      } @else if (cardMode() === 'registracija') {
+        <app-register-form (switchForm)="open('prijava')" />
+      }
     </section>
   </div>
 </main>

@@ -119,6 +119,29 @@ describe('LandingPage', () => {
       expect(element().querySelector('app-login-form')).not.toBeNull();
     });
 
+    it('renders exactly one complete form after each in-card switch', async () => {
+      function expectOnlyForm(selector: string, heading: string, firstField: string): void {
+        const forms = formView().querySelectorAll('app-login-form, app-register-form');
+        expect(forms.length).toBe(1);
+        expect(forms[0].matches(selector)).toBe(true);
+        expect(forms[0].querySelector('h2')?.textContent).toBe(heading);
+        expect(forms[0].querySelector(firstField)).not.toBeNull();
+        expect(formView().querySelectorAll(firstField).length).toBe(1);
+      }
+
+      await click(button('Prijava', heroView()));
+      expectOnlyForm('app-login-form', 'Prijava', '#login-identifier');
+
+      await click(button('Registruj se', formView()));
+      expectOnlyForm('app-register-form', 'Registracija', '#register-username');
+
+      await click(button('Prijavi se', formView().querySelector('app-register-form .switch')!));
+      expectOnlyForm('app-login-form', 'Prijava', '#login-identifier');
+
+      await click(button('Registruj se', formView()));
+      expectOnlyForm('app-register-form', 'Registracija', '#register-username');
+    });
+
     it('returns to the hero on Escape', async () => {
       await click(button('Registracija', heroView()));
       document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
