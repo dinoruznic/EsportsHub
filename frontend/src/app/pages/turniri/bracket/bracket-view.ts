@@ -31,16 +31,18 @@ interface Box {
   imports: [TeamHex],
   templateUrl: './bracket-view.html',
   styleUrl: './bracket-view.scss',
+  host: { '[class.preview]': 'preview()' },
 })
 export class BracketView {
   readonly bracket = input.required<Bracket>();
   readonly seeds = input<Record<number, number>>({});
+  readonly preview = input(false);
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
   private readonly inner = viewChild.required<ElementRef<HTMLElement>>('inner');
 
-  protected readonly columns = computed(() => buildBracket(this.bracket(), this.seeds()));
+  protected readonly columns = computed(() => buildBracket(this.bracket(), this.seeds(), this.preview()));
   protected readonly champion = computed(() => findChampion(this.bracket()));
   protected readonly connectors = signal<Connector[]>([]);
 

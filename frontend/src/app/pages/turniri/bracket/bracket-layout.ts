@@ -1,4 +1,5 @@
-import { Bracket, BracketMatch, MatchStatus, TeamBrief } from '../../../core/api/models';
+import { Bracket, BracketMatch, BracketRound, MatchStatus, Registration, TeamBrief } from '../../../core/api/models';
+import { isPowerOfTwo } from '../../../shared/format';
 import { initials } from '../../../shared/team-hex/team-hex';
 
 export interface SlotView {
@@ -83,13 +84,68 @@ export function monogram(team: TeamBrief): string {
   return initials(team.tag || team.name);
 }
 
-export function buildBracket(bracket: Bracket, seeds: Record<number, number>): RoundColumn[] {
+export function seedOrder(size: number): number[] {
+  let order = [1];
+  for (let m = 1; m < size; m *= 2) {
+    order = order.flatMap((seed) => [seed, 2 * m + 1 - seed]);
+  }
+  return order;
+}
+
+function backendRoundName(roundNumber: number, matchCount: number): string {
+  switch (matchCount) {
+    case 1:
+      return 'Finale';
+    case 2:
+      return 'Polufinale';
+    case 4:
+      return 'Cetvrtfinale';
+    default:
+      return `Runda ${roundNumber}`;
+  }
+}
+
+export function previewBracket(maxTeams: number | null, registrations: Registration[]): Bracket | null {
+  if (!maxTeams || !isPowerOfTwo(maxTeams)) {
+    return null;
+  }
+  const teams: (TeamBrief | null)[] = Array.from({ length: maxTeams }, (_, index) => {
+    const registration = registrations[index];
+    return registration
+      ? { id: registration.teamId, name: registration.teamName, tag: registration.teamTag }
+      : null;
+  });
+  const order = seedOrder(maxTeams);
+  const rounds: BracketRound[] = [];
+  let nextId = -1;
+  let matchCount = maxTeams / 2;
+  for (let roundNumber = 1; matchCount >= 1; roundNumber++, matchCount /= 2) {
+    const matches: BracketMatch[] = Array.from({ length: matchCount }, (_, index) => ({
+      id: nextId--,
+      status: 'SCHEDULED',
+      teamA: roundNumber === 1 ? teams[order[2 * index] - 1] : null,
+      teamB: roundNumber === 1 ? teams[order[2 * index + 1] - 1] : null,
+      scoreA: null,
+      scoreB: null,
+      winnerTeamId: null,
+      nextMatchId: null,
+    }));
+    rounds.push({ roundNumber, name: backendRoundName(roundNumber, matchCount), matches });
+  }
+  rounds.forEach((round, index) => {
+    const next = rounds[index + 1];
+    round.matches.forEach((match, at) => (match.nextMatchId = next ? next.matches[Math.floor(at / 2)].id : null));
+  });
+  return { tournamentId: 0, tournamentName: '', status: 'REGISTRATION', rounds };
+}
+
+export function buildBracket(bracket: Bracket, seeds: Record<number, number>, preview = false): RoundColumn[] {
   const rounds = [...bracket.rounds].sort((a, b) => a.roundNumber - b.roundNumber);
   const ordered: BracketMatch[][] = [];
 
   rounds.forEach((round, index) => {
     if (index === 0) {
-      ordered.push([...round.matches].sort((a, b) => a.id - b.id));
+      ordered.push(preview ? [...round.matches] : [...round.matches].sort((a, b) => a.id - b.id));
       return;
     }
     const previous = ordered[index - 1];
@@ -99,7 +155,7 @@ export function buildBracket(bracket: Bracket, seeds: Record<number, number>): R
         .filter((at) => at >= 0);
       return feeders.length > 0 ? Math.min(...feeders) : Number.MAX_SAFE_INTEGER;
     };
-    ordered.push([...round.matches].sort((a, b) => position(a) - position(b) || a.id - b.id));
+    ordered.push([...round.matches].sort((a, b) => position(a) - position(b) || Math.abs(a.id) - Math.abs(b.id)));
   });
 
   const numbers = new Map<number, number>();
@@ -107,7 +163,9 @@ export function buildBracket(bracket: Bracket, seeds: Record<number, number>): R
 
   const all = ordered.flat();
   const feedersOf = (match: BracketMatch) =>
-    all.filter((candidate) => candidate.nextMatchId === match.id).sort((a, b) => a.id - b.id);
+    all
+      .filter((candidate) => candidate.nextMatchId === match.id)
+      .sort((a, b) => Math.abs(a.id) - Math.abs(b.id));
 
   return rounds.map((round, index) => ({
     roundNumber: round.roundNumber,
@@ -118,12 +176,12 @@ export function buildBracket(bracket: Bracket, seeds: Record<number, number>): R
         id: match.id,
         number: numbers.get(match.id)!,
         status: match.status,
-        statusLabel: STATUS_LABELS[match.status] ?? match.status,
+        statusLabel: preview ? 'Pregled' : (STATUS_LABELS[match.status] ?? match.status),
         nextMatchId: match.nextMatchId,
         decided: match.winnerTeamId !== null,
         slots: [
-          slot(match, match.teamA, match.scoreA, feeders[0], numbers, seeds),
-          slot(match, match.teamB, match.scoreB, feeders[1], numbers, seeds),
+          slot(match, match.teamA, match.scoreA, feeders[0], numbers, seeds, preview),
+          slot(match, match.teamB, match.scoreB, feeders[1], numbers, seeds, preview),
         ],
       };
     }),
@@ -137,6 +195,7 @@ function slot(
   feeder: BracketMatch | undefined,
   numbers: Map<number, number>,
   seeds: Record<number, number>,
+  preview: boolean,
 ): SlotView {
   const played = match.status === 'LIVE' || match.status === 'FINISHED';
   const winner = !!team && match.winnerTeamId === team.id;
@@ -144,7 +203,7 @@ function slot(
     team,
     seed: team ? (seeds[team.id] ?? null) : null,
     monogram: team ? monogram(team) : '',
-    placeholder: feeder ? `Pobjednik meča ${numbers.get(feeder.id)}` : 'Čeka se',
+    placeholder: feeder ? `Pobjednik meča ${numbers.get(feeder.id)}` : preview ? 'Slobodno mjesto' : 'Čeka se',
     score: team && played ? (score ?? 0) : null,
     winner,
     loser: !!team && match.winnerTeamId !== null && !winner,

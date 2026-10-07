@@ -113,7 +113,8 @@ describe('TurnirDetalji', () => {
     await harness.fixture.whenStable();
 
     expect(element.querySelector('.picker')).toBeNull();
-    expect(element.querySelectorAll('app-registered-teams li').length).toBe(2);
+    expect(element.querySelectorAll('app-registered-teams li.filled').length).toBe(2);
+    expect(element.querySelectorAll('app-registered-teams li.open').length).toBe(6);
   });
 
   it('shows the backend error in Bosnian next to the action', async () => {
@@ -148,21 +149,25 @@ describe('TurnirDetalji', () => {
     expect(element.querySelector('app-registered-teams')!.textContent).toContain('0 / 8');
   });
 
-  it('disables bracket generation for the organizer when the team count is not a power of two', async () => {
+  it('shows a locked ghost generate button when the team count is not a power of two', async () => {
     await render({ username: 'org', registrations: FOUR.slice(0, 3) });
     const generate = element.querySelector<HTMLButtonElement>('.generate')!;
 
-    expect(generate.disabled).toBe(true);
-    expect(element.querySelector('section.actions .hint')!.textContent).toBe(
-      'Potrebno 2, 4, 8 ili 16 timova (trenutno 3).',
-    );
+    expect(generate.getAttribute('aria-disabled')).toBe('true');
+    expect(generate.classList).not.toContain('btn-gold');
+    expect(generate.querySelector('svg')).not.toBeNull();
+    expect(element.querySelector('#generate-hint')!.textContent).toBe('Potrebno 2, 4, 8 ili 16 timova · trenutno 3');
+
+    generate.click();
+    http.expectNone({ method: 'POST', url: '/api/tournaments/1/bracket' });
   });
 
   it('lets the organizer generate the bracket with four teams', async () => {
     await render({ username: 'org', registrations: FOUR });
     const generate = element.querySelector<HTMLButtonElement>('.generate')!;
 
-    expect(generate.disabled).toBe(false);
+    expect(generate.classList).toContain('btn-gold');
+    expect(generate.getAttribute('aria-disabled')).toBeNull();
     generate.click();
     http.expectOne({ method: 'POST', url: '/api/tournaments/1/bracket' }).flush(fourTeamBracket());
     await settle();
@@ -200,12 +205,47 @@ describe('TurnirDetalji', () => {
     expect(element.querySelector('app-status-chip')!.textContent).toContain('Prijave otvorene');
   });
 
-  it('shows the empty bracket state when there is no bracket yet', async () => {
-    await render();
+  it('renders a ghosted preview with teams in seed order and open seats', async () => {
+    await render({ registrations: FOUR.slice(0, 3) });
+    const rounds = Array.from(element.querySelectorAll('.round-name')).map((r) => r.textContent);
+    const statuses = new Set(Array.from(element.querySelectorAll('.match-status')).map((s) => s.textContent!.trim()));
+    const firstRound = Array.from(element.querySelectorAll('.round')[0].querySelectorAll('.team')).map(
+      (t) => t.textContent,
+    );
 
+    expect(element.querySelector('.preview-note')!.textContent).toContain('Pregled.');
+    expect(element.querySelector('app-bracket-view')!.classList).toContain('preview');
+    expect(rounds).toEqual(['Četvrtfinale', 'Polufinale', 'Finale', 'Prvak']);
+    expect(element.querySelectorAll('.match').length).toBe(7);
+    expect([...statuses]).toEqual(['Pregled']);
+    expect(firstRound).toEqual([
+      'Tim 1',
+      'Slobodno mjesto',
+      'Slobodno mjesto',
+      'Slobodno mjesto',
+      'Tim 2',
+      'Slobodno mjesto',
+      'Tim 3',
+      'Slobodno mjesto',
+    ]);
+    expect(element.querySelectorAll('app-registered-teams li.open').length).toBe(5);
+  });
+
+  it('falls back to a compact empty state when the team limit is not a power of two', async () => {
+    await render({ tournament: tournament({ maxTeams: 6 }) });
+
+    expect(element.querySelector('app-bracket-view')).toBeNull();
     expect(element.querySelector('.bracket-section app-empty-state')!.textContent).toContain(
       'Bracket još nije generisan.',
     );
+  });
+
+  it('shows the explanation and no preview or actions for a rejected tournament', async () => {
+    await render({ username: 'org', tournament: tournament({ status: 'REJECTED' }) });
+
+    expect(element.querySelector('app-tournament-stats .note')!.textContent).toBe('Turnir je odbijen.');
+    expect(element.querySelector('app-bracket-view')).toBeNull();
+    expect(element.querySelector('section.actions')).toBeNull();
   });
 
   it('renders rounds, match cards, the winner and the live match', async () => {

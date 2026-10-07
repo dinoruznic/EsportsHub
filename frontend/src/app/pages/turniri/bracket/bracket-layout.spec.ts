@@ -1,5 +1,6 @@
 import { Bracket, BracketMatch } from '../../../core/api/models';
-import { buildBracket, monogram, roundLabel } from './bracket-layout';
+import { registration } from '../../../testing/tournament-data';
+import { buildBracket, monogram, previewBracket, roundLabel, seedOrder } from './bracket-layout';
 
 function match(id: number, nextMatchId: number | null): BracketMatch {
   return {
@@ -47,5 +48,25 @@ describe('bracket layout', () => {
     expect(columns[1].matches.map((m) => m.number)).toEqual([5, 6]);
     expect(columns[1].matches[0].slots.map((s) => s.placeholder)).toEqual(['Pobjednik meča 1', 'Pobjednik meča 2']);
     expect(columns[2].matches[0].slots.map((s) => s.placeholder)).toEqual(['Pobjednik meča 6', 'Pobjednik meča 5']);
+  });
+
+  it('seeds like the backend: 1 against the last, 2 against the second last', () => {
+    expect(seedOrder(4)).toEqual([1, 4, 2, 3]);
+    expect(seedOrder(8)).toEqual([1, 8, 4, 5, 2, 7, 3, 6]);
+  });
+
+  it('builds a preview for the team limit with open seats', () => {
+    const preview = previewBracket(4, [registration(1, 11), registration(2, 12)])!;
+    const columns = buildBracket(preview, {}, true);
+
+    expect(columns.map((c) => c.label)).toEqual(['Polufinale', 'Finale']);
+    expect(columns[0].matches.map((m) => m.slots.map((s) => s.team?.name ?? s.placeholder))).toEqual([
+      ['Tim 11', 'Slobodno mjesto'],
+      ['Tim 12', 'Slobodno mjesto'],
+    ]);
+    expect(columns[1].matches[0].slots.map((s) => s.placeholder)).toEqual(['Pobjednik meča 1', 'Pobjednik meča 2']);
+    expect(columns[0].matches[0].statusLabel).toBe('Pregled');
+    expect(previewBracket(6, [])).toBeNull();
+    expect(previewBracket(null, [])).toBeNull();
   });
 });

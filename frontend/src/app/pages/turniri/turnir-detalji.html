@@ -27,14 +27,13 @@
         }
 
         @if (canRegister() && !picking()) {
-          <button
-            type="button"
-            class="btn btn-gold register"
-            [disabled]="busy() || isFull()"
-            (click)="openPicker()"
-          >
-            Prijavi tim
-          </button>
+          @if (isFull()) {
+            <span class="hint">Turnir je popunjen.</span>
+          } @else {
+            <button type="button" class="btn btn-gold register" [disabled]="busy()" (click)="openPicker()">
+              Prijavi tim
+            </button>
+          }
         }
 
         @if (canWithdraw()) {
@@ -51,25 +50,30 @@
         }
 
         @if (canGenerate()) {
-          @if (!generateReady()) {
-            <span class="hint">Potrebno 2, 4, 8 ili 16 timova (trenutno {{ active().length }}).</span>
+          @if (generateReady()) {
+            <button type="button" class="btn btn-gold generate" [disabled]="busy()" (click)="generate()">
+              Generiši bracket
+            </button>
+          } @else {
+            <span class="hint" id="generate-hint">Potrebno 2, 4, 8 ili 16 timova · trenutno {{ active().length }}</span>
+            <button
+              type="button"
+              class="btn locked generate"
+              aria-disabled="true"
+              aria-describedby="generate-hint"
+              (click)="generate()"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <rect x="5" y="11" width="14" height="9" rx="2" />
+                <path d="M8 11V8a4 4 0 0 1 8 0v3" />
+              </svg>
+              Generiši bracket
+            </button>
           }
-          <button
-            type="button"
-            class="btn btn-gold generate"
-            [disabled]="busy() || !generateReady()"
-            (click)="generate()"
-          >
-            Generiši bracket
-          </button>
         }
       </section>
     }
   </app-tournament-stats>
-
-  @if (canRegister() && isFull() && !picking()) {
-    <p class="hint below">Turnir je popunjen.</p>
-  }
 
   @if (picking()) {
     <div class="picker panel">
@@ -113,7 +117,14 @@
         <app-error-state [message]="bracketError()" (retry)="bracket.reload()" />
       } @else if (!bracket.hasValue()) {
         <app-skeleton [count]="1" [height]="320" />
-      } @else if (!hasBracket()) {
+      } @else if (hasBracket()) {
+        <app-bracket-view [bracket]="bracket.value()" [seeds]="seeds()" />
+      } @else if (closed()) {
+        <app-empty-state class="bracket-empty" title="Bracket neće biti odigran." />
+      } @else if (preview(); as preview) {
+        <p class="preview-note">Pregled. Pravi parovi nastaju kad organizator generiše bracket.</p>
+        <app-bracket-view [bracket]="preview" [seeds]="previewSeeds()" [preview]="true" />
+      } @else {
         <app-empty-state
           class="bracket-empty"
           title="Bracket još nije generisan."
@@ -123,8 +134,6 @@
             ') ili administrator kada je prijavljeno 2, 4, 8 ili 16 timova.'
           "
         />
-      } @else {
-        <app-bracket-view [bracket]="bracket.value()" [seeds]="seeds()" />
       }
     </section>
 

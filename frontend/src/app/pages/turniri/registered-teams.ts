@@ -10,16 +10,23 @@ import { TeamHex } from '../../shared/team-hex/team-hex';
       Prijavljeni timovi
       <span class="num count">{{ teams().length }} / {{ maxTeams() ?? '∞' }}</span>
     </h2>
-    @if (teams().length === 0) {
+    @if (teams().length === 0 && openSeats().length === 0) {
       <p class="none">Još nijedan tim nije prijavljen.</p>
     } @else {
       <ol class="list">
         @for (team of teams(); track team.id) {
-          <li class="team" [attr.data-team-id]="team.teamId">
+          <li class="team filled" [attr.data-team-id]="team.teamId">
             <span class="num seed">{{ team.seed }}</span>
             <app-team-hex [teamId]="team.teamId" [label]="team.teamTag" [size]="24" />
             <span class="name">{{ team.teamName }}</span>
             <span class="num tag">{{ team.teamTag }}</span>
+          </li>
+        }
+        @for (seat of openSeats(); track seat) {
+          <li class="team open">
+            <span class="num seed">{{ seat }}</span>
+            <app-team-hex [size]="24" />
+            <span class="name">Slobodno mjesto</span>
           </li>
         }
       </ol>
@@ -83,6 +90,17 @@ import { TeamHex } from '../../shared/team-hex/team-hex';
       background: var(--raise);
     }
 
+    .team.open {
+      border: 1px dashed var(--line);
+      background: transparent;
+    }
+
+    .team.open .name {
+      color: var(--faint);
+      font-style: italic;
+      font-weight: 400;
+    }
+
     .seed {
       color: var(--faint);
       font-size: 11px;
@@ -104,6 +122,11 @@ import { TeamHex } from '../../shared/team-hex/team-hex';
 export class RegisteredTeams {
   readonly registrations = input.required<Registration[]>();
   readonly maxTeams = input<number | null>(null);
+
+  protected readonly openSeats = computed(() => {
+    const free = (this.maxTeams() ?? 0) - this.registrations().length;
+    return Array.from({ length: Math.max(0, free) }, (_, index) => this.registrations().length + index + 1);
+  });
 
   protected readonly teams = computed(() =>
     this.registrations().map((registration, index) => ({

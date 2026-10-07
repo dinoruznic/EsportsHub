@@ -38,8 +38,30 @@
   font-size: 12.5px;
 }
 
-.below {
-  justify-self: end;
+.locked {
+  border-color: var(--line);
+  background: transparent;
+  color: var(--faint);
+  cursor: not-allowed;
+
+  &:hover {
+    background: transparent;
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+  }
+}
+
+.preview-note {
+  margin-top: -4px;
+  color: var(--muted);
+  font-size: 13px;
 }
 
 .action-error {
@@ -137,6 +159,7 @@
 }
 
 .bracket-empty {
+  padding: 32px 20px;
   border-style: solid;
   border-color: var(--line-soft);
   background: var(--panel);

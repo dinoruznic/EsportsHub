@@ -15,6 +15,7 @@ import { ErrorState } from '../../shared/error-state/error-state';
 import { isPowerOfTwo } from '../../shared/format';
 import { Skeleton } from '../../shared/skeleton/skeleton';
 import { TeamHex } from '../../shared/team-hex/team-hex';
+import { previewBracket } from './bracket/bracket-layout';
 import { BracketView } from './bracket/bracket-view';
 import { RegisteredTeams } from './registered-teams';
 import { TournamentStats } from './tournament-stats';
@@ -69,6 +70,17 @@ export default class TurnirDetalji {
     Object.fromEntries(this.active().filter((r) => r.seed !== null).map((r) => [r.teamId, r.seed!])),
   );
   protected readonly hasBracket = computed(() => this.bracket.hasValue() && this.bracket.value().rounds.length > 0);
+  protected readonly closed = computed(() => this.t()?.status === 'REJECTED' || this.t()?.status === 'CANCELLED');
+  protected readonly preview = computed(() => {
+    const t = this.t();
+    if (!t || (t.status !== 'PENDING' && t.status !== 'REGISTRATION') || !this.bracket.hasValue() || this.hasBracket()) {
+      return null;
+    }
+    return previewBracket(t.maxTeams, this.active());
+  });
+  protected readonly previewSeeds = computed(() =>
+    Object.fromEntries(this.active().map((registration, index) => [registration.teamId, index + 1])),
+  );
 
   private readonly username = computed(() => this.auth.currentUser()?.username ?? null);
   protected readonly isAdmin = computed(() => this.auth.hasRole('ADMIN'));
@@ -183,6 +195,9 @@ export default class TurnirDetalji {
   }
 
   protected generate(): void {
+    if (!this.generateReady()) {
+      return;
+    }
     this.run(this.api.generateBracket(this.id()), () => this.reloadAll());
   }
 

@@ -213,6 +213,21 @@
   min-width: 200px;
 }
 
+:host(.preview) {
+  .match {
+    border-style: dashed;
+    background: rgb(24 32 43 / 0.55);
+  }
+
+  .match-head {
+    color: var(--faint);
+  }
+
+  .row:not(.tbd) .team {
+    color: var(--muted);
+  }
+}
+
 @keyframes pulse {
   50% {
     opacity: 0.25;
