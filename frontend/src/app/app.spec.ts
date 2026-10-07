@@ -1,6 +1,6 @@
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { provideHttpClientTesting } from '@angular/common/http/testing';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideRouter, Router } from '@angular/router';
 import { App } from './app';
 import { routes } from './app.routes';
@@ -17,12 +17,29 @@ describe('App', () => {
 
   afterEach(() => localStorage.clear());
 
+  async function answerRequests(fixture: ComponentFixture<App>) {
+    const http = TestBed.inject(HttpTestingController);
+    for (let i = 0; i < 4; i++) {
+      await Promise.resolve();
+      TestBed.tick();
+      for (const request of http.match(() => true)) {
+        const list = /\/api\/(games|teams|tournaments(\/pending)?|tournaments\/\d+\/registrations)$/.test(request.request.url);
+        if (list) {
+          request.flush([]);
+        } else {
+          request.flush(null, { status: 404, statusText: 'Not Found' });
+        }
+      }
+    }
+    await fixture.whenStable();
+  }
+
   async function renderAt(url: string) {
     const fixture = TestBed.createComponent(App);
     const router = TestBed.inject(Router);
     await router.navigateByUrl(url);
-    await fixture.whenStable();
-    return { element: fixture.nativeElement as HTMLElement, router };
+    await answerRequests(fixture);
+    return { fixture, element: fixture.nativeElement as HTMLElement, router };
   }
 
   it('shows the landing page without navigation to guests', async () => {
@@ -69,13 +86,22 @@ describe('App', () => {
     expect(element.querySelector('a.nav-item.active')?.getAttribute('href')).toBe('/turniri');
   });
 
+  it('keeps Turniri active on the create and detail pages', async () => {
+    storeSession();
+    const { fixture, element, router } = await renderAt('/turniri/novi');
+
+    expect(element.querySelector('a.nav-item.active')?.getAttribute('href')).toBe('/turniri');
+    expect(document.title).toBe('Novi turnir · EsportsHub');
+
+    await router.navigateByUrl('/turniri/5');
+    await answerRequests(fixture);
+
+    expect(element.querySelector('a.nav-item.active')?.getAttribute('href')).toBe('/turniri');
+  });
+
   it('shows the user with role chips and logs out with Odjava', async () => {
     storeSession();
-    const fixture = TestBed.createComponent(App);
-    const router = TestBed.inject(Router);
-    await router.navigateByUrl('/turniri');
-    await fixture.whenStable();
-    const element = fixture.nativeElement as HTMLElement;
+    const { fixture, element, router } = await renderAt('/turniri');
 
     expect(element.querySelector('.topbar .username')?.textContent).toBe('admin');
     expect(Array.from(element.querySelectorAll('.topbar .role')).map((chip) => chip.textContent)).toEqual([
