@@ -1,10 +1,17 @@
-import { Component, inject, output, signal } from '@angular/core';
+import { Component, ElementRef, inject, output, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { toApiError } from '../../core/api/api-error';
 import { AuthService } from '../../core/auth/auth.service';
-import { FieldMessages, applyServerErrors, errorMessage, matches, notBlank } from './auth-form-utils';
+import {
+  FieldMessages,
+  applyServerErrors,
+  errorMessage,
+  focusFirstInvalid,
+  matches,
+  notBlank,
+} from './auth-form-utils';
 
 @Component({
   selector: 'app-register-form',
@@ -15,6 +22,7 @@ import { FieldMessages, applyServerErrors, errorMessage, matches, notBlank } fro
 export class RegisterForm {
   private readonly auth = inject(AuthService);
   private readonly router = inject(Router);
+  private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
 
   readonly switchForm = output<void>();
 
@@ -67,7 +75,7 @@ export class RegisterForm {
 
   protected error(name: keyof typeof this.form.controls): string | null {
     const control = this.form.controls[name];
-    return errorMessage(control, control.touched || this.submitted(), this.messages[name]);
+    return errorMessage(control, this.submitted(), this.messages[name]);
   }
 
   protected submit(): void {
@@ -76,7 +84,7 @@ export class RegisterForm {
       return;
     }
     if (this.form.invalid) {
-      this.form.markAllAsTouched();
+      focusFirstInvalid(this.form, this.host.nativeElement);
       return;
     }
     const { username, email, displayName, password } = this.form.getRawValue();

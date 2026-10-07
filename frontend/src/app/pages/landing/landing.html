@@ -32,10 +32,12 @@
       class="card panel"
       [attr.aria-label]="cardMode() === 'registracija' ? 'Registracija' : 'Prijava'"
     >
-      @if (cardMode() === 'prijava') {
-        <app-login-form (switchForm)="open('registracija')" />
-      } @else if (cardMode() === 'registracija') {
-        <app-register-form (switchForm)="open('prijava')" />
+      @for (session of [formSession()]; track session) {
+        @if (cardMode() === 'prijava') {
+          <app-login-form (switchForm)="open('registracija')" />
+        } @else if (cardMode() === 'registracija') {
+          <app-register-form (switchForm)="open('prijava')" />
+        }
       }
     </section>
   </div>

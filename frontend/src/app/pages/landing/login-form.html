@@ -63,5 +63,12 @@
 
 <p class="switch">
   Nemaš nalog?
-  <button type="button" class="link" (click)="switchForm.emit()">Registruj se</button>
+  <button
+    type="button"
+    class="link"
+    (mousedown)="$event.preventDefault()"
+    (click)="switchForm.emit()"
+  >
+    Registruj se
+  </button>
 </p>

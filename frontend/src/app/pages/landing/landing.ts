@@ -6,6 +6,7 @@ import {
   effect,
   inject,
   linkedSignal,
+  signal,
   viewChild,
 } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -48,6 +49,8 @@ export default class LandingPage {
     computation: (mode, previous) => mode ?? previous?.value ?? null,
   });
 
+  protected readonly formSession = signal(0);
+
   private previousMode: FormMode | null = null;
   private openedWith: FormMode | null = null;
 
@@ -58,6 +61,9 @@ export default class LandingPage {
       this.previousMode = mode;
       if (mode && !previous) {
         this.openedWith = mode;
+      }
+      if (mode && mode !== previous) {
+        this.formSession.update((session) => session + 1);
       }
       if (mode !== previous) {
         afterNextRender(() => this.moveFocus(mode, previous), { injector: this.injector });

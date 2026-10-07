@@ -98,5 +98,12 @@
 
 <p class="switch">
   Već imaš nalog?
-  <button type="button" class="link" (click)="switchForm.emit()">Prijavi se</button>
+  <button
+    type="button"
+    class="link"
+    (mousedown)="$event.preventDefault()"
+    (click)="switchForm.emit()"
+  >
+    Prijavi se
+  </button>
 </p>
