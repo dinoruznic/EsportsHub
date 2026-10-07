@@ -1,0 +1,167 @@
+:host {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--ink);
+  pointer-events: none;
+}
+
+.columns {
+  position: absolute;
+  inset: 0 -6dvh;
+  display: flex;
+  gap: 4px;
+  background: var(--ink);
+  transform: skewX(-6deg);
+}
+
+.column {
+  position: relative;
+  flex: 1;
+  margin: 0;
+  overflow: hidden;
+  animation: column-in 0.9s ease-out both;
+
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      180deg,
+      rgb(10 14 20 / 0.5) 0%,
+      rgb(10 14 20 / 0.3) 28%,
+      rgb(10 14 20 / 0.62) 62%,
+      rgb(10 14 20 / 0.96) 100%
+    );
+  }
+}
+
+img {
+  position: absolute;
+  top: 0;
+  left: -8dvh;
+  width: calc(100% + 16dvh);
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+  transform: skewX(6deg);
+  animation: zoom 20s ease-in-out infinite alternate;
+}
+
+figcaption {
+  position: absolute;
+  inset: auto 0 clamp(72px, 11dvh, 112px);
+  z-index: 1;
+  font: 500 11px/1 var(--mono);
+  letter-spacing: 0.18em;
+  text-align: center;
+  text-transform: uppercase;
+  color: rgb(232 236 242 / 0.62);
+  transform: skewX(6deg);
+}
+
+.column:first-child figcaption {
+  padding-left: 6dvh;
+}
+
+.column:last-child figcaption {
+  padding-right: 6dvh;
+}
+
+.type {
+  position: absolute;
+  inset: 0;
+}
+
+.row {
+  position: absolute;
+  left: -30vw;
+  right: -30vw;
+  font: 900 clamp(80px, 12vw, 220px) / 1 var(--display);
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: transparent;
+  -webkit-text-stroke: 1px rgb(232 236 242 / 0.08);
+  transform: rotate(-8deg);
+
+  &:nth-child(1) {
+    top: 2%;
+    --duration: 80s;
+  }
+
+  &:nth-child(2) {
+    top: 26%;
+    --duration: 68s;
+  }
+
+  &:nth-child(3) {
+    top: 50%;
+    --duration: 90s;
+  }
+
+  &:nth-child(4) {
+    top: 74%;
+    --duration: 62s;
+  }
+}
+
+.track {
+  display: inline-flex;
+  animation: drift var(--duration) linear infinite;
+}
+
+.reverse .track {
+  animation-direction: reverse;
+}
+
+.word {
+  padding-right: 0.45em;
+}
+
+.light {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(42vmax 42vmax at 6% 0%, rgb(226 177 84 / 0.16), transparent 70%),
+    radial-gradient(36vmax 36vmax at 0% 55%, rgb(77 141 247 / 0.13), transparent 70%),
+    radial-gradient(36vmax 36vmax at 100% 58%, rgb(239 91 91 / 0.12), transparent 70%),
+    radial-gradient(ellipse 34% 50% at 50% 50%, rgb(10 14 20 / 0.8), rgb(10 14 20 / 0.45) 55%, transparent 100%),
+    radial-gradient(ellipse at center, transparent 50%, rgb(10 14 20 / 0.78) 100%);
+}
+
+@keyframes column-in {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes zoom {
+  to {
+    transform: skewX(6deg) scale(1.06);
+  }
+}
+
+@keyframes drift {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (max-width: 759.98px) {
+  .column:nth-child(n + 3) {
+    display: none;
+  }
+
+  .column:nth-child(2) figcaption {
+    padding-right: 6dvh;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .column,
+  img,
+  .track {
+    animation: none;
+  }
+}

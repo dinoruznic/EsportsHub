@@ -1,0 +1,26 @@
+@if (images().length > 0) {
+  <div class="columns">
+    @for (image of images(); track image.src; let i = $index) {
+      <figure class="column" [style.animation-delay.ms]="i * 120">
+        <img [src]="image.src" alt="" decoding="async" />
+        <figcaption>{{ image.game }}</figcaption>
+      </figure>
+    }
+  </div>
+}
+
+<div class="type">
+  @for (row of rows; track row; let odd = $odd) {
+    <p class="row" [class.reverse]="odd">
+      <span class="track">
+        @for (copy of copies; track copy) {
+          @for (repeat of repeats; track repeat) {
+            <span class="word">{{ row }}</span>
+          }
+        }
+      </span>
+    </p>
+  }
+</div>
+
+<div class="light"></div>

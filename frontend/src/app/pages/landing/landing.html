@@ -1,0 +1,43 @@
+<app-landing-background [images]="images" />
+
+<div class="page">
+  <main class="content">
+    <header class="hero">
+      <p class="eyebrow">Turniri · Timovi · Transfer market · Uživo</p>
+      <h1 class="wordmark">ESPORTS<span>HUB</span></h1>
+      <p class="lead">Platforma za amaterske esports turnire, od prijave tima do finala uživo.</p>
+    </header>
+
+    <div class="auth">
+      <div class="actions">
+        <button
+          type="button"
+          class="btn"
+          [class.btn-gold]="mode() !== 'registracija'"
+          [class.btn-ghost]="mode() === 'registracija'"
+          [class.active]="mode() === 'prijava'"
+          [attr.aria-expanded]="mode() === 'prijava'"
+          (click)="toggle('prijava')"
+        >
+          Prijava
+        </button>
+        <button
+          type="button"
+          class="btn"
+          [class.btn-gold]="mode() === 'registracija'"
+          [class.btn-ghost]="mode() !== 'registracija'"
+          [class.active]="mode() === 'registracija'"
+          [attr.aria-expanded]="mode() === 'registracija'"
+          (click)="toggle('registracija')"
+        >
+          Registracija
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    Nezvaničan studentski projekat. League of Legends, Valorant, Counter-Strike 2 i Dota 2 su
+    zaštitni znakovi svojih vlasnika.
+  </footer>
+</div>
