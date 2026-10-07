@@ -1,6 +1,6 @@
 :host {
   display: grid;
-  gap: 20px;
+  gap: 18px;
 }
 
 .back {
@@ -16,93 +16,43 @@
 }
 
 .head {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px 24px;
-}
-
-.title-block {
   min-width: 0;
 }
 
 .name {
   margin-top: 8px;
   overflow-wrap: anywhere;
-  font-size: clamp(44px, 7vw, 92px);
-}
-
-.chips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 24px;
-  padding: 0 10px;
-  border: 1px solid var(--line);
-  border-radius: 999px;
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 12px;
-
-  strong {
-    color: var(--text);
-  }
-
-  &.prize strong {
-    color: var(--gold);
-  }
-}
-
-.notice {
-  padding: 10px 14px;
-  border: 1px solid var(--line);
-  border-left: 3px solid var(--gold);
-  border-radius: 8px;
-  background: var(--panel);
-  color: var(--muted);
-  font-size: 14px;
-
-  &.rejected {
-    border-left-color: var(--red);
-  }
+  font-size: clamp(48px, 6vw, 88px);
 }
 
 .actions {
-  display: grid;
-  gap: 10px;
-}
-
-.buttons {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  justify-content: flex-end;
   gap: 10px;
 }
 
 .hint {
   color: var(--muted);
-  font-size: 13px;
+  font-size: 12.5px;
+}
+
+.below {
+  justify-self: end;
 }
 
 .action-error {
+  justify-self: end;
   color: var(--red);
   font-size: 13px;
 }
 
 .picker {
   display: grid;
+  justify-self: end;
   gap: 12px;
-  max-width: 520px;
+  width: min(100%, 460px);
   padding: 16px;
 }
 
@@ -117,7 +67,7 @@
 
 .team-option {
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
   padding: 10px 12px;
@@ -143,7 +93,7 @@
 }
 
 .team-tag {
-  color: var(--muted);
+  color: var(--faint);
   font-size: 11px;
 }
 
@@ -155,9 +105,10 @@
 
 .columns {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 320px;
+  grid-template-columns: minmax(0, 1fr) 340px;
   align-items: start;
-  gap: 20px;
+  gap: 24px;
+  margin-top: 6px;
 }
 
 .bracket-section {
@@ -185,8 +136,24 @@
   font-size: 12px;
 }
 
+.bracket-empty {
+  border-style: solid;
+  border-color: var(--line-soft);
+  background: var(--panel);
+}
+
+.side {
+  position: sticky;
+  top: 72px;
+  min-width: 0;
+}
+
 @media (max-width: 1099.98px) {
   .columns {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  .side {
+    position: static;
   }
 }

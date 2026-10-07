@@ -1,4 +1,5 @@
 import { Bracket, BracketMatch, MatchStatus, TeamBrief } from '../../../core/api/models';
+import { initials } from '../../../shared/team-hex/team-hex';
 
 export interface SlotView {
   team: TeamBrief | null;
@@ -39,15 +40,47 @@ const ROUND_LABELS: Record<string, string> = {
   finale: 'Finale',
 };
 
-export function roundLabel(name: string | null, roundNumber: number): string {
-  if (!name) {
-    return `Runda ${roundNumber}`;
+export function roundLabel(name: string | null, roundNumber: number, matchCount?: number): string {
+  const known = name ? ROUND_LABELS[name.trim().toLowerCase()] : undefined;
+  if (known) {
+    return known;
   }
-  return ROUND_LABELS[name.trim().toLowerCase()] ?? name;
+  if (matchCount === 8) {
+    return 'Osmina finala';
+  }
+  return name || `Runda ${roundNumber}`;
+}
+
+export interface ChampionInfo {
+  champion: TeamBrief;
+  finalist: TeamBrief | null;
+  championScore: number;
+  finalistScore: number;
+  finalMatchId: number;
+}
+
+export function findChampion(bracket: Bracket): ChampionInfo | null {
+  const rounds = [...bracket.rounds].sort((a, b) => a.roundNumber - b.roundNumber);
+  const final = rounds.at(-1)?.matches.find((match) => match.nextMatchId === null) ?? null;
+  if (!final || final.winnerTeamId === null) {
+    return null;
+  }
+  const championIsA = final.teamA?.id === final.winnerTeamId;
+  const champion = championIsA ? final.teamA : final.teamB;
+  if (!champion) {
+    return null;
+  }
+  return {
+    champion,
+    finalist: championIsA ? final.teamB : final.teamA,
+    championScore: (championIsA ? final.scoreA : final.scoreB) ?? 0,
+    finalistScore: (championIsA ? final.scoreB : final.scoreA) ?? 0,
+    finalMatchId: final.id,
+  };
 }
 
 export function monogram(team: TeamBrief): string {
-  return (team.tag || team.name).replace(/[^\p{L}\p{N}]/gu, '').slice(0, 2).toUpperCase();
+  return initials(team.tag || team.name);
 }
 
 export function buildBracket(bracket: Bracket, seeds: Record<number, number>): RoundColumn[] {
@@ -78,7 +111,7 @@ export function buildBracket(bracket: Bracket, seeds: Record<number, number>): R
 
   return rounds.map((round, index) => ({
     roundNumber: round.roundNumber,
-    label: roundLabel(round.name, round.roundNumber),
+    label: roundLabel(round.name, round.roundNumber, round.matches.length),
     matches: ordered[index].map((match) => {
       const feeders = feedersOf(match);
       return {

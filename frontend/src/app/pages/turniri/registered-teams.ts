@@ -1,8 +1,10 @@
 import { Component, computed, input } from '@angular/core';
 import { Registration } from '../../core/api/models';
+import { TeamHex } from '../../shared/team-hex/team-hex';
 
 @Component({
   selector: 'app-registered-teams',
+  imports: [TeamHex],
   template: `
     <h2 class="heading">
       Prijavljeni timovi
@@ -15,6 +17,7 @@ import { Registration } from '../../core/api/models';
         @for (team of teams(); track team.id) {
           <li class="team" [attr.data-team-id]="team.teamId">
             <span class="num seed">{{ team.seed }}</span>
+            <app-team-hex [teamId]="team.teamId" [label]="team.teamTag" [size]="24" />
             <span class="name">{{ team.teamName }}</span>
             <span class="num tag">{{ team.teamTag }}</span>
           </li>
@@ -29,6 +32,10 @@ import { Registration } from '../../core/api/models';
       align-content: start;
       gap: 12px;
       padding: 16px;
+    }
+
+    .heading .count {
+      font: 700 13px/1 var(--mono);
     }
 
     .heading {
@@ -61,13 +68,19 @@ import { Registration } from '../../core/api/models';
 
     .team {
       display: grid;
-      grid-template-columns: 24px minmax(0, 1fr) auto;
+      grid-template-columns: 18px 24px minmax(0, 1fr) auto;
       align-items: center;
       gap: 10px;
-      padding: 8px 10px;
-      border-radius: 6px;
+      height: 44px;
+      padding: 0 10px;
+      border-radius: 7px;
       background: var(--panel-2);
-      font-size: 13.5px;
+      font-size: 14px;
+      transition: background-color 0.15s ease;
+    }
+
+    .team:hover {
+      background: var(--raise);
     }
 
     .seed {
@@ -83,7 +96,7 @@ import { Registration } from '../../core/api/models';
     }
 
     .tag {
-      color: var(--muted);
+      color: var(--faint);
       font-size: 11px;
     }
   `,

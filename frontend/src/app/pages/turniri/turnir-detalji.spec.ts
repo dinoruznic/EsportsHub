@@ -69,14 +69,21 @@ describe('TurnirDetalji', () => {
     return Array.from(element.querySelectorAll('section.actions button')).map((b) => b.textContent!.trim());
   }
 
-  it('renders the header with game, format, team count and chips', async () => {
-    await render();
+  it('renders the header and the stats strip', async () => {
+    await render({ registrations: [registration(1, 1), registration(2, 2)] });
+    const cells = Array.from(element.querySelectorAll('app-tournament-stats .cell')).map(
+      (cell) => `${cell.querySelector('dt')!.textContent}: ${cell.querySelector('dd')!.textContent!.trim()}`,
+    );
 
     expect(element.querySelector('.eyebrow')!.textContent).toBe('League of Legends · Single elimination · 8 timova');
     expect(element.querySelector('h1')!.textContent).toBe('Balkan Kup');
-    expect(element.querySelector('.chips')!.textContent).toContain('Prijave otvorene');
-    expect(element.querySelector('.chip.prize')!.textContent).toContain('1.500 KM');
-    expect(element.querySelector('.chip.organizer')!.textContent).toContain('org');
+    expect(cells).toEqual([
+      'Status: Prijave otvorene',
+      'Timovi: 2 / 8',
+      'Nagradni fond: 1.500 KM',
+      'Početak: —',
+      'Organizator: org',
+    ]);
     expect(document.title).toBe('Balkan Kup · EsportsHub');
   });
 
@@ -178,7 +185,7 @@ describe('TurnirDetalji', () => {
   it('lets an admin approve a pending tournament', async () => {
     await render({ roles: ['ADMIN'], tournament: tournament({ status: 'PENDING' }) });
 
-    expect(element.querySelector('.notice')!.textContent).toContain('čeka odobrenje');
+    expect(element.querySelector('app-tournament-stats .note')!.textContent).toBe('Čeka odobrenje administratora.');
     expect(buttons()).toEqual(['Odobri', 'Odbij']);
 
     element.querySelector<HTMLButtonElement>('.approve')!.click();
@@ -209,7 +216,8 @@ describe('TurnirDetalji', () => {
     });
 
     const rounds = Array.from(element.querySelectorAll('.round-name')).map((r) => r.textContent);
-    expect(rounds).toEqual(['Polufinale', 'Finale']);
+    expect(rounds).toEqual(['Polufinale', 'Finale', 'Prvak']);
+    expect(element.querySelector('[data-champion]')!.textContent).toContain('Čeka se finale');
     expect(element.querySelectorAll('.match').length).toBe(3);
 
     const finished = element.querySelector('[data-match-id="10"]')!;

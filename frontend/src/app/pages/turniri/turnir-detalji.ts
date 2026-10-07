@@ -12,15 +12,26 @@ import { AuthService } from '../../core/auth/auth.service';
 import { ConfirmInline } from '../../shared/confirm-inline/confirm-inline';
 import { EmptyState } from '../../shared/empty-state/empty-state';
 import { ErrorState } from '../../shared/error-state/error-state';
-import { formatDate, formatKm, isPowerOfTwo } from '../../shared/format';
+import { isPowerOfTwo } from '../../shared/format';
 import { Skeleton } from '../../shared/skeleton/skeleton';
-import { StatusChip } from '../../shared/status-chip/status-chip';
+import { TeamHex } from '../../shared/team-hex/team-hex';
 import { BracketView } from './bracket/bracket-view';
 import { RegisteredTeams } from './registered-teams';
+import { TournamentStats } from './tournament-stats';
 
 @Component({
   selector: 'app-turnir-detalji',
-  imports: [RouterLink, BracketView, ConfirmInline, EmptyState, ErrorState, Skeleton, StatusChip, RegisteredTeams],
+  imports: [
+    RouterLink,
+    BracketView,
+    ConfirmInline,
+    EmptyState,
+    ErrorState,
+    Skeleton,
+    TeamHex,
+    RegisteredTeams,
+    TournamentStats,
+  ],
   templateUrl: './turnir-detalji.html',
   styleUrl: './turnir-detalji.scss',
 })
@@ -115,13 +126,17 @@ export default class TurnirDetalji {
     }
     return parts.join(' · ');
   });
-  protected readonly prize = computed(() => {
-    const prize = this.t()?.prizePool;
-    return prize === null || prize === undefined ? null : formatKm(prize);
-  });
-  protected readonly start = computed(() => {
-    const start = this.t()?.startDate;
-    return start ? formatDate(start) : null;
+  protected readonly statusNote = computed(() => {
+    switch (this.t()?.status) {
+      case 'PENDING':
+        return 'Čeka odobrenje administratora.';
+      case 'REJECTED':
+        return 'Turnir je odbijen.';
+      case 'CANCELLED':
+        return 'Turnir je otkazan.';
+      default:
+        return null;
+    }
   });
 
   protected readonly picking = signal(false);

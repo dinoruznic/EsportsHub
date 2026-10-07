@@ -11,7 +11,8 @@ import {
   viewChild,
 } from '@angular/core';
 import { Bracket } from '../../../core/api/models';
-import { buildBracket } from './bracket-layout';
+import { TeamHex } from '../../../shared/team-hex/team-hex';
+import { buildBracket, findChampion } from './bracket-layout';
 
 interface Connector {
   key: string;
@@ -19,8 +20,15 @@ interface Connector {
   decided: boolean;
 }
 
+interface Box {
+  left: number;
+  right: number;
+  middle: number;
+}
+
 @Component({
   selector: 'app-bracket-view',
+  imports: [TeamHex],
   templateUrl: './bracket-view.html',
   styleUrl: './bracket-view.scss',
 })
@@ -33,6 +41,7 @@ export class BracketView {
   private readonly inner = viewChild.required<ElementRef<HTMLElement>>('inner');
 
   protected readonly columns = computed(() => buildBracket(this.bracket(), this.seeds()));
+  protected readonly champion = computed(() => findChampion(this.bracket()));
   protected readonly connectors = signal<Connector[]>([]);
 
   constructor() {
@@ -55,29 +64,33 @@ export class BracketView {
   private measure(): void {
     const inner = this.inner().nativeElement;
     const origin = inner.getBoundingClientRect();
-    const rectOf = (id: number) => inner.querySelector(`[data-match-id="${id}"]`)?.getBoundingClientRect() ?? null;
+    const boxOf = (selector: string): Box | null => {
+      const rect = inner.querySelector(selector)?.getBoundingClientRect();
+      return rect
+        ? {
+            left: rect.left - origin.left,
+            right: rect.right - origin.left,
+            middle: rect.top + rect.height / 2 - origin.top,
+          }
+        : null;
+    };
     const lines: Connector[] = [];
+    const link = (key: string, from: Box | null, to: Box | null, decided: boolean) => {
+      if (!from || !to) {
+        return;
+      }
+      const mid = (from.right + to.left) / 2;
+      lines.push({ key, decided, d: `M ${from.right} ${from.middle} H ${mid} V ${to.middle} H ${to.left}` });
+    };
 
     for (const column of this.columns()) {
       for (const match of column.matches) {
+        const from = boxOf(`[data-match-id="${match.id}"]`);
         if (match.nextMatchId === null) {
-          continue;
+          link(`${match.id}-prvak`, from, boxOf('[data-champion]'), match.decided);
+        } else {
+          link(`${match.id}-${match.nextMatchId}`, from, boxOf(`[data-match-id="${match.nextMatchId}"]`), match.decided);
         }
-        const from = rectOf(match.id);
-        const to = rectOf(match.nextMatchId);
-        if (!from || !to) {
-          continue;
-        }
-        const x1 = from.right - origin.left;
-        const y1 = from.top + from.height / 2 - origin.top;
-        const x2 = to.left - origin.left;
-        const y2 = to.top + to.height / 2 - origin.top;
-        const mid = (x1 + x2) / 2;
-        lines.push({
-          key: `${match.id}-${match.nextMatchId}`,
-          d: `M ${x1} ${y1} H ${mid} V ${y2} H ${x2}`,
-          decided: match.decided,
-        });
       }
     }
 

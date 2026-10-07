@@ -5,21 +5,18 @@
 
 .scroller {
   overflow-x: auto;
-  padding-bottom: 6px;
-  border: 1px solid var(--line-soft);
   border-radius: 10px;
-  background:
-    radial-gradient(circle at 1px 1px, rgb(255 255 255 / 0.035) 1px, transparent 0) 0 0 / 18px 18px,
-    var(--panel);
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1px var(--line-soft);
 }
 
 .inner {
   position: relative;
   display: flex;
-  gap: 56px;
-  width: max-content;
-  min-width: 100%;
-  padding: 18px 20px;
+  gap: 48px;
+  width: 100%;
+  min-width: min-content;
+  padding: 20px 24px 24px;
 }
 
 .lines {
@@ -37,20 +34,20 @@
   }
 
   path.decided {
-    stroke: rgb(226 177 84 / 0.45);
+    stroke: rgb(226 177 84 / 0.5);
   }
 }
 
 .round {
   position: relative;
   display: flex;
+  flex: 1 1 0;
   flex-direction: column;
-  width: 230px;
-  flex: none;
+  min-width: 260px;
 }
 
 .round-name {
-  margin-bottom: 10px;
+  margin-bottom: 12px;
   color: var(--muted);
   font: 500 11px/1.4 var(--mono);
   letter-spacing: 0.1em;
@@ -67,29 +64,30 @@
   display: flex;
   flex: 1;
   align-items: center;
-  min-height: 108px;
+  min-height: 140px;
 }
 
 .match {
   width: 100%;
+  max-width: 340px;
   overflow: hidden;
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: 9px;
   background: var(--panel-2);
 
   &.live {
-    border-color: rgb(255 67 87 / 0.7);
-    box-shadow: 0 0 18px rgb(255 67 87 / 0.25);
+    border-color: rgb(255 67 87 / 0.75);
+    box-shadow: 0 0 22px rgb(255 67 87 / 0.28);
   }
 }
 
 .match-head {
   display: flex;
   justify-content: space-between;
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-bottom: 1px solid var(--line-soft);
   color: var(--faint);
-  font: 500 10px/1.2 var(--mono);
+  font: 500 10.5px/1.3 var(--mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -97,7 +95,7 @@
 .match-status {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
 
   .live & {
     color: var(--live);
@@ -106,21 +104,22 @@
 }
 
 .live-dot {
-  width: 6px;
-  height: 6px;
+  width: 7px;
+  height: 7px;
   border-radius: 50%;
   background: var(--live);
+  box-shadow: 0 0 8px var(--live);
   animation: pulse 1.2s ease-in-out infinite;
 }
 
 .row {
   display: grid;
-  grid-template-columns: 16px 22px minmax(0, 1fr) 24px;
+  grid-template-columns: 16px 24px minmax(0, 1fr) 28px;
   align-items: center;
-  gap: 8px;
-  height: 32px;
-  padding: 0 10px;
-  font-size: 13px;
+  gap: 10px;
+  height: 44px;
+  padding: 0 12px;
+  font-size: 15px;
 
   & + & {
     border-top: 1px solid var(--line-soft);
@@ -141,30 +140,15 @@
 
   &.tbd .team {
     color: var(--faint);
+    font-size: 13.5px;
     font-style: italic;
   }
 }
 
 .seed {
   color: var(--faint);
-  font-size: 10px;
+  font-size: 10.5px;
   text-align: right;
-}
-
-.mono {
-  display: grid;
-  place-items: center;
-  width: 22px;
-  height: 22px;
-  border-radius: 5px;
-  background: var(--raise);
-  color: var(--text);
-  font: 700 9px/1 var(--mono);
-
-  &.empty {
-    border: 1px dashed var(--line);
-    background: transparent;
-  }
 }
 
 .team {
@@ -175,7 +159,58 @@
 
 .score {
   color: var(--muted);
+  font-size: 15px;
   text-align: right;
+}
+
+.champion {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 240px;
+  padding: 18px 14px;
+  border: 1px dashed var(--line);
+  border-radius: 9px;
+  text-align: center;
+
+  &.crowned {
+    border: 1px solid rgb(226 177 84 / 0.55);
+    background: radial-gradient(circle at 50% 0%, rgb(226 177 84 / 0.18), transparent 70%), var(--panel-2);
+    box-shadow: 0 0 28px rgb(226 177 84 / 0.2);
+  }
+}
+
+.trophy {
+  width: 28px;
+  height: 28px;
+  fill: none;
+  stroke: var(--faint);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+
+  .crowned & {
+    stroke: var(--gold);
+  }
+}
+
+.champion-name {
+  color: var(--gold);
+  font: 800 20px/1.1 var(--display);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.waiting {
+  color: var(--faint);
+  font-size: 13px;
+  font-style: italic;
+}
+
+.champion-col {
+  flex: 0.8 1 0;
+  min-width: 200px;
 }
 
 @keyframes pulse {
