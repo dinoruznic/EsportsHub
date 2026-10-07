@@ -68,6 +68,27 @@ describe('App', () => {
     expect(element.querySelector('a.nav-item.active')?.getAttribute('href')).toBe('/turniri');
   });
 
+  it('shows the user with role chips and logs out with Odjava', async () => {
+    storeSession();
+    const fixture = TestBed.createComponent(App);
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/turniri');
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.querySelector('.topbar .username')?.textContent).toBe('admin');
+    expect(Array.from(element.querySelectorAll('.topbar .role')).map((chip) => chip.textContent)).toEqual([
+      'ADMIN',
+    ]);
+
+    element.querySelector<HTMLButtonElement>('.topbar button')!.click();
+    await fixture.whenStable();
+
+    expect(router.url).toBe('/');
+    expect(localStorage.length).toBe(0);
+    expect(element.querySelector('.topbar')).toBeNull();
+  });
+
   it('renders the not-found page for an unknown url', async () => {
     const { element, router } = await renderAt('/ova-stranica-ne-postoji');
 
