@@ -9,7 +9,7 @@ describe('LandingPage', () => {
   let fixture: ComponentFixture<App>;
   let router: Router;
 
-  beforeEach(async () => {
+  async function render(url: string): Promise<void> {
     localStorage.clear();
     TestBed.configureTestingModule({
       imports: [App],
@@ -17,9 +17,9 @@ describe('LandingPage', () => {
     });
     fixture = TestBed.createComponent(App);
     router = TestBed.inject(Router);
-    await router.navigateByUrl('/');
+    await router.navigateByUrl(url);
     await fixture.whenStable();
-  });
+  }
 
   afterEach(() => localStorage.clear());
 
@@ -27,8 +27,20 @@ describe('LandingPage', () => {
     return fixture.nativeElement as HTMLElement;
   }
 
-  function button(label: string): HTMLButtonElement {
-    const found = Array.from(element().querySelectorAll('button')).find(
+  function heroView(): HTMLElement {
+    return element().querySelector('.hero-view')!;
+  }
+
+  function formView(): HTMLElement {
+    return element().querySelector('.form-view')!;
+  }
+
+  function isShown(view: HTMLElement): boolean {
+    return !view.classList.contains('hidden') && !view.hasAttribute('inert');
+  }
+
+  function button(label: string, root: HTMLElement = element()): HTMLButtonElement {
+    const found = Array.from(root.querySelectorAll('button')).find(
       (candidate) => candidate.textContent?.trim() === label,
     );
     if (!found) {
@@ -37,8 +49,8 @@ describe('LandingPage', () => {
     return found;
   }
 
-  async function click(label: string): Promise<void> {
-    button(label).click();
+  async function click(target: HTMLElement): Promise<void> {
+    target.click();
     await fixture.whenStable();
   }
 
@@ -50,62 +62,109 @@ describe('LandingPage', () => {
     await fixture.whenStable();
   }
 
-  it('shows only the buttons at first', () => {
-    expect(element().querySelector('#auth-card')).toBeNull();
-    expect(button('Prijava').getAttribute('aria-expanded')).toBe('false');
+  describe('from the hero view', () => {
+    beforeEach(() => render('/'));
+
+    it('shows both buttons and no form', () => {
+      expect(isShown(heroView())).toBe(true);
+      expect(isShown(formView())).toBe(false);
+      expect(button('Prijava', heroView()).classList).toContain('btn-gold');
+      expect(button('Registracija', heroView()).classList).toContain('btn-ghost');
+      expect(element().querySelector('app-login-form')).toBeNull();
+      expect(element().querySelector('app-register-form')).toBeNull();
+    });
+
+    it('hides the hero and shows the login form when Prijava is clicked', async () => {
+      await click(button('Prijava', heroView()));
+
+      expect(router.url).toBe('/?forma=prijava');
+      expect(isShown(heroView())).toBe(false);
+      expect(heroView().hasAttribute('inert')).toBe(true);
+      expect(isShown(formView())).toBe(true);
+      expect(formView().querySelector('app-login-form h2')?.textContent).toBe('Prijava');
+    });
+
+    it('returns to the hero with the Nazad button', async () => {
+      await click(button('Prijava', heroView()));
+      const back = formView().querySelector<HTMLButtonElement>('button.back')!;
+
+      expect(back.getAttribute('aria-label')).toBe('Nazad na početnu');
+      await click(back);
+
+      expect(router.url).toBe('/');
+      expect(isShown(heroView())).toBe(true);
+      expect(isShown(formView())).toBe(false);
+    });
+
+    it('shows the register form when Registracija is clicked', async () => {
+      await click(button('Registracija', heroView()));
+
+      expect(router.url).toBe('/?forma=registracija');
+      expect(isShown(formView())).toBe(true);
+      expect(formView().querySelector('app-register-form h2')?.textContent).toBe('Registracija');
+    });
+
+    it('swaps login and register with the links inside the card', async () => {
+      await click(button('Prijava', heroView()));
+      await click(button('Registruj se', formView()));
+
+      expect(router.url).toBe('/?forma=registracija');
+      expect(element().querySelector('app-login-form')).toBeNull();
+      expect(element().querySelector('app-register-form')).not.toBeNull();
+
+      await click(formView().querySelector<HTMLButtonElement>('app-register-form .link')!);
+
+      expect(router.url).toBe('/?forma=prijava');
+      expect(element().querySelector('app-register-form')).toBeNull();
+      expect(element().querySelector('app-login-form')).not.toBeNull();
+    });
+
+    it('returns to the hero on Escape', async () => {
+      await click(button('Registracija', heroView()));
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      await fixture.whenStable();
+
+      expect(router.url).toBe('/');
+      expect(isShown(heroView())).toBe(true);
+    });
+
+    it('has no close button in the card', async () => {
+      await click(button('Prijava', heroView()));
+
+      expect(element().querySelector('button[aria-label="Zatvori"]')).toBeNull();
+    });
+
+    it('shows required errors after submitting an empty login form', async () => {
+      await click(button('Prijava', heroView()));
+      await click(button('Prijavi se', formView()));
+
+      const errors = Array.from(element().querySelectorAll('.field-error')).map((error) =>
+        error.textContent?.trim(),
+      );
+      expect(errors).toEqual(['Obavezno polje.', 'Obavezno polje.']);
+    });
   });
 
-  it('opens the login form when Prijava is clicked', async () => {
-    await click('Prijava');
+  describe('opened with ?forma=registracija', () => {
+    beforeEach(() => render('/?forma=registracija'));
 
-    expect(router.url).toBe('/?forma=prijava');
-    expect(element().querySelector('app-login-form')).not.toBeNull();
-    expect(element().querySelector('label[for="login-identifier"]')?.textContent).toContain(
-      'Korisničko ime ili email',
-    );
-    expect(button('Prijava').getAttribute('aria-expanded')).toBe('true');
-  });
+    it('shows the register form directly', () => {
+      expect(isShown(heroView())).toBe(false);
+      expect(isShown(formView())).toBe(true);
+      expect(element().querySelector('app-register-form')).not.toBeNull();
+    });
 
-  it('swaps to the register form when Registracija is clicked', async () => {
-    await click('Prijava');
-    await click('Registracija');
+    it('shows an error when the passwords do not match', async () => {
+      await type('#register-password', 'lozinka123');
+      await type('#register-confirm', 'lozinka124');
 
-    expect(router.url).toBe('/?forma=registracija');
-    expect(element().querySelector('app-login-form')).toBeNull();
-    expect(element().querySelector('app-register-form')).not.toBeNull();
-    expect(button('Registracija').classList).toContain('btn-gold');
-  });
+      expect(element().querySelector('#register-confirm-error')?.textContent).toContain(
+        'Lozinke se ne poklapaju.',
+      );
 
-  it('shows an error when the passwords do not match', async () => {
-    await click('Registracija');
-    await type('#register-password', 'lozinka123');
-    await type('#register-confirm', 'lozinka124');
+      await type('#register-confirm', 'lozinka123');
 
-    expect(element().querySelector('#register-confirm-error')?.textContent).toContain(
-      'Lozinke se ne poklapaju.',
-    );
-
-    await type('#register-confirm', 'lozinka123');
-
-    expect(element().querySelector('#register-confirm-error')).toBeNull();
-  });
-
-  it('shows required errors after submitting an empty login form', async () => {
-    await click('Prijava');
-    await click('Prijavi se');
-
-    const errors = Array.from(element().querySelectorAll('.field-error')).map((error) =>
-      error.textContent?.trim(),
-    );
-    expect(errors).toEqual(['Obavezno polje.', 'Obavezno polje.']);
-  });
-
-  it('closes the card with the close button', async () => {
-    await click('Prijava');
-    element().querySelector<HTMLButtonElement>('button[aria-label="Zatvori"]')!.click();
-    await fixture.whenStable();
-
-    expect(router.url).toBe('/');
-    expect(element().querySelector('#auth-card')).toBeNull();
+      expect(element().querySelector('#register-confirm-error')).toBeNull();
+    });
   });
 });
