@@ -23,6 +23,28 @@ export const MESSAGES = {
   emailTaken: 'Email je već registrovan.',
   invalidFields: 'Provjeri označena polja.',
   generic: 'Nešto nije u redu. Pokušaj ponovo.',
+  forbidden: 'Nemaš dozvolu za ovu radnju.',
+  notFound: 'Traženi podatak ne postoji.',
+};
+
+const BACKEND_MESSAGES: Record<string, string> = {
+  'turnir ne postoji': 'Turnir ne postoji.',
+  'unknown game': 'Izabrana igra ne postoji.',
+  'turnir nije u statusu pending': 'Turnir više ne čeka odobrenje.',
+  'prijave nisu otvorene': 'Prijave za ovaj turnir nisu otvorene.',
+  'tim ne postoji': 'Tim ne postoji.',
+  'nisi kapiten tima': 'Samo kapiten tima može to uraditi.',
+  'tim i turnir nisu ista igra': 'Tim nije iz iste igre kao turnir.',
+  'tim je vec prijavljen': 'Tim je već prijavljen na turnir.',
+  'turnir je pun': 'Turnir je popunjen.',
+  'prijava ne postoji': 'Prijava ne postoji.',
+  'ne mozes se povuci nakon zdrijeba': 'Nakon žrijeba se više ne možeš povući.',
+  'samo organizator ili admin': 'Samo organizator ili admin može generisati bracket.',
+  'turnir nije u fazi prijava': 'Turnir nije u fazi prijava.',
+  'bracket vec postoji': 'Bracket je već generisan.',
+  'premalo timova': 'Premalo prijavljenih timova za bracket.',
+  'broj timova mora biti stepen dvojke (2,4,8,16...)': 'Broj timova mora biti 2, 4, 8 ili 16.',
+  'nepodrzan format turnira': 'Format turnira nije podržan.',
 };
 
 const FIELD_MESSAGES: Record<string, Record<string, string>> = {
@@ -30,6 +52,7 @@ const FIELD_MESSAGES: Record<string, Record<string, string>> = {
   email: { Email: 'Email nije ispravan.', Size: 'Email može imati najviše 120 znakova.' },
   password: { Size: 'Lozinka mora imati 8 do 72 znaka.' },
   displayName: { Size: 'Ime za prikaz može imati najviše 60 znakova.' },
+  name: { Size: 'Naziv može imati najviše 80 znakova.' },
 };
 
 export function toApiError(error: unknown): ApiError {
@@ -39,11 +62,20 @@ export function toApiError(error: unknown): ApiError {
 
   const body = (typeof error.error === 'object' && error.error ? error.error : {}) as SpringErrorBody;
 
+  const known = BACKEND_MESSAGES[(body.message ?? '').trim().toLowerCase()];
+  if (known && error.status >= 400 && error.status < 500) {
+    return { message: known, fieldErrors: {} };
+  }
+
   switch (error.status) {
     case 0:
       return { message: MESSAGES.offline, fieldErrors: {} };
     case 401:
       return { message: MESSAGES.badCredentials, fieldErrors: {} };
+    case 403:
+      return { message: MESSAGES.forbidden, fieldErrors: {} };
+    case 404:
+      return { message: MESSAGES.notFound, fieldErrors: {} };
     case 409:
       return duplicateError(body.message ?? '');
     case 400:
