@@ -59,6 +59,46 @@ a {
   outline-offset: 2px;
 }
 
+@supports not selector(::-webkit-scrollbar) {
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--gold) transparent;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  margin: 6px;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.03);
+}
+
+::-webkit-scrollbar-thumb {
+  border: 2px solid transparent;
+  border-radius: 999px;
+  background: var(--gold) padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #f0c97c padding-box;
+}
+
+::-webkit-scrollbar-thumb:active {
+  background: #c99a42 padding-box;
+}
+
+::-webkit-scrollbar-button {
+  display: none;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
 .eyebrow {
   font-family: var(--mono);
   font-size: 11px;
