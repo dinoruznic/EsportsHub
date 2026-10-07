@@ -34,14 +34,36 @@
 }
 
 .wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.14em;
   font: 900 clamp(48px, 9vw, 112px) / 0.86 var(--display);
   letter-spacing: 0.01em;
+  color: var(--text);
   text-shadow:
     0 2px 6px rgb(10 14 20 / 0.6),
     0 8px 40px rgb(10 14 20 / 0.85);
+}
 
-  span {
-    color: var(--gold);
+.mark {
+  flex: none;
+  width: 0.74em;
+  height: 0.74em;
+  filter: drop-shadow(0 4px 18px rgb(10 14 20 / 0.85));
+
+  path {
+    stroke: var(--gold);
+    stroke-linejoin: round;
+  }
+
+  .hex {
+    fill: none;
+    stroke-width: 2;
+  }
+
+  .hex-inner {
+    fill: rgb(226 177 84 / 0.18);
+    stroke-width: 1.5;
   }
 }
 

@@ -29,7 +29,8 @@ describe('App', () => {
     const { element, router } = await renderAt('/');
 
     expect(router.url).toBe('/');
-    expect(element.querySelector('h1')?.textContent).toContain('ESPORTS');
+    expect(element.querySelector('h1')?.textContent?.trim()).toBe('ESPORTSHUB');
+    expect(element.querySelector('h1 span')).toBeNull();
     expect(element.querySelector('nav')).toBeNull();
   });
 
