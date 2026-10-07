@@ -148,6 +148,8 @@ npm start
 
 Open http://localhost:4200. The backend must be running on `:8080`, because the dev server proxies `/api` and `/ws` to it (`frontend/proxy.conf.json`).
 
+The start page is a full-screen landing with login and registration on the same page; the rest of the app is only reachable after logging in. Demo admin: `admin` / `admin12345`.
+
 **Live demo:** run `backend/http/demo-setup.http` (creates a 4-team tournament and prints the spectator link), open the link, then step through `backend/http/demo-play.http` request by request and watch the bracket update without refreshing.
 
 **Riot agent** (see [`agent/README.md`](agent/README.md)):
