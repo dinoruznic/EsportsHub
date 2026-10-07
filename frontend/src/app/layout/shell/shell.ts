@@ -1,7 +1,5 @@
 import { Component, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
-import { filter, map } from 'rxjs';
+import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 
 interface NavItem {
@@ -67,24 +65,8 @@ export class Shell {
     },
   ];
 
-  protected readonly area = toSignal(
-    this.router.events.pipe(
-      filter((event) => event instanceof NavigationEnd),
-      map(() => this.currentArea()),
-    ),
-    { initialValue: '' },
-  );
-
   protected logout(): void {
     this.auth.logout();
     void this.router.navigateByUrl('/');
-  }
-
-  private currentArea(): string {
-    let route = this.router.routerState.snapshot.root;
-    while (route.firstChild) {
-      route = route.firstChild;
-    }
-    return route.data['area'] ?? '';
   }
 }

@@ -86,6 +86,16 @@ describe('App', () => {
     expect(element.querySelector('a.nav-item.active')?.getAttribute('href')).toBe('/turniri');
   });
 
+  it('shows the gold wordmark in the top bar as a link to /turniri', async () => {
+    storeSession();
+    const { element } = await renderAt('/turniri');
+    const wordmark = element.querySelector<HTMLAnchorElement>('.topbar a.wordmark')!;
+
+    expect(wordmark.textContent?.trim()).toBe('EsportsHub');
+    expect(wordmark.getAttribute('href')).toBe('/turniri');
+    expect(element.querySelector('.topbar .crumb')).toBeNull();
+  });
+
   it('keeps Turniri active on the create and detail pages', async () => {
     storeSession();
     const { fixture, element, router } = await renderAt('/turniri/novi');

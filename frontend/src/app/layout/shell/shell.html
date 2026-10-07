@@ -30,10 +30,8 @@
   <div class="main">
     <header class="topbar">
       <div class="topbar-inner">
-        <p class="crumb">
-          <span class="eyebrow">EsportsHub</span>
-          <span class="area">{{ area() }}</span>
-        </p>
+        <span aria-hidden="true"></span>
+        <a class="wordmark" routerLink="/turniri">EsportsHub</a>
         @if (user(); as user) {
           <div class="account">
             <span class="username">{{ user.username }}</span>

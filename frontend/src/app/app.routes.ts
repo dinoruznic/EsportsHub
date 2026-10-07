@@ -17,43 +17,36 @@ export const routes: Routes = [
       {
         path: 'uzivo',
         title: 'Uživo · EsportsHub',
-        data: { area: 'Uživo' },
         loadComponent: () => import('./pages/uzivo/uzivo'),
       },
       {
         path: 'turniri',
         title: 'Turniri · EsportsHub',
-        data: { area: 'Turniri' },
         loadComponent: () => import('./pages/turniri/turniri'),
       },
       {
         path: 'turniri/novi',
         title: 'Novi turnir · EsportsHub',
-        data: { area: 'Turniri' },
         loadComponent: () => import('./pages/turniri/novi-turnir'),
       },
       {
         path: 'turniri/:id',
         title: 'Turnir · EsportsHub',
-        data: { area: 'Turniri' },
         loadComponent: () => import('./pages/turniri/turnir-detalji'),
       },
       {
         path: 'market',
         title: 'Market · EsportsHub',
-        data: { area: 'Market' },
         loadComponent: () => import('./pages/market/market'),
       },
       {
         path: 'timovi',
         title: 'Timovi · EsportsHub',
-        data: { area: 'Timovi' },
         loadComponent: () => import('./pages/timovi/timovi'),
       },
       {
         path: 'profil',
         title: 'Profil · EsportsHub',
-        data: { area: 'Profil' },
         loadComponent: () => import('./pages/profil/profil'),
       },
     ],
