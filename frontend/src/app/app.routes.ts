@@ -33,6 +33,12 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/turniri/novi-turnir'),
       },
       {
+        path: 'turniri/:id',
+        title: 'Turnir · EsportsHub',
+        data: { area: 'Turniri' },
+        loadComponent: () => import('./pages/turniri/turnir-detalji'),
+      },
+      {
         path: 'market',
         title: 'Market · EsportsHub',
         data: { area: 'Market' },

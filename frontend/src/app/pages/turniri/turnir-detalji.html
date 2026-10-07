@@ -1,0 +1,157 @@
+<a class="back" routerLink="/turniri">← Turniri</a>
+
+@if (tournament.error()) {
+  <app-error-state [message]="loadError()" (retry)="tournament.reload()" />
+} @else if (!t()) {
+  <app-skeleton [count]="1" [height]="140" />
+  <app-skeleton [count]="1" [height]="320" />
+} @else {
+  @let tour = t()!;
+  <header class="head">
+    <div class="title-block">
+      <p class="eyebrow">{{ eyebrow() }}</p>
+      <h1 class="display-title name">{{ tour.name }}</h1>
+    </div>
+    <ul class="chips">
+      <li><app-status-chip [status]="tour.status" /></li>
+      @if (prize(); as prize) {
+        <li class="chip prize">Nagradni fond <strong class="num">{{ prize }}</strong></li>
+      }
+      @if (start(); as start) {
+        <li class="chip">Početak {{ start }}</li>
+      }
+      <li class="chip organizer">Organizator: <strong>{{ tour.organizerUsername }}</strong></li>
+    </ul>
+  </header>
+
+  @if (tour.status === 'PENDING') {
+    <p class="notice" role="status">
+      Turnir čeka odobrenje administratora. Do tada ga vide samo organizator i administratori.
+    </p>
+  } @else if (tour.status === 'REJECTED') {
+    <p class="notice rejected" role="status">Administrator je odbio ovaj turnir.</p>
+  }
+
+  @if (hasActions()) {
+    <section class="actions" aria-label="Akcije">
+      <div class="buttons">
+        @if (canReview()) {
+          <button type="button" class="btn btn-gold approve" [disabled]="busy()" (click)="approve()">Odobri</button>
+          <app-confirm-inline
+            label="Odbij"
+            question="Odbiti turnir?"
+            confirmLabel="Da, odbij"
+            [busy]="busy()"
+            (confirmed)="reject()"
+          />
+        }
+
+        @if (canRegister() && !picking()) {
+          <button
+            type="button"
+            class="btn btn-gold register"
+            [disabled]="busy() || isFull()"
+            (click)="openPicker()"
+          >
+            Prijavi tim
+          </button>
+        }
+
+        @if (canWithdraw()) {
+          @for (registration of myRegistrations(); track registration.id) {
+            <app-confirm-inline
+              class="withdraw"
+              [label]="myRegistrations().length > 1 ? 'Povuci prijavu: ' + registration.teamTag : 'Povuci prijavu'"
+              question="Povući prijavu tima {{ registration.teamName }}?"
+              confirmLabel="Da, povuci"
+              [busy]="busy()"
+              (confirmed)="withdraw(registration.id)"
+            />
+          }
+        }
+
+        @if (canGenerate()) {
+          <button
+            type="button"
+            class="btn btn-gold generate"
+            [disabled]="busy() || !generateReady()"
+            (click)="generate()"
+          >
+            Generiši bracket
+          </button>
+          @if (!generateReady()) {
+            <span class="hint">Potrebno 2, 4, 8 ili 16 timova (trenutno {{ active().length }}).</span>
+          }
+        }
+      </div>
+
+      @if (canRegister() && isFull() && !picking()) {
+        <p class="hint">Turnir je popunjen.</p>
+      }
+
+      @if (picking()) {
+        <div class="picker panel">
+          <p class="picker-title">Izaberi tim za prijavu</p>
+          <div class="team-options" role="radiogroup" aria-label="Tvoji timovi">
+            @for (team of eligibleTeams(); track team.id) {
+              <label class="team-option" [class.selected]="selectedTeam() === team.id">
+                <input
+                  type="radio"
+                  name="team"
+                  [value]="team.id"
+                  [checked]="selectedTeam() === team.id"
+                  (change)="selectedTeam.set(team.id)"
+                />
+                <span class="team-name">{{ team.name }}</span>
+                <span class="num team-tag">{{ team.tag }}</span>
+              </label>
+            }
+          </div>
+          <div class="picker-actions">
+            <button type="button" class="btn btn-ghost" [disabled]="busy()" (click)="picking.set(false)">Odustani</button>
+            <button type="button" class="btn btn-gold confirm-register" [disabled]="busy()" (click)="register()">
+              {{ busy() ? 'Prijavljujem…' : 'Potvrdi prijavu' }}
+            </button>
+          </div>
+        </div>
+      }
+
+      @if (actionError(); as message) {
+        <p class="action-error" role="alert">{{ message }}</p>
+      }
+    </section>
+  }
+
+  <div class="columns">
+    <section class="bracket-section" aria-labelledby="bracket-heading">
+      <div class="section-head">
+        <h2 id="bracket-heading" class="section-title">Bracket</h2>
+        <button type="button" class="btn btn-ghost refresh" (click)="reloadAll()">Osvježi</button>
+      </div>
+      @if (bracket.error()) {
+        <app-error-state [message]="bracketError()" (retry)="bracket.reload()" />
+      } @else if (!bracket.hasValue()) {
+        <app-skeleton [count]="1" [height]="320" />
+      } @else if (!hasBracket()) {
+        <app-empty-state
+          title="Bracket još nije generisan."
+          [text]="
+            'Generiše ga organizator (' +
+            tour.organizerUsername +
+            ') ili administrator kada je prijavljeno 2, 4, 8 ili 16 timova.'
+          "
+        />
+      }
+    </section>
+
+    <aside class="side">
+      @if (registrations.error()) {
+        <app-error-state message="Prijave se ne mogu učitati." (retry)="registrations.reload()" />
+      } @else if (!registrations.hasValue()) {
+        <app-skeleton [count]="1" [height]="200" />
+      } @else {
+        <app-registered-teams [registrations]="active()" [maxTeams]="tour.maxTeams" />
+      }
+    </aside>
+  </div>
+}
