@@ -25,6 +25,8 @@ export const MESSAGES = {
   generic: 'Nešto nije u redu. Pokušaj ponovo.',
   forbidden: 'Nemaš dozvolu za ovu radnju.',
   notFound: 'Traženi podatak ne postoji.',
+  conflict: 'Radnja trenutno nije moguća. Osvježi stranicu i pokušaj ponovo.',
+  sessionExpired: 'Sesija je istekla. Prijavi se ponovo.',
 };
 
 const BACKEND_MESSAGES: Record<string, string> = {
@@ -67,17 +69,19 @@ export function toApiError(error: unknown): ApiError {
     return { message: known, fieldErrors: {} };
   }
 
+  const authRequest = (error.url ?? '').includes('/api/auth/');
+
   switch (error.status) {
     case 0:
       return { message: MESSAGES.offline, fieldErrors: {} };
     case 401:
-      return { message: MESSAGES.badCredentials, fieldErrors: {} };
+      return { message: authRequest ? MESSAGES.badCredentials : MESSAGES.sessionExpired, fieldErrors: {} };
     case 403:
       return { message: MESSAGES.forbidden, fieldErrors: {} };
     case 404:
       return { message: MESSAGES.notFound, fieldErrors: {} };
     case 409:
-      return duplicateError(body.message ?? '');
+      return authRequest ? duplicateError(body.message ?? '') : { message: MESSAGES.conflict, fieldErrors: {} };
     case 400:
       return validationError(body.errors ?? []);
     default:
