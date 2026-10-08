@@ -1,0 +1,98 @@
+<header class="head">
+  <div>
+    <p class="eyebrow">Transferi</p>
+    <h1 class="display-title">Market</h1>
+    <p class="lead">Igrači koji traže tim i ponude timova.</p>
+  </div>
+</header>
+
+<section class="panel-section" aria-label="Svi oglasi">
+  <div class="filters" role="search">
+    <label class="filter">
+      <span class="filter-label">Igra</span>
+      <select
+        class="field-input game-filter"
+        [value]="game()"
+        (change)="setFilter('igra', $any($event.target).value)"
+      >
+        <option value="">Sve igre</option>
+        @if (games.hasValue()) {
+          @for (g of games.value(); track g.id) {
+            <option [value]="g.code" [selected]="g.code === game()">{{ g.name }}</option>
+          }
+        }
+      </select>
+    </label>
+    <label class="filter">
+      <span class="filter-label">Pozicija</span>
+      <select
+        class="field-input position-filter"
+        [value]="position()"
+        [disabled]="!game()"
+        (change)="setFilter('pozicija', $any($event.target).value)"
+      >
+        <option value="">{{ game() ? 'Sve pozicije' : 'Prvo izaberi igru' }}</option>
+        @if (positions.hasValue()) {
+          @for (p of positions.value(); track p.id) {
+            <option [value]="p.label" [selected]="p.label === position()">{{ p.label }}</option>
+          }
+        }
+      </select>
+    </label>
+    <label class="filter search">
+      <span class="filter-label">Pretraga</span>
+      <input
+        class="field-input search-input"
+        type="search"
+        placeholder="Ime u igri"
+        [value]="search()"
+        (input)="setFilter('q', $any($event.target).value)"
+      />
+    </label>
+  </div>
+
+  @if (listings.error()) {
+    <app-error-state [message]="loadError()" (retry)="listings.reload()" />
+  } @else if (!listings.hasValue()) {
+    <app-skeleton class="grid" [count]="6" [height]="200" />
+  } @else if (listings.value().length === 0) {
+    <app-empty-state
+      title="Na marketu trenutno nema igrača."
+      text="Igrači se pojavljuju ovdje kad na profilu uključe 'Dostupan za transfer'."
+    />
+  } @else if (visible().length === 0) {
+    <app-empty-state
+      title="Nema oglasa za izabrane filtere."
+      text="Promijeni igru, poziciju ili pretragu."
+    >
+      @if (filtered()) {
+        <button type="button" class="btn btn-ghost" (click)="clearFilters()">Očisti filtere</button>
+      }
+    </app-empty-state>
+  } @else {
+    <div class="grid">
+      @for (l of visible(); track l.id) {
+        <app-listing-card
+          [listing]="l"
+          [gameName]="gameNames()[l.gameCode] ?? null"
+          [ownerName]="ownerName(l)"
+          [region]="region(l)"
+          [own]="isOwn(l)"
+          (open)="openListing(l)"
+        />
+      }
+    </div>
+  }
+</section>
+
+@if (selected(); as l) {
+  <app-drawer [label]="'Oglas ' + l.inGameName" (close)="closeListing()">
+    <app-listing-detail
+      [listing]="l"
+      [gameName]="gameNames()[l.gameCode] ?? null"
+      [ownerName]="ownerName(l)"
+      [region]="region(l)"
+      [own]="isOwn(l)"
+    />
+  </app-drawer>
+}
