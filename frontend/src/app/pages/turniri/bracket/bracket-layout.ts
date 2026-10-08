@@ -27,6 +27,7 @@ export interface MatchCard {
   nextMatchId: number | null;
   decided: boolean;
   championPath: boolean;
+  refereeUsername: string | null;
   slots: [SlotView, SlotView];
 }
 
@@ -202,6 +203,7 @@ export function buildBracket(
         nextMatchId: match.nextMatchId,
         decided: match.winnerTeamId !== null,
         championPath: championId !== null && match.winnerTeamId === championId,
+        refereeUsername: preview ? null : (match.refereeUsername ?? null),
         slots: [
           slot(match, match.teamA, match.scoreA, feeders[0], numbers, seeds, preview),
           slot(match, match.teamB, match.scoreB, feeders[1], numbers, seeds, preview),

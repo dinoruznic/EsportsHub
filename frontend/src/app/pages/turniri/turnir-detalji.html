@@ -167,7 +167,13 @@
         @if (highlights(); as h) {
           <app-match-highlights [highlights]="h" />
         }
-        <app-bracket-view [bracket]="bracket.value()" [seeds]="seeds()" [flash]="flashed()" />
+        <app-bracket-view
+          [bracket]="bracket.value()"
+          [seeds]="seeds()"
+          [flash]="flashed()"
+          [canAssignReferee]="canAssignReferee()"
+          (assignReferee)="refereeFor.set($event)"
+        />
       } @else if (closed()) {
         <app-empty-state class="bracket-empty" title="Bracket neće biti odigran." />
       } @else if (preview(); as preview) {
@@ -200,4 +206,12 @@
       }
     </aside>
   </div>
+
+  @if (refereeFor(); as card) {
+    <app-referee-picker
+      [match]="card"
+      (assigned)="refereeAssigned($event)"
+      (close)="refereeFor.set(null)"
+    />
+  }
 }

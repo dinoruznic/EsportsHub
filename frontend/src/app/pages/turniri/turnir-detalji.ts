@@ -5,7 +5,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable, map, switchMap } from 'rxjs';
 import { toApiError } from '../../core/api/api-error';
 import { GamesApi } from '../../core/api/games-api';
-import { formatLabel } from '../../core/api/models';
+import { BracketMatch, formatLabel } from '../../core/api/models';
 import { TeamsApi } from '../../core/api/teams-api';
 import { TournamentsApi } from '../../core/api/tournaments-api';
 import { AuthService } from '../../core/auth/auth.service';
@@ -19,6 +19,7 @@ import { isPowerOfTwo } from '../../shared/format';
 import { Skeleton } from '../../shared/skeleton/skeleton';
 import { TeamHex } from '../../shared/team-hex/team-hex';
 import {
+  MatchCard,
   buildBracket,
   findChampion,
   matchHighlights,
@@ -29,6 +30,7 @@ import {
 import { BracketView } from './bracket/bracket-view';
 import { ChampionBanner } from './champion-banner';
 import { MatchHighlights } from './match-highlights';
+import { RefereePicker } from './referee-picker';
 import { RegisteredTeams } from './registered-teams';
 import { TournamentStats } from './tournament-stats';
 
@@ -45,6 +47,7 @@ import { TournamentStats } from './tournament-stats';
     ErrorState,
     Skeleton,
     TeamHex,
+    RefereePicker,
     RegisteredTeams,
     TournamentStats,
   ],
@@ -195,6 +198,10 @@ export default class TurnirDetalji {
       !this.hasBracket(),
   );
   protected readonly generateReady = computed(() => isPowerOfTwo(this.active().length));
+  protected readonly canAssignReferee = computed(
+    () => (this.isOrganizer() || this.isAdmin()) && this.t()?.status === 'ONGOING',
+  );
+  protected readonly refereeFor = signal<MatchCard | null>(null);
   protected readonly canReview = computed(() => this.isAdmin() && this.t()?.status === 'PENDING');
   protected readonly hasActions = computed(
     () => this.canRegister() || this.canWithdraw() || this.canGenerate() || this.canReview(),
@@ -304,6 +311,13 @@ export default class TurnirDetalji {
 
   protected reject(): void {
     this.run(this.api.reject(this.id()), () => this.tournament.reload());
+  }
+
+  protected refereeAssigned(match: BracketMatch): void {
+    if (this.bracket.hasValue()) {
+      this.bracket.set(withMatch(this.bracket.value(), match));
+    }
+    this.refereeFor.set(null);
   }
 
   private applyMessage(message: TournamentTopicMessage): void {

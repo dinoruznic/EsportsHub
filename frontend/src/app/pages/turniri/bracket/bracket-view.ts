@@ -7,6 +7,7 @@ import {
   computed,
   inject,
   input,
+  output,
   signal,
   viewChild,
 } from '@angular/core';
@@ -14,7 +15,7 @@ import { NgTemplateOutlet } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { Bracket } from '../../../core/api/models';
 import { TeamHex } from '../../../shared/team-hex/team-hex';
-import { buildBracket, findChampion } from './bracket-layout';
+import { MatchCard, buildBracket, findChampion } from './bracket-layout';
 
 interface Connector {
   key: string;
@@ -34,19 +35,23 @@ interface Box {
   imports: [NgTemplateOutlet, RouterLink, TeamHex],
   templateUrl: './bracket-view.html',
   styleUrl: './bracket-view.scss',
-  host: { '[class.preview]': 'preview()' },
+  host: { '[class.preview]': 'preview()', '[class.assigning]': 'canAssignReferee()' },
 })
 export class BracketView {
   readonly bracket = input.required<Bracket>();
   readonly seeds = input<Record<number, number>>({});
   readonly preview = input(false);
   readonly flash = input<number[]>([]);
+  readonly canAssignReferee = input(false);
+  readonly assignReferee = output<MatchCard>();
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);
   private readonly inner = viewChild.required<ElementRef<HTMLElement>>('inner');
 
-  protected readonly columns = computed(() => buildBracket(this.bracket(), this.seeds(), this.preview()));
+  protected readonly columns = computed(() =>
+    buildBracket(this.bracket(), this.seeds(), this.preview()),
+  );
   protected readonly champion = computed(() => findChampion(this.bracket()));
   protected readonly connectors = signal<Connector[]>([]);
 
@@ -81,19 +86,36 @@ export class BracketView {
         : null;
     };
     const lines: Connector[] = [];
-    const link = (key: string, from: Box | null, to: Box | null, decided: boolean, champion: boolean) => {
+    const link = (
+      key: string,
+      from: Box | null,
+      to: Box | null,
+      decided: boolean,
+      champion: boolean,
+    ) => {
       if (!from || !to) {
         return;
       }
       const mid = (from.right + to.left) / 2;
-      lines.push({ key, decided, champion, d: `M ${from.right} ${from.middle} H ${mid} V ${to.middle} H ${to.left}` });
+      lines.push({
+        key,
+        decided,
+        champion,
+        d: `M ${from.right} ${from.middle} H ${mid} V ${to.middle} H ${to.left}`,
+      });
     };
 
     for (const column of this.columns()) {
       for (const match of column.matches) {
         const from = boxOf(`[data-match-id="${match.id}"]`);
         if (match.nextMatchId === null) {
-          link(`${match.id}-prvak`, from, boxOf('[data-champion]'), match.decided, match.championPath);
+          link(
+            `${match.id}-prvak`,
+            from,
+            boxOf('[data-champion]'),
+            match.decided,
+            match.championPath,
+          );
         } else {
           const to = boxOf(`[data-match-id="${match.nextMatchId}"]`);
           link(`${match.id}-${match.nextMatchId}`, from, to, match.decided, match.championPath);

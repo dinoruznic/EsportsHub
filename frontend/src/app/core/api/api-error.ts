@@ -73,7 +73,7 @@ const BACKEND_MESSAGES: Record<string, string> = {
   'turnir je pun': 'Turnir je popunjen.',
   'prijava ne postoji': 'Prijava ne postoji.',
   'ne mozes se povuci nakon zdrijeba': 'Nakon žrijeba se više ne možeš povući.',
-  'samo organizator ili admin': 'Samo organizator ili admin može generisati bracket.',
+  'samo organizator ili admin': 'Ovo može samo organizator turnira ili admin.',
   'turnir nije u fazi prijava': 'Turnir nije u fazi prijava.',
   'bracket vec postoji': 'Bracket je već generisan.',
   'premalo timova': 'Premalo prijavljenih timova za bracket.',

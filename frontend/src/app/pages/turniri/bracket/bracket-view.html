@@ -37,7 +37,25 @@
                     [ngTemplateOutlet]="card"
                     [ngTemplateOutletContext]="{ $implicit: match }"
                   />
+                  <p class="referee">
+                    {{ match.refereeUsername ? 'Sudija: ' + match.refereeUsername : 'Bez sudije' }}
+                  </p>
                 </a>
+                @if (
+                  canAssignReferee() && match.status !== 'FINISHED' && match.status !== 'CANCELLED'
+                ) {
+                  <button
+                    type="button"
+                    class="assign"
+                    [attr.aria-label]="
+                      (match.refereeUsername ? 'Promijeni sudiju za M' : 'Dodijeli sudiju za M') +
+                      match.number
+                    "
+                    (click)="assignReferee.emit(match)"
+                  >
+                    {{ match.refereeUsername ? 'Promijeni sudiju' : 'Dodijeli sudiju' }}
+                  </button>
+                }
               }
             </div>
           }
