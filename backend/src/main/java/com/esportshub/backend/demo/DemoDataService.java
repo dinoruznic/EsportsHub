@@ -12,9 +12,11 @@ public class DemoDataService {
 
     private final DemoCleaner demoCleaner;
     private final DemoSeeder demoSeeder;
+    private final DemoRunner demoRunner;
 
     @Transactional
     public DemoResetResponse reset() {
+        demoRunner.stop();
         demoCleaner.clean();
         return demoSeeder.seed();
     }

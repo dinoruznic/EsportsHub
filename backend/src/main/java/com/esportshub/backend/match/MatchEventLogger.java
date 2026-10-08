@@ -21,6 +21,7 @@ public class MatchEventLogger {
     private static final String SOURCE_ADMIN = "ADMIN";
     private static final String SOURCE_RIOT = "RIOT";
     private static final String SOURCE_SYSTEM = "SISTEM";
+    private static final String SOURCE_DEMO = "DEMO";
 
     private final MatchEventRecordRepository matchEventRecordRepository;
     private final MatchRepository matchRepository;
@@ -34,13 +35,16 @@ public class MatchEventLogger {
         }
 
         boolean system = RefereeAssigner.SYSTEM_ACTOR.equals(event.actor());
-        User actor = event.actor() == null || system ? null : userRepository.findByUsername(event.actor()).orElse(null);
+        boolean demo = MatchEvent.DEMO_ACTOR.equals(event.actor());
+        User actor = event.actor() == null || system || demo
+                ? null
+                : userRepository.findByUsername(event.actor()).orElse(null);
         Match match = matchRepository.getReferenceById(event.matchId());
 
         matchEventRecordRepository.save(MatchEventRecord.builder()
                 .matchId(event.matchId())
                 .type(event.type())
-                .source(system ? SOURCE_SYSTEM : sourceOf(event.actor(), match))
+                .source(system ? SOURCE_SYSTEM : demo ? SOURCE_DEMO : sourceOf(event.actor(), match))
                 .createdBy(actor)
                 .payload(objectMapper.writeValueAsString(event.data()))
                 .build());
@@ -63,6 +67,9 @@ public class MatchEventLogger {
     private static String actorOf(MatchEventRecord record) {
         if (record.getCreatedBy() != null) {
             return record.getCreatedBy().getUsername();
+        }
+        if (SOURCE_DEMO.equals(record.getSource())) {
+            return MatchEvent.DEMO_ACTOR;
         }
         return SOURCE_SYSTEM.equals(record.getSource()) ? RefereeAssigner.SYSTEM_ACTOR : null;
     }

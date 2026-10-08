@@ -1,9 +1,8 @@
 package com.esportshub.backend.it;
 
-import com.esportshub.backend.support.AbstractIntegrationTest;
+import com.esportshub.backend.support.AbstractDemoIntegrationTest;
 import com.esportshub.backend.support.Api;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.context.TestPropertySource;
 import tools.jackson.databind.JsonNode;
 
 import java.util.List;
@@ -15,8 +14,7 @@ import java.util.stream.StreamSupport;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@TestPropertySource(properties = "esportshub.demo.enabled=true")
-class DemoResetIntegrationTest extends AbstractIntegrationTest {
+class DemoResetIntegrationTest extends AbstractDemoIntegrationTest {
 
     @Test
     void onlyAdminsCanResetDemoData() {

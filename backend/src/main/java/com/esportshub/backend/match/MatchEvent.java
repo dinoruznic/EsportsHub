@@ -18,4 +18,5 @@ public record MatchEvent(
     public static final String LIVE_SNAPSHOT = "LIVE_SNAPSHOT";
 
     public static final String RIOT_AGENT = "riot-agent";
+    public static final String DEMO_ACTOR = "DEMO";
 }

@@ -1,0 +1,30 @@
+### EsportsHub — Demo rezim: mecevi se igraju sami kroz RabbitMQ
+### Run all (⏩). Prvo pokreni demo-reset.http da baza ima Sarajevo Open.
+
+@host = http://localhost:8080
+
+### 1. Admin login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "admin", "password": "admin12345" }
+
+> {% client.global.set("demoAdmin", response.body.token); %}
+
+### 2. Pokreni demo (bez tijela = Sarajevo Open ili bilo koji turnir u toku)
+POST {{host}}/api/admin/demo/start
+Authorization: Bearer {{demoAdmin}}
+Content-Type: application/json
+
+{}
+
+### 3. Status { running, tournamentId, liveMatches, snapshotsSent, startedAt }
+GET {{host}}/api/admin/demo/status
+Authorization: Bearer {{demoAdmin}}
+
+### 4. Mecevi uzivo (javno)
+GET {{host}}/api/matches/live
+
+### 5. Zaustavi demo
+POST {{host}}/api/admin/demo/stop
+Authorization: Bearer {{demoAdmin}}
