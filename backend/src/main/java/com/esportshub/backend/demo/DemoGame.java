@@ -81,7 +81,7 @@ class DemoGame {
         if (gameTime < TOWERS_FROM_SECONDS || current >= MAX_TOWERS) {
             return current;
         }
-        double chance = favored ? 0.25 : 0.12;
+        double chance = favored ? 0.1 : 0.04;
         return random.nextDouble() < chance ? current + 1 : current;
     }
 }
