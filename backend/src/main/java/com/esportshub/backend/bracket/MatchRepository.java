@@ -9,6 +9,7 @@ import java.util.Optional;
 public interface MatchRepository extends JpaRepository<Match, Long> {
     List<Match> findByTournament_IdOrderByRound_RoundNumberAscIdAsc(Long tournamentId);
     boolean existsByTournament_Id(Long tournamentId);
+    long countByStatus(MatchStatus status);
     List<Match> findByNextMatchIdOrderByIdAsc(Long nextMatchId);
     Optional<Match> findBySpectatorKey(String spectatorKey);
     List<Match> findByStatusOrderByStartedAtAscIdAsc(MatchStatus status);

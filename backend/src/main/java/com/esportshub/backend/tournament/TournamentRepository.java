@@ -9,4 +9,5 @@ public interface TournamentRepository extends JpaRepository<Tournament, Long> {
     List<Tournament> findByStatusIn(Collection<TournamentStatus> statuses);
     List<Tournament> findByStatus(TournamentStatus status);
     boolean existsByOrganizer_Username(String username);
+    long countByStatus(TournamentStatus status);
 }

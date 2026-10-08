@@ -1,0 +1,67 @@
+### EsportsHub — Admin: korisnici, uloge i pregled
+### Run all (⏩). Admin trazi korisnike, daje i uklanja uloge, gleda statistiku.
+
+@host = http://localhost:8080
+
+### 0. Svjez korisnik
+GET {{host}}/api/games
+
+> {% client.global.set("aUser", "admuser" + Math.floor(Math.random() * 1000000)); %}
+
+###
+POST {{host}}/api/auth/register
+Content-Type: application/json
+
+{ "username": "{{aUser}}", "email": "{{aUser}}@esportshub.local", "password": "lozinka123", "displayName": "Admin test" }
+
+> {% client.global.set("aUT", response.body.token); %}
+
+### 1. Admin login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "admin", "password": "admin12345" }
+
+> {% client.global.set("aTA", response.body.token); %}
+
+### 2. Obican korisnik ne vidi admin API -> 403
+GET {{host}}/api/admin/users
+Authorization: Bearer {{aUT}}
+
+### 3. Pretraga korisnika (username, ime ili email)
+GET {{host}}/api/admin/users?query={{aUser}}&page=0&size=20
+Authorization: Bearer {{aTA}}
+
+### 4. Filter po ulozi
+GET {{host}}/api/admin/users?role=REFEREE
+Authorization: Bearer {{aTA}}
+
+### 5. Daj ulogu ORGANIZER -> 200
+POST {{host}}/api/admin/users/{{aUser}}/roles
+Content-Type: application/json
+Authorization: Bearer {{aTA}}
+
+{ "role": "ORGANIZER" }
+
+### 6. Ista uloga opet -> 409
+POST {{host}}/api/admin/users/{{aUser}}/roles
+Content-Type: application/json
+Authorization: Bearer {{aTA}}
+
+{ "role": "ORGANIZER" }
+
+### 7. Ukloni ORGANIZER -> 200
+DELETE {{host}}/api/admin/users/{{aUser}}/roles/ORGANIZER
+Authorization: Bearer {{aTA}}
+
+### 8. PLAYER se ne uklanja -> 400
+DELETE {{host}}/api/admin/users/{{aUser}}/roles/PLAYER
+Authorization: Bearer {{aTA}}
+
+### 9. Admin ne moze ukloniti svoju admin ulogu -> 409
+DELETE {{host}}/api/admin/users/admin/roles/ADMIN
+Authorization: Bearer {{aTA}}
+
+### 10. Pregled
+GET {{host}}/api/admin/stats
+Authorization: Bearer {{aTA}}
