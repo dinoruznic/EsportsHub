@@ -12,6 +12,8 @@ export class PlayersApi {
   }
 
   gameAccounts(username: string): Observable<GameAccount[]> {
-    return this.http.get<GameAccount[]>(`/api/players/${encodeURIComponent(username)}/game-accounts`);
+    return this.http.get<GameAccount[]>(
+      `/api/players/${encodeURIComponent(username)}/game-accounts`,
+    );
   }
 }

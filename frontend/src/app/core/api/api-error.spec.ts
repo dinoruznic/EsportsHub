@@ -1,7 +1,11 @@
 import { HttpErrorResponse } from '@angular/common/http';
 import { MESSAGES, toApiError } from './api-error';
 
-function httpError(status: number, error: unknown = null, url = '/api/auth/register'): HttpErrorResponse {
+function httpError(
+  status: number,
+  error: unknown = null,
+  url = '/api/auth/register',
+): HttpErrorResponse {
   return new HttpErrorResponse({ status, error, url });
 }
 
@@ -45,19 +49,23 @@ describe('toApiError', () => {
   it('translates short backend messages about tournaments', () => {
     const url = '/api/tournaments/3/registrations';
 
-    expect(toApiError(httpError(409, { message: 'turnir je pun' }, url)).message).toBe('Turnir je popunjen.');
+    expect(toApiError(httpError(409, { message: 'turnir je pun' }, url)).message).toBe(
+      'Turnir je popunjen.',
+    );
     expect(toApiError(httpError(409, { message: 'tim je vec prijavljen' }, url)).message).toBe(
       'Tim je već prijavljen na turnir.',
     );
-    expect(toApiError(httpError(400, { message: 'tim i turnir nisu ista igra' }, url)).message).toBe(
-      'Tim nije iz iste igre kao turnir.',
-    );
+    expect(
+      toApiError(httpError(400, { message: 'tim i turnir nisu ista igra' }, url)).message,
+    ).toBe('Tim nije iz iste igre kao turnir.');
   });
 
   it('uses auth-only messages only for auth endpoints', () => {
     const url = '/api/tournaments/3/bracket';
 
-    expect(toApiError(httpError(409, { message: 'nesto drugo' }, url)).message).toBe(MESSAGES.conflict);
+    expect(toApiError(httpError(409, { message: 'nesto drugo' }, url)).message).toBe(
+      MESSAGES.conflict,
+    );
     expect(toApiError(httpError(401, null, url)).message).toBe(MESSAGES.sessionExpired);
     expect(toApiError(httpError(403, null, url)).message).toBe(MESSAGES.forbidden);
   });

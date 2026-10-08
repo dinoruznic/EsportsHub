@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
 
@@ -6,6 +6,7 @@ interface NavItem {
   label: string;
   path: string;
   icon: string[];
+  roles?: string[];
 }
 
 @Component({
@@ -20,7 +21,7 @@ export class Shell {
 
   protected readonly user = this.auth.currentUser;
 
-  protected readonly nav: NavItem[] = [
+  private readonly allNav: NavItem[] = [
     {
       label: 'Uživo',
       path: '/uzivo',
@@ -63,7 +64,20 @@ export class Shell {
       path: '/profil',
       icon: ['M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z', 'M4.5 20.5a7.5 7.5 0 0 1 15 0'],
     },
+    {
+      label: 'Sudija',
+      path: '/sudija',
+      icon: ['M5 21V4', 'M5 4h12l-2.5 4L17 12H5'],
+      roles: ['REFEREE', 'ADMIN'],
+    },
   ];
+
+  protected readonly nav = computed(() => {
+    this.auth.currentUser();
+    return this.allNav.filter(
+      (item) => !item.roles || item.roles.some((role) => this.auth.hasRole(role)),
+    );
+  });
 
   protected logout(): void {
     this.auth.logout();

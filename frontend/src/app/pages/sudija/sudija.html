@@ -1,0 +1,61 @@
+<header class="head">
+  <p class="eyebrow">Sudijski panel</p>
+  <h1 class="display-title">Moji mečevi</h1>
+  <p class="lead">
+    Mečevi kojima si dodijeljen kao sudija. Odavde pokrećeš meč, upisuješ rezultat i povezuješ
+    agenta.
+  </p>
+</header>
+
+@if (matches.error()) {
+  <app-error-state [message]="loadError()" (retry)="matches.reload()" />
+} @else if (!matches.hasValue()) {
+  <app-skeleton [count]="3" [height]="72" />
+} @else if (groups().length === 0) {
+  <app-empty-state
+    title="Nemaš dodijeljenih mečeva."
+    text="Organizatori dodjeljuju sudije na stranici turnira, direktno na kartici meča u bracketu."
+  >
+    <a class="btn btn-ghost" routerLink="/turniri">Turniri</a>
+  </app-empty-state>
+} @else {
+  @for (group of groups(); track group.key) {
+    <section class="group" [attr.data-group]="group.key" [attr.aria-label]="group.title">
+      <h2 class="group-title">
+        {{ group.title }}
+        <span class="num count">{{ group.matches.length }}</span>
+      </h2>
+      <ul class="rows">
+        @for (m of group.matches; track m.matchId) {
+          <li class="row" [attr.data-match-id]="m.matchId">
+            <app-game-badge [code]="m.gameCode" [name]="gameNames()[m.gameCode] ?? null" />
+            <span class="context">{{ m.tournamentName }} · {{ round(m) }}</span>
+            <span class="teams">
+              <span class="team">
+                <app-team-hex
+                  [teamId]="m.teamA?.id ?? null"
+                  [label]="m.teamA?.tag ?? ''"
+                  [size]="26"
+                />
+                <span class="team-name">{{ m.teamA?.name ?? 'Čeka se' }}</span>
+              </span>
+              <span class="num score">{{ m.scoreA ?? 0 }} : {{ m.scoreB ?? 0 }}</span>
+              <span class="team right">
+                <span class="team-name">{{ m.teamB?.name ?? 'Čeka se' }}</span>
+                <app-team-hex
+                  [teamId]="m.teamB?.id ?? null"
+                  [label]="m.teamB?.tag ?? ''"
+                  [size]="26"
+                />
+              </span>
+            </span>
+            <app-match-status [status]="m.status" />
+            <a class="btn btn-gold open" [routerLink]="['/sudija/mecevi', m.matchId]"
+              >Otvori panel</a
+            >
+          </li>
+        }
+      </ul>
+    </section>
+  }
+}

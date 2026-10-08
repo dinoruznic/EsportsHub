@@ -23,7 +23,9 @@ export class MarketApi {
 
   openListingFor(gameAccountId: number): Observable<Listing | null> {
     return this.openListings().pipe(
-      map((listings) => listings.find((listing) => listing.gameAccountId === gameAccountId) ?? null),
+      map(
+        (listings) => listings.find((listing) => listing.gameAccountId === gameAccountId) ?? null,
+      ),
     );
   }
 

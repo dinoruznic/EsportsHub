@@ -1,0 +1,108 @@
+:host {
+  display: grid;
+  gap: 26px;
+}
+
+.head h1 {
+  margin: 8px 0 10px;
+  font-size: clamp(44px, 7vw, 80px);
+}
+
+.lead {
+  color: var(--muted);
+}
+
+.group {
+  display: grid;
+  gap: 10px;
+}
+
+.group-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font: 700 20px/1 var(--display);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+[data-group='live'] .group-title {
+  color: var(--live);
+}
+
+.count {
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.rows {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.row {
+  display: grid;
+  grid-template-columns: 170px minmax(0, 1fr) minmax(0, 1.6fr) auto auto;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: var(--panel);
+}
+
+[data-group='live'] .row {
+  border-color: rgb(255 67 87 / 0.4);
+}
+
+.context {
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.teams {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+}
+
+.team {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+
+  &.right {
+    justify-content: flex-end;
+  }
+}
+
+.team-name {
+  overflow: hidden;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.score {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+@media (max-width: 1099.98px) {
+  .row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .context,
+  .teams {
+    grid-column: 1 / -1;
+  }
+}

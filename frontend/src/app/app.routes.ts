@@ -1,5 +1,5 @@
 import { Routes } from '@angular/router';
-import { authGuard, guestGuard } from './core/auth/guards';
+import { authGuard, guestGuard, roleGuard } from './core/auth/guards';
 import { ownProfileGuard } from './pages/igraci/own-profile.guard';
 
 export const routes: Routes = [
@@ -45,6 +45,12 @@ export const routes: Routes = [
         title: 'Igrač · EsportsHub',
         canActivate: [ownProfileGuard],
         loadComponent: () => import('./pages/igraci/igrac'),
+      },
+      {
+        path: 'sudija',
+        title: 'Moji mečevi · EsportsHub',
+        canActivate: [roleGuard('REFEREE', 'ADMIN')],
+        loadComponent: () => import('./pages/sudija/sudija'),
       },
       {
         path: 'market',

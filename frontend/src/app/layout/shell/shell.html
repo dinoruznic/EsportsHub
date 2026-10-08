@@ -7,7 +7,7 @@
       </svg>
     </a>
     <ul class="nav">
-      @for (item of nav; track item.path) {
+      @for (item of nav(); track item.path) {
         <li>
           <a
             class="nav-item"

@@ -1,10 +1,5 @@
 export type TournamentStatus =
-  | 'PENDING'
-  | 'REGISTRATION'
-  | 'REJECTED'
-  | 'ONGOING'
-  | 'COMPLETED'
-  | 'CANCELLED';
+  'PENDING' | 'REGISTRATION' | 'REJECTED' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
 
 export type RegistrationStatus = 'REGISTERED' | 'WITHDRAWN';
 
@@ -70,6 +65,7 @@ export interface BracketMatch {
   tournamentName?: string | null;
   gameCode?: string | null;
   roundName?: string | null;
+  refereeUsername?: string | null;
 }
 
 export interface BracketRound {
@@ -289,4 +285,29 @@ export interface MyOffer {
   status: OfferStatus;
   createdAt: string;
   respondedAt: string | null;
+}
+
+export interface RefereeMatch {
+  matchId: number;
+  status: MatchStatus;
+  tournamentId: number;
+  tournamentName: string;
+  gameCode: string;
+  roundNumber: number | null;
+  roundName: string | null;
+  teamA: TeamBrief | null;
+  teamB: TeamBrief | null;
+  scoreA: number | null;
+  scoreB: number | null;
+  winnerTeamId: number | null;
+  nextMatchId: number | null;
+  refereeUsername: string | null;
+  startedAt: string | null;
+  endedAt: string | null;
+  lastSnapshotAt: string | null;
+}
+
+export interface Referee {
+  username: string;
+  displayName: string | null;
 }

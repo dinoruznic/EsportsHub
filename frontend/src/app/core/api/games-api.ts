@@ -48,7 +48,10 @@ export class GamesApi {
     });
   }
 
-  private options(gameId: number, kind: 'regions' | 'positions' | 'ranks'): Observable<GameOption[]> {
+  private options(
+    gameId: number,
+    kind: 'regions' | 'positions' | 'ranks',
+  ): Observable<GameOption[]> {
     const key = `${gameId}/${kind}`;
     let cached = this.optionCache.get(key);
     if (!cached) {

@@ -57,6 +57,12 @@ const BACKEND_MESSAGES: Record<string, string> = {
   'ponuda nije aktivna': 'Ponuda više nije aktivna.',
   'nije tvoja ponuda': 'To nije tvoja ponuda.',
   'ponuda ne postoji': 'Ponuda ne postoji.',
+  'nemas pravo nad ovim mecom': 'Nemaš pravo upravljati ovim mečom.',
+  'mec nema oba tima': 'Meč još nema oba tima.',
+  'mec nije uzivo': 'Meč nije uživo.',
+  'nerijeseno nije dozvoljeno': 'Neriješeno nije dozvoljeno.',
+  'korisnik nije sudija': 'Izabrani korisnik nije sudija.',
+  'mec ne postoji': 'Meč ne postoji.',
   'korisnik ne postoji': 'Igrač ne postoji.',
   'turnir nije u statusu pending': 'Turnir više ne čeka odobrenje.',
   'prijave nisu otvorene': 'Prijave za ovaj turnir nisu otvorene.',
@@ -91,9 +97,16 @@ export function toApiError(error: unknown): ApiError {
     return { message: MESSAGES.generic, fieldErrors: {} };
   }
 
-  const body = (typeof error.error === 'object' && error.error ? error.error : {}) as SpringErrorBody;
+  const body = (
+    typeof error.error === 'object' && error.error ? error.error : {}
+  ) as SpringErrorBody;
 
-  const known = BACKEND_MESSAGES[(body.message ?? '').trim().toLowerCase()];
+  const normalized = (body.message ?? '').trim().toLowerCase();
+  const known =
+    BACKEND_MESSAGES[normalized] ??
+    (normalized.startsWith('nedozvoljen prelaz')
+      ? 'Ovaj korak nije dozvoljen u trenutnom stanju meča.'
+      : undefined);
   if (known && error.status >= 400 && error.status < 500) {
     return { message: known, fieldErrors: {} };
   }
@@ -104,13 +117,18 @@ export function toApiError(error: unknown): ApiError {
     case 0:
       return { message: MESSAGES.offline, fieldErrors: {} };
     case 401:
-      return { message: authRequest ? MESSAGES.badCredentials : MESSAGES.sessionExpired, fieldErrors: {} };
+      return {
+        message: authRequest ? MESSAGES.badCredentials : MESSAGES.sessionExpired,
+        fieldErrors: {},
+      };
     case 403:
       return { message: MESSAGES.forbidden, fieldErrors: {} };
     case 404:
       return { message: MESSAGES.notFound, fieldErrors: {} };
     case 409:
-      return authRequest ? duplicateError(body.message ?? '') : { message: MESSAGES.conflict, fieldErrors: {} };
+      return authRequest
+        ? duplicateError(body.message ?? '')
+        : { message: MESSAGES.conflict, fieldErrors: {} };
     case 400:
       return validationError(body.errors ?? []);
     default:

@@ -70,8 +70,8 @@ describe('App', () => {
     expect(router.url).toBe('/turniri');
   });
 
-  it('renders the five nav links with correct hrefs for a logged-in user', async () => {
-    storeSession();
+  it('renders the five nav links for a player without the referee item', async () => {
+    storeSession(3600, { userId: 2, username: 'igrac', roles: ['PLAYER'] });
     const { element } = await renderAt('/turniri');
     const links = Array.from(element.querySelectorAll<HTMLAnchorElement>('a.nav-item'));
 
