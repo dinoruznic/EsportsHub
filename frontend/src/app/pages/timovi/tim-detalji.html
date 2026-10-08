@@ -1,0 +1,163 @@
+<a class="back" routerLink="/timovi">← Timovi</a>
+
+@if (missing()) {
+  <app-empty-state title="Tim ne postoji." text="Možda je obrisan ili je link pogrešan.">
+    <a class="btn btn-ghost" routerLink="/timovi">Svi timovi</a>
+  </app-empty-state>
+} @else if (detail.error()) {
+  <app-error-state [message]="loadError()" (retry)="detail.reload()" />
+} @else if (team(); as t) {
+  <header class="head">
+    <app-team-hex [teamId]="t.id" [label]="t.tag" [size]="88" />
+    <div class="title-block">
+      <p class="eyebrow">{{ eyebrow() }}</p>
+      <h1 class="display-title name">{{ t.name }}</h1>
+      <p class="num tag">{{ t.tag }}</p>
+    </div>
+  </header>
+
+  <dl class="stats panel">
+    <div class="cell">
+      <dt>Igra</dt>
+      <dd>{{ game()?.name ?? t.gameCode }}</dd>
+    </div>
+    <div class="cell">
+      <dt>Regija</dt>
+      <dd>{{ t.region || '—' }}</dd>
+    </div>
+    <div class="cell">
+      <dt>Članovi</dt>
+      <dd class="num">{{ members().length }}</dd>
+    </div>
+    <div class="cell">
+      <dt>Kapiten</dt>
+      <dd>
+        <a class="player captain-link" [routerLink]="profileLink(t.captainUsername)">{{
+          captainName()
+        }}</a>
+        <span class="c" title="Kapiten">C</span>
+      </dd>
+    </div>
+    <div class="cell">
+      <dt>Osnovan</dt>
+      <dd>{{ founded() }}</dd>
+    </div>
+  </dl>
+
+  <div class="columns">
+    <section class="panel roster" aria-labelledby="roster-heading">
+      <div class="panel-head">
+        <h2 id="roster-heading" class="panel-title">Sastav</h2>
+        <span class="count">{{ membersCount() }}</span>
+      </div>
+
+      @if (members().length === 0) {
+        <p class="none">Tim još nema igrača u sastavu.</p>
+      } @else {
+        <ul class="rows">
+          @for (m of members(); track m.membershipId) {
+            <li class="row" [attr.data-membership-id]="m.membershipId">
+              <span class="num position">{{ m.position || '—' }}</span>
+              <a class="player ign" [routerLink]="profileLink(m.ownerUsername)">{{
+                m.inGameName
+              }}</a>
+              <span class="skill">
+                @if (m.rank) {
+                  <app-rank-emblem [rank]="m.rank" [size]="26" />
+                  <span class="rank">{{ rank(m) }}</span>
+                } @else if (rating(m); as r) {
+                  <span class="num rating">{{ r }}</span>
+                  <span class="rating-label">{{ ratingName() }}</span>
+                }
+              </span>
+              @if (isCaptainMember(m)) {
+                <span class="role captain-role">Kapiten</span>
+              } @else {
+                <span class="role">Igrač</span>
+              }
+              @if (isCaptain() && !isCaptainMember(m)) {
+                <app-confirm-inline
+                  class="remove"
+                  label="Ukloni"
+                  question="Ukloniti igrača iz tima?"
+                  confirmLabel="Da, ukloni"
+                  [busy]="removing() === m.membershipId"
+                  (confirmed)="remove(m)"
+                />
+              }
+            </li>
+          }
+        </ul>
+      }
+
+      @if (actionError(); as message) {
+        <p class="error" role="alert">{{ message }}</p>
+      }
+
+      @if (isCaptain()) {
+        <div class="captain-tools">
+          @if (adding()) {
+            <form class="add-form" (submit)="$event.preventDefault(); addMember()" novalidate>
+              <label class="field-label" for="add-username">Korisničko ime igrača</label>
+              <div class="add-row">
+                <input
+                  id="add-username"
+                  class="field-input"
+                  type="text"
+                  autocomplete="off"
+                  spellcheck="false"
+                  [value]="addUsername()"
+                  (input)="addUsername.set($any($event.target).value)"
+                />
+                <button type="submit" class="btn btn-gold" [disabled]="addBusy()">
+                  {{ addBusy() ? 'Dodajem…' : 'Dodaj' }}
+                </button>
+                <button type="button" class="btn btn-ghost" (click)="adding.set(false)">
+                  Odustani
+                </button>
+              </div>
+              @if (addError(); as message) {
+                <p class="error" role="alert">{{ message }}</p>
+              }
+            </form>
+          } @else {
+            <button type="button" class="btn btn-ghost add-player" (click)="openAdd()">
+              + Dodaj igrača
+            </button>
+          }
+          <p class="hint">
+            Igrače možeš dovesti i preko
+            <a [routerLink]="['/market']" [queryParams]="{ igra: t.gameCode }">transfer marketa</a>.
+          </p>
+        </div>
+      }
+    </section>
+
+    <section class="panel contracts" aria-labelledby="contracts-heading">
+      <div class="panel-head">
+        <h2 id="contracts-heading" class="panel-title">Ugovori</h2>
+      </div>
+      @if (!contracts.hasValue()) {
+        <app-skeleton [count]="1" [height]="80" />
+      } @else if (contracts.value().length === 0) {
+        <p class="none">Još nema potpisanih ugovora.</p>
+      } @else {
+        <ul class="rows">
+          @for (c of contracts.value(); track c.id) {
+            <li class="contract" [attr.data-contract-id]="c.id">
+              <span class="contract-player">{{ c.inGameName }}</span>
+              <span class="num amount">{{ salary(c.salary) }}</span>
+              <span class="contract-date">{{ date(c.startDate) }}</span>
+              <span class="contract-status" [attr.data-status]="c.status">{{
+                contractStatus(c.status)
+              }}</span>
+            </li>
+          }
+        </ul>
+      }
+    </section>
+  </div>
+} @else {
+  <app-skeleton [count]="1" [height]="120" />
+  <app-skeleton [count]="1" [height]="260" />
+}
