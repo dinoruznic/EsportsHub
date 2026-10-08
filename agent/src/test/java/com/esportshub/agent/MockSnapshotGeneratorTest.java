@@ -37,6 +37,43 @@ class MockSnapshotGeneratorTest {
     }
 
     @Test
+    void startsFromTheGivenGameTimeWithPlausibleState() {
+        MockSnapshotGenerator generator = new MockSnapshotGenerator("kljuc", 2, new Random(11), 840);
+        LiveSnapshotMessage first = generator.next(Instant.now());
+
+        assertEquals(842, first.gameTimeSeconds());
+        assertTrue(first.killsA() >= 3 && first.killsA() <= 13, "kills A " + first.killsA());
+        assertTrue(first.killsB() >= 3 && first.killsB() <= 13, "kills B " + first.killsB());
+        assertTrue(first.goldA() >= 2500 + 400 * 14, "gold A " + first.goldA());
+        assertTrue(first.goldB() >= 2500 + 400 * 14, "gold B " + first.goldB());
+        assertTrue(first.goldA() <= 2500 + 400 * 14 + 1300, "gold A " + first.goldA());
+        assertTrue(first.goldB() <= 2500 + 400 * 14 + 1300, "gold B " + first.goldB());
+        assertTrue(first.goldA() != first.goldB());
+        assertTrue(first.towersA() <= 4 && first.towersB() <= 4);
+
+        LiveSnapshotMessage second = generator.next(Instant.now());
+        assertEquals(844, second.gameTimeSeconds());
+        assertTrue(second.goldA() > first.goldA());
+    }
+
+    @Test
+    void sameSeedGivesTheSameStart() {
+        LiveSnapshotMessage a = new MockSnapshotGenerator("kljuc", 2, new Random(99), 900).next(Instant.EPOCH);
+        LiveSnapshotMessage b = new MockSnapshotGenerator("kljuc", 2, new Random(99), 900).next(Instant.EPOCH);
+
+        assertEquals(a, b);
+    }
+
+    @Test
+    void earlyStartHasNoTowers() {
+        LiveSnapshotMessage message = new MockSnapshotGenerator("kljuc", 2, new Random(3), 300).next(Instant.now());
+
+        assertEquals(302, message.gameTimeSeconds());
+        assertEquals(0, message.towersA());
+        assertEquals(0, message.towersB());
+    }
+
+    @Test
     void noTowersBeforeTenMinutes() {
         MockSnapshotGenerator generator = new MockSnapshotGenerator("kljuc", 5, new Random(7));
         for (int i = 1; i < 120; i++) {

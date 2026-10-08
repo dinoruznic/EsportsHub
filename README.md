@@ -161,6 +161,12 @@ java -jar target/esportshub-agent.jar --mock --match-key=<key>   # plausible fak
 java -jar target/esportshub-agent.jar --match-key=<key>          # real League game on this PC
 ```
 
+For a demo that looks like a game already in progress, `--start=MM:SS` (env `AGENT_START`, only together with `--mock`) starts the mock at that game time with plausible kills, gold and towers. The referee panel offers this command ready to copy:
+
+```bash
+java -jar agent/target/esportshub-agent.jar --mock --start=14:00 --interval=2 --match-key=<key>
+```
+
 ## API Overview
 
 Authentication is stateless: log in, then send `Authorization: Bearer <token>`. Full reference in Swagger UI.

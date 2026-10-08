@@ -9,7 +9,8 @@ public class MockSnapshotSource implements SnapshotSource {
     private final MockSnapshotGenerator generator;
 
     public MockSnapshotSource(AgentConfig config) {
-        this.generator = new MockSnapshotGenerator(config.matchKey(), config.intervalSeconds(), new Random());
+        this.generator = new MockSnapshotGenerator(
+                config.matchKey(), config.intervalSeconds(), new Random(), config.startSeconds());
     }
 
     @Override

@@ -7,6 +7,8 @@ import java.util.Random;
 public class MockSnapshotGenerator {
 
     private static final int START_GOLD = 2500;
+    private static final int GOLD_PER_MINUTE = 400;
+    private static final int MAX_START_TOWERS = 3;
     private static final int MAX_TOWERS = 11;
     private static final int TOWERS_FROM_SECONDS = 600;
 
@@ -23,9 +25,37 @@ public class MockSnapshotGenerator {
     private int towersB;
 
     public MockSnapshotGenerator(String matchKey, int intervalSeconds, Random random) {
+        this(matchKey, intervalSeconds, random, 0);
+    }
+
+    public MockSnapshotGenerator(String matchKey, int intervalSeconds, Random random, int startSeconds) {
         this.matchKey = matchKey;
         this.intervalSeconds = intervalSeconds;
         this.random = random;
+        if (startSeconds > 0) {
+            warmUp(startSeconds);
+        }
+    }
+
+    private void warmUp(int startSeconds) {
+        gameTime = startSeconds;
+        double minutes = startSeconds / 60.0;
+        killsA = startKills(minutes);
+        killsB = startKills(minutes);
+        int base = START_GOLD + (int) Math.round(GOLD_PER_MINUTE * minutes);
+        int lead = (int) Math.round(minutes * (20 + random.nextInt(41)));
+        boolean aLeads = random.nextBoolean();
+        goldA = base + (aLeads ? lead : 0) + random.nextInt(201);
+        goldB = base + (aLeads ? 0 : lead) + random.nextInt(201);
+        if (startSeconds >= TOWERS_FROM_SECONDS) {
+            towersA = random.nextInt(MAX_START_TOWERS + 1);
+            towersB = random.nextInt(MAX_START_TOWERS + 1);
+        }
+    }
+
+    private int startKills(double minutes) {
+        double expected = minutes / 2.0;
+        return Math.max(0, (int) Math.round(expected * (0.7 + 0.6 * random.nextDouble())));
     }
 
     public LiveSnapshotMessage next(Instant capturedAt) {
