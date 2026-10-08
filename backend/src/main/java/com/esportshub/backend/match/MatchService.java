@@ -20,6 +20,7 @@ import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -125,6 +126,17 @@ public class MatchService {
         Match match = findMatch(matchId);
         requireControl(actor, match);
         return new AgentKeyResponse(match.getSpectatorKey());
+    }
+
+    @Transactional(readOnly = true)
+    public List<LiveMatchResponse> liveOverview() {
+        List<Match> live = matchRepository.findByStatusOrderByStartedAtAscIdAsc(MatchStatus.LIVE);
+        List<Match> upcoming = matchRepository
+                .findTop10ByStatusAndTeamAIsNotNullAndTeamBIsNotNullAndTournament_StatusOrderByIdAsc(
+                        MatchStatus.SCHEDULED, TournamentStatus.ONGOING);
+        return Stream.concat(live.stream(), upcoming.stream())
+                .map(LiveMatchResponse::from)
+                .toList();
     }
 
     @Transactional(readOnly = true)

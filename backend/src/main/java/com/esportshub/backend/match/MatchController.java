@@ -43,6 +43,11 @@ public class MatchController {
         return matchService.finish(MatchActor.from(principal), id, request);
     }
 
+    @GetMapping("/live")
+    public List<LiveMatchResponse> live() {
+        return matchService.liveOverview();
+    }
+
     @GetMapping("/{id}")
     public MatchView get(@PathVariable Long id) {
         return matchService.get(id);

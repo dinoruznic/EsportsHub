@@ -1,5 +1,6 @@
 package com.esportshub.backend.bracket;
 
+import com.esportshub.backend.tournament.TournamentStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -10,4 +11,7 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
     boolean existsByTournament_Id(Long tournamentId);
     List<Match> findByNextMatchIdOrderByIdAsc(Long nextMatchId);
     Optional<Match> findBySpectatorKey(String spectatorKey);
+    List<Match> findByStatusOrderByStartedAtAscIdAsc(MatchStatus status);
+    List<Match> findTop10ByStatusAndTeamAIsNotNullAndTeamBIsNotNullAndTournament_StatusOrderByIdAsc(
+            MatchStatus status, TournamentStatus tournamentStatus);
 }
