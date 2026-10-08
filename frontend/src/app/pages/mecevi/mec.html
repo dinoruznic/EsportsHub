@@ -25,44 +25,7 @@
 
   <h1 class="sr-only">{{ m.teamA?.name ?? 'Čeka se' }} vs {{ m.teamB?.name ?? 'Čeka se' }}</h1>
 
-  <section class="scoreboard panel" [class.is-live]="live()" aria-label="Rezultat">
-    <div class="side blue" [class.won]="finished() && m.teamA && m.winnerTeamId === m.teamA.id">
-      <span class="side-label">Blue side</span>
-      @if (m.teamA; as team) {
-        <app-team-hex [teamId]="team.id" [label]="team.tag || team.name" [size]="76" />
-        <p class="team-name">{{ team.name }}</p>
-        <span class="num tag">{{ team.tag }}</span>
-      } @else {
-        <app-team-hex [size]="76" />
-        <p class="team-name tbd">Čeka se</p>
-      }
-    </div>
-
-    <div class="center">
-      <div class="series num">
-        <span [class.lead]="(m.scoreA ?? 0) > (m.scoreB ?? 0)">{{ m.scoreA ?? 0 }}</span>
-        <span class="colon">:</span>
-        <span [class.lead]="(m.scoreB ?? 0) > (m.scoreA ?? 0)">{{ m.scoreB ?? 0 }}</span>
-      </div>
-      @if (live()) {
-        <div class="clock num">{{ clock() ?? '--:--' }}</div>
-      } @else {
-        <div class="state">{{ statusLabel() }}</div>
-      }
-    </div>
-
-    <div class="side red" [class.won]="finished() && m.teamB && m.winnerTeamId === m.teamB.id">
-      <span class="side-label">Red side</span>
-      @if (m.teamB; as team) {
-        <app-team-hex [teamId]="team.id" [label]="team.tag || team.name" [size]="76" />
-        <p class="team-name">{{ team.name }}</p>
-        <span class="num tag">{{ team.tag }}</span>
-      } @else {
-        <app-team-hex [size]="76" />
-        <p class="team-name tbd">Čeka se</p>
-      }
-    </div>
-  </section>
+  <app-match-scoreboard [match]="m" [clock]="clock()" [statusLabel]="statusLabel()" />
 
   <div class="lower">
     <app-match-stats [snapshot]="snapshot()" />
