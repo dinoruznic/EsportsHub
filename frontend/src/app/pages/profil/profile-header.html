@@ -1,0 +1,69 @@
+<app-team-hex class="avatar" [teamId]="seed()" [label]="initials()" [size]="104" />
+
+<div class="info">
+  @if (editing()) {
+    <form class="edit" (submit)="$event.preventDefault(); save()" novalidate>
+      <label class="field-label" for="display-name-input">Ime za prikaz</label>
+      <div class="edit-row">
+        <input
+          id="display-name-input"
+          class="field-input"
+          type="text"
+          autocomplete="nickname"
+          [value]="draft()"
+          (input)="draft.set($any($event.target).value)"
+          [attr.aria-invalid]="error() ? true : null"
+          [attr.aria-describedby]="error() ? 'display-name-error' : null"
+        />
+        <button type="submit" class="btn btn-gold save" [disabled]="saving()">
+          {{ saving() ? 'Čuvam…' : 'Sačuvaj' }}
+        </button>
+        <button type="button" class="btn btn-ghost" [disabled]="saving()" (click)="cancel()">
+          Odustani
+        </button>
+      </div>
+      @if (error(); as message) {
+        <p class="field-error" id="display-name-error">{{ message }}</p>
+      }
+      <p class="field-hint">Prazno polje vraća korisničko ime.</p>
+    </form>
+  } @else {
+    <div class="name-row">
+      <h1 class="display-title name">{{ shownName() }}</h1>
+      @if (editable()) {
+        <button type="button" class="pencil" aria-label="Uredi ime za prikaz" (click)="startEdit()">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M4 20h4L19 9l-4-4L4 16v4Z" />
+            <path d="M13.5 6.5l4 4" />
+          </svg>
+        </button>
+      }
+    </div>
+  }
+
+  <p class="handle num">&#64;{{ username() }}</p>
+
+  @if (roles().length > 0 || teams().length > 0) {
+    <div class="chips">
+      @for (role of roles(); track role) {
+        <span class="role">{{ role }}</span>
+      }
+      @for (team of teams(); track team.id) {
+        <a class="team" [routerLink]="['/timovi', team.id]" [attr.data-team-id]="team.id">
+          <span class="num tag">{{ team.tag }}</span>
+          <span class="team-name">{{ team.name }}</span>
+          @if (team.captain) {
+            <span class="captain" title="Kapiten">C</span>
+          }
+        </a>
+      }
+    </div>
+  }
+</div>
+
+@if (since(); as date) {
+  <p class="since">
+    <span class="since-label">Član od</span>
+    <span>{{ date }}</span>
+  </p>
+}

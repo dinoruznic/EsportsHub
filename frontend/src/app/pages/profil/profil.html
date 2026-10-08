@@ -1,0 +1,15 @@
+@if (meResource.error()) {
+  <app-error-state [message]="loadError()" (retry)="meResource.reload()" />
+} @else if (me(); as m) {
+  <app-profile-header
+    [username]="m.username"
+    [displayName]="m.displayName"
+    [roles]="m.roles"
+    [createdAt]="m.createdAt"
+    [teams]="teams()"
+    [editable]="true"
+    (renamed)="onRenamed($event)"
+  />
+} @else {
+  <app-skeleton [count]="1" [height]="170" />
+}

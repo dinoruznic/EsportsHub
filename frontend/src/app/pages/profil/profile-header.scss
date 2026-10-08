@@ -1,0 +1,168 @@
+:host {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 28px;
+  padding: 28px clamp(20px, 3vw, 36px);
+  background:
+    radial-gradient(ellipse at 0% 0%, rgb(226 177 84 / 0.08), transparent 55%), var(--panel);
+}
+
+.info {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.name-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.name {
+  overflow-wrap: anywhere;
+  font-size: clamp(38px, 4.4vw, 56px);
+}
+
+.pencil {
+  display: grid;
+  flex: none;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+
+  &:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.8;
+    stroke-linejoin: round;
+  }
+}
+
+.edit {
+  display: grid;
+  gap: 6px;
+  max-width: 620px;
+}
+
+.edit-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  .field-input {
+    flex: 1 1 240px;
+    font-size: 18px;
+  }
+
+  .btn {
+    height: 42px;
+  }
+}
+
+.handle {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.role {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 8px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  background: var(--panel-2);
+  color: var(--muted);
+  font: 600 10.5px/1 var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.team {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 13px;
+  text-decoration: none;
+
+  &:hover {
+    border-color: #3a4757;
+  }
+}
+
+.tag {
+  color: var(--faint);
+  font-size: 11px;
+}
+
+.team-name {
+  font-weight: 600;
+}
+
+.captain {
+  display: grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: var(--ink);
+  font: 800 10px/1 var(--mono);
+}
+
+.since {
+  display: grid;
+  align-self: start;
+  justify-items: end;
+  gap: 4px;
+  color: var(--text);
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.since-label {
+  color: var(--faint);
+  font: 500 10px/1.2 var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 759.98px) {
+  :host {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .since {
+    grid-column: 1 / -1;
+    justify-items: start;
+  }
+}
