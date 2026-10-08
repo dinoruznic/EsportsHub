@@ -1,0 +1,176 @@
+<div class="topline">
+  <a class="back" routerLink="/sudija">← Moji mečevi</a>
+  <app-connection-indicator [state]="store.realtime.state()" />
+</div>
+
+@if (store.loadError(); as message) {
+  <app-error-state [message]="message" (retry)="retry()" />
+} @else if (!match()) {
+  <app-skeleton [count]="2" [height]="260" />
+} @else {
+  @let m = match()!;
+  <header class="heading">
+    <div class="heading-meta">
+      <p class="eyebrow">{{ store.eyebrow() }}</p>
+      <app-match-status [status]="m.status" />
+    </div>
+    <h1 class="display-title">
+      {{ m.teamA?.name ?? 'Čeka se' }} <span class="vs">vs</span> {{ m.teamB?.name ?? 'Čeka se' }}
+    </h1>
+    @if (store.tournament(); as t) {
+      <a class="tournament" [routerLink]="['/turniri', t.id]">{{ t.name }}</a>
+    }
+  </header>
+
+  <div class="columns">
+    <section class="controls" aria-label="Upravljanje mečem">
+      <div class="panel control">
+        <ol class="steps" aria-label="Tok meča">
+          @for (s of steps(); track s.status) {
+            <li
+              class="step"
+              [attr.data-state]="s.state"
+              [attr.aria-current]="s.state === 'current' ? 'step' : null"
+            >
+              <span class="step-dot" aria-hidden="true"></span>
+              {{ s.label }}
+            </li>
+          }
+        </ol>
+
+        @if (m.status === 'SCHEDULED') {
+          <div class="block">
+            <button
+              type="button"
+              class="btn btn-gold start"
+              [disabled]="!!startBlocker() || busy() === 'start'"
+              (click)="start()"
+            >
+              {{ busy() === 'start' ? 'Pokrećem…' : 'Počni meč' }}
+            </button>
+            @if (startBlocker(); as reason) {
+              <p class="hint start-reason">{{ reason }}</p>
+            }
+            @if (errors().start; as message) {
+              <p class="error" role="alert">{{ message }}</p>
+            }
+          </div>
+        }
+
+        @if (m.status === 'LIVE') {
+          <div class="block score-editor">
+            <p class="block-title">Rezultat serije</p>
+            <div class="score-row">
+              <div class="side" data-side="A">
+                <span class="side-name">{{ m.teamA?.name }}</span>
+                <div class="stepper">
+                  <button
+                    type="button"
+                    class="btn btn-ghost minus"
+                    [attr.aria-label]="'Smanji rezultat za ' + m.teamA?.name"
+                    [disabled]="draftA() === 0"
+                    (click)="step('A', -1)"
+                  >
+                    −
+                  </button>
+                  <span class="num value">{{ draftA() }}</span>
+                  <button
+                    type="button"
+                    class="btn btn-ghost plus"
+                    [attr.aria-label]="'Povećaj rezultat za ' + m.teamA?.name"
+                    (click)="step('A', 1)"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              <span class="colon num" aria-hidden="true">:</span>
+              <div class="side" data-side="B">
+                <span class="side-name">{{ m.teamB?.name }}</span>
+                <div class="stepper">
+                  <button
+                    type="button"
+                    class="btn btn-ghost minus"
+                    [attr.aria-label]="'Smanji rezultat za ' + m.teamB?.name"
+                    [disabled]="draftB() === 0"
+                    (click)="step('B', -1)"
+                  >
+                    −
+                  </button>
+                  <span class="num value">{{ draftB() }}</span>
+                  <button
+                    type="button"
+                    class="btn btn-ghost plus"
+                    [attr.aria-label]="'Povećaj rezultat za ' + m.teamB?.name"
+                    (click)="step('B', 1)"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="row-actions">
+              <button
+                type="button"
+                class="btn btn-ghost save"
+                [disabled]="!dirty() || busy() === 'score'"
+                (click)="saveScore()"
+              >
+                Sačuvaj rezultat
+              </button>
+              @if (saved()) {
+                <span class="saved" role="status">Sačuvano</span>
+              }
+            </div>
+            @if (errors().score; as message) {
+              <p class="error" role="alert">{{ message }}</p>
+            }
+          </div>
+
+          <div class="block finish-block">
+            <app-confirm-inline
+              label="Završi meč"
+              tone="gold"
+              confirmLabel="Završi"
+              [question]="finishText()"
+              [blocked]="tie()"
+              [busy]="busy() === 'finish'"
+              (confirmed)="finish()"
+            />
+            @if (errors().finish; as message) {
+              <p class="error" role="alert">{{ message }}</p>
+            }
+          </div>
+        }
+
+        @if (outcome(); as text) {
+          <p class="outcome" role="status">{{ text }}</p>
+        }
+      </div>
+
+      @if (m.status !== 'FINISHED' && m.status !== 'CANCELLED') {
+        <app-agent-card
+          [matchId]="m.id"
+          [live]="live()"
+          [lastSnapshotAt]="store.snapshotAt()"
+          [now]="store.now()"
+        />
+      }
+    </section>
+
+    <section class="preview" aria-labelledby="preview-title">
+      <div class="preview-head">
+        <h2 class="preview-title" id="preview-title">Kako gledaoci vide meč</h2>
+        <a class="viewer-link" [routerLink]="['/mecevi', m.id]">Otvori kao gledalac →</a>
+      </div>
+      <app-match-scoreboard
+        [match]="m"
+        [clock]="store.clock()"
+        [statusLabel]="store.statusLabel()"
+        [compact]="true"
+      />
+      <app-match-stats [snapshot]="store.snapshot()" />
+      <app-match-feed [entries]="store.feed()" />
+    </section>
+  </div>
+}

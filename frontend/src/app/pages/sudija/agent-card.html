@@ -1,0 +1,65 @@
+<div class="head">
+  <h2 class="title">Prijenos iz igre</h2>
+  <p class="status" [attr.data-state]="status().state" role="status">
+    <span class="dot" aria-hidden="true"></span>
+    {{ status().text }}
+  </p>
+</div>
+
+<div class="key-row">
+  <span class="label">Ključ meča</span>
+  <code class="num key">{{ shownKey() }}</code>
+  <button
+    type="button"
+    class="btn btn-ghost reveal"
+    [disabled]="loadingKey()"
+    (click)="toggleReveal()"
+  >
+    {{ revealed() ? 'Sakrij ključ' : 'Prikaži ključ' }}
+  </button>
+</div>
+
+<div class="mode-row">
+  <span class="label" id="agent-demo-label">Demo (mock)</span>
+  <button
+    type="button"
+    class="switch"
+    role="switch"
+    aria-labelledby="agent-demo-label"
+    [attr.aria-checked]="demo()"
+    (click)="demo.set(!demo()); copied.set(null)"
+  >
+    <span class="knob"></span>
+  </button>
+  <span class="mode-hint">
+    {{
+      demo() ? 'Izmišljeni podaci, igra kreće od 14:00.' : 'Pravi League klijent na ovom računaru.'
+    }}
+  </span>
+</div>
+
+<pre class="code" #code><code class="num command">{{ command() }}</code></pre>
+
+<div class="actions">
+  <button type="button" class="btn btn-gold copy" [disabled]="loadingKey()" (click)="copy()">
+    Kopiraj komandu
+  </button>
+  <button
+    type="button"
+    class="btn btn-ghost simulate"
+    [disabled]="simulating() || !live()"
+    (click)="simulate()"
+  >
+    {{ simulated() ? 'Poslano' : 'Simuliraj podatak' }}
+  </button>
+  @if (!live()) {
+    <span class="hint">Agent i simulacija rade dok je meč uživo.</span>
+  }
+</div>
+
+@if (copied(); as message) {
+  <p class="copied" role="status">{{ message }}</p>
+}
+@if (error(); as message) {
+  <p class="error" role="alert">{{ message }}</p>
+}

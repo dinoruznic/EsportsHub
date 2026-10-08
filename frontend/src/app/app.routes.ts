@@ -53,6 +53,12 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/sudija/sudija'),
       },
       {
+        path: 'sudija/mecevi/:id',
+        title: 'Sudijski panel · EsportsHub',
+        canActivate: [roleGuard('REFEREE', 'ADMIN')],
+        loadComponent: () => import('./pages/sudija/sudija-mec'),
+      },
+      {
         path: 'market',
         title: 'Market · EsportsHub',
         loadComponent: () => import('./pages/market/market'),

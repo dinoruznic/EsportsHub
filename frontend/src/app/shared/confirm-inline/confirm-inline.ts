@@ -5,7 +5,12 @@ import { Component, input, output, signal } from '@angular/core';
   template: `
     @if (asking()) {
       <span class="question">{{ question() }}</span>
-      <button type="button" class="btn btn-gold confirm" [disabled]="busy()" (click)="confirm()">
+      <button
+        type="button"
+        class="btn btn-gold confirm"
+        [disabled]="busy() || blocked()"
+        (click)="confirm()"
+      >
         {{ confirmLabel() }}
       </button>
       <button
@@ -49,6 +54,7 @@ export class ConfirmInline {
   readonly question = input('Sigurno?');
   readonly confirmLabel = input('Da');
   readonly busy = input(false);
+  readonly blocked = input(false);
   readonly tone = input<'ghost' | 'gold'>('ghost');
   readonly confirmed = output<void>();
 

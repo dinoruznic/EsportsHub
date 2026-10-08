@@ -1,0 +1,154 @@
+:host {
+  display: grid;
+  gap: 14px;
+  padding: 18px 20px;
+}
+
+.head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.title {
+  font: 700 18px/1 var(--display);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.status {
+  --tone: var(--faint);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 13px;
+
+  &[data-state='active'] {
+    --tone: var(--good);
+    color: var(--text);
+  }
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--tone);
+
+  [data-state='active'] & {
+    box-shadow: 0 0 8px var(--good);
+    animation: pulse 1.2s ease-in-out infinite;
+  }
+}
+
+.key-row,
+.mode-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.label {
+  color: var(--faint);
+  font: 500 10.5px/1.2 var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.key {
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--ink);
+  font-size: 12.5px;
+}
+
+.reveal {
+  height: 30px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.mode-hint,
+.hint {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.switch {
+  position: relative;
+  width: 42px;
+  height: 24px;
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: var(--raise);
+  cursor: pointer;
+
+  &[aria-checked='true'] {
+    border-color: var(--gold);
+    background: rgb(226 177 84 / 0.3);
+
+    .knob {
+      transform: translateX(18px);
+      background: var(--gold);
+    }
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+  }
+}
+
+.knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform 0.15s ease;
+}
+
+.code {
+  margin: 0;
+  padding: 12px 14px;
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--ink);
+  color: var(--text);
+  font-size: 12.5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+.copied {
+  color: var(--good);
+  font-size: 13px;
+}
+
+.error {
+  color: var(--red);
+  font-size: 13px;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.35;
+  }
+}
