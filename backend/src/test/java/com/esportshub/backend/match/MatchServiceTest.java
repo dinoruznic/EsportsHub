@@ -51,6 +51,8 @@ class MatchServiceTest {
     private TournamentRepository tournamentRepository;
     @Mock
     private ApplicationEventPublisher eventPublisher;
+    @Mock
+    private RefereeAssigner refereeAssigner;
 
     @InjectMocks
     private MatchService matchService;
@@ -232,6 +234,31 @@ class MatchServiceTest {
         matchService.assignReferee(ADMIN, match.getId(), new AssignRefereeRequest(" ref "));
 
         assertThat(match.getReferee()).isEqualTo(referee);
+    }
+
+    @Test
+    void assignRefereeRejectsMemberOfOneOfTheTeams() {
+        Match match = stored(match(1L, MatchStatus.SCHEDULED, teamA, teamB, null));
+        match.setReferee(null);
+        when(userRepository.findByUsername("ref")).thenReturn(Optional.of(referee));
+        when(refereeAssigner.conflictTeam(referee, match)).thenReturn(Optional.of(teamB));
+
+        assertStatus(() -> matchService.assignReferee(ORGANIZER, match.getId(), new AssignRefereeRequest("ref")),
+                HttpStatus.CONFLICT, "Sudija je clan tima Beta i ne moze suditi ovaj mec");
+        assertThat(match.getReferee()).isNull();
+        verify(eventPublisher, never()).publishEvent(any(Object.class));
+    }
+
+    @Test
+    void winnerAdvancingGivesTheNextMatchAnAutomaticReferee() {
+        Match semifinal1 = stored(match(1L, MatchStatus.LIVE, teamA, teamB, 3L));
+        Match finalMatch = stored(match(3L, MatchStatus.SCHEDULED, null, teamB, null));
+        when(matchRepository.findByNextMatchIdOrderByIdAsc(3L)).thenReturn(List.of(semifinal1));
+
+        matchService.finish(REFEREE, semifinal1.getId(), new ScoreRequest(2, 1));
+
+        assertThat(finalMatch.getTeamA()).isEqualTo(teamA);
+        verify(refereeAssigner).assignIfMissing(finalMatch);
     }
 
     @Test

@@ -1,5 +1,6 @@
 package com.esportshub.backend.bracket;
 
+import com.esportshub.backend.match.RefereeAssigner;
 import com.esportshub.backend.team.Team;
 import com.esportshub.backend.tournament.RegistrationStatus;
 import com.esportshub.backend.tournament.Tournament;
@@ -29,6 +30,7 @@ public class BracketService {
     private final RoundRepository roundRepository;
     private final MatchRepository matchRepository;
     private final BracketStrategyResolver bracketStrategyResolver;
+    private final RefereeAssigner refereeAssigner;
 
     public BracketResponse generate(String username, boolean isAdmin, Long tournamentId) {
         Tournament tournament = tournamentRepository.findById(tournamentId).orElseThrow(BracketService::tournamentNotFound);
@@ -97,6 +99,8 @@ public class BracketService {
 
         tournament.setStatus(TournamentStatus.ONGOING);
         tournamentRepository.save(tournament);
+
+        matches.forEach(refereeAssigner::assignIfMissing);
 
         return toResponse(tournament);
     }

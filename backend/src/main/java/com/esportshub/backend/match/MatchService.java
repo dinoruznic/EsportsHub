@@ -33,6 +33,7 @@ public class MatchService {
     private final UserRepository userRepository;
     private final TournamentRepository tournamentRepository;
     private final ApplicationEventPublisher eventPublisher;
+    private final RefereeAssigner refereeAssigner;
 
     public MatchView assignReferee(MatchActor actor, Long matchId, AssignRefereeRequest request) {
         Match match = findMatch(matchId);
@@ -47,6 +48,11 @@ public class MatchService {
         if (referee.getRoles().stream().noneMatch(role -> REFEREE_ROLE.equals(role.getName()))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "korisnik nije sudija");
         }
+
+        refereeAssigner.conflictTeam(referee, match).ifPresent(team -> {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Sudija je clan tima " + team.getName() + " i ne moze suditi ovaj mec");
+        });
 
         match.setReferee(referee);
         matchRepository.save(match);
@@ -160,6 +166,8 @@ public class MatchService {
                 "winnerTeamId", match.getWinnerTeam().getId(),
                 "nextMatchId", next.getId(),
                 "slot", firstFeeder ? "A" : "B"));
+
+        refereeAssigner.assignIfMissing(next);
     }
 
     private void completeTournament(MatchActor actor, Match finalMatch) {

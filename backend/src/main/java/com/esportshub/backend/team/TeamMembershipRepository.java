@@ -8,4 +8,5 @@ public interface TeamMembershipRepository extends JpaRepository<TeamMembership, 
     List<TeamMembership> findByTeam_IdAndActiveTrue(Long teamId);
     List<TeamMembership> findByGameAccount_User_UsernameAndActiveTrue(String username);
     boolean existsByTeam_IdAndGameAccount_IdAndActiveTrue(Long teamId, Long gameAccountId);
+    boolean existsByTeam_IdAndGameAccount_User_UsernameAndActiveTrue(Long teamId, String username);
 }

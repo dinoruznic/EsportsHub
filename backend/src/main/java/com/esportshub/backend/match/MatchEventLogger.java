@@ -20,6 +20,7 @@ public class MatchEventLogger {
     private static final String SOURCE_ORGANIZER = "ORGANIZER";
     private static final String SOURCE_ADMIN = "ADMIN";
     private static final String SOURCE_RIOT = "RIOT";
+    private static final String SOURCE_SYSTEM = "SISTEM";
 
     private final MatchEventRecordRepository matchEventRecordRepository;
     private final MatchRepository matchRepository;
@@ -32,13 +33,14 @@ public class MatchEventLogger {
             return;
         }
 
-        User actor = event.actor() == null ? null : userRepository.findByUsername(event.actor()).orElse(null);
+        boolean system = RefereeAssigner.SYSTEM_ACTOR.equals(event.actor());
+        User actor = event.actor() == null || system ? null : userRepository.findByUsername(event.actor()).orElse(null);
         Match match = matchRepository.getReferenceById(event.matchId());
 
         matchEventRecordRepository.save(MatchEventRecord.builder()
                 .matchId(event.matchId())
                 .type(event.type())
-                .source(sourceOf(event.actor(), match))
+                .source(system ? SOURCE_SYSTEM : sourceOf(event.actor(), match))
                 .createdBy(actor)
                 .payload(objectMapper.writeValueAsString(event.data()))
                 .build());
@@ -52,10 +54,17 @@ public class MatchEventLogger {
                         record.getMatchId(),
                         record.getType(),
                         record.getSource(),
-                        record.getCreatedBy() == null ? null : record.getCreatedBy().getUsername(),
+                        actorOf(record),
                         record.getPayload() == null ? null : objectMapper.readTree(record.getPayload()),
                         record.getCreatedAt()))
                 .toList();
+    }
+
+    private static String actorOf(MatchEventRecord record) {
+        if (record.getCreatedBy() != null) {
+            return record.getCreatedBy().getUsername();
+        }
+        return SOURCE_SYSTEM.equals(record.getSource()) ? RefereeAssigner.SYSTEM_ACTOR : null;
     }
 
     private static String sourceOf(String actor, Match match) {

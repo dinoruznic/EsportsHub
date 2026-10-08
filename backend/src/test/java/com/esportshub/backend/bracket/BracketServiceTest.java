@@ -1,6 +1,7 @@
 package com.esportshub.backend.bracket;
 
 import com.esportshub.backend.game.Game;
+import com.esportshub.backend.match.RefereeAssigner;
 import com.esportshub.backend.support.TestData;
 import com.esportshub.backend.tournament.RegistrationStatus;
 import com.esportshub.backend.tournament.Tournament;
@@ -44,6 +45,8 @@ class BracketServiceTest {
     private RoundRepository roundRepository;
     @Mock
     private MatchRepository matchRepository;
+    @Mock
+    private RefereeAssigner refereeAssigner;
 
     private BracketService bracketService;
     private Tournament tournament;
@@ -53,7 +56,7 @@ class BracketServiceTest {
     void setUp() {
         BracketStrategyResolver resolver = new BracketStrategyResolver(List.of(new SingleEliminationStrategy()));
         bracketService = new BracketService(tournamentRepository, tournamentRegistrationRepository,
-                roundRepository, matchRepository, resolver);
+                roundRepository, matchRepository, resolver, refereeAssigner);
         lol = TestData.game(1L, "LOL", "TIER");
         tournament = Tournament.builder()
                 .id(10L)
@@ -142,6 +145,7 @@ class BracketServiceTest {
         assertThat(matches.get(1).getNextMatchId()).isEqualTo(matches.get(2).getId());
         assertThat(matches.get(2).getNextMatchId()).isNull();
         verify(tournamentRegistrationRepository).saveAll(any());
+        matches.forEach(match -> verify(refereeAssigner).assignIfMissing(match));
     }
 
     private List<TournamentRegistration> registered(int count) {

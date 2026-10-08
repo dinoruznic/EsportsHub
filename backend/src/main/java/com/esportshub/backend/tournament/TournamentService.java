@@ -3,6 +3,7 @@ package com.esportshub.backend.tournament;
 import com.esportshub.backend.game.Game;
 import com.esportshub.backend.game.GameRepository;
 import com.esportshub.backend.team.Team;
+import com.esportshub.backend.team.TeamMembershipRepository;
 import com.esportshub.backend.team.TeamRepository;
 import com.esportshub.backend.user.User;
 import com.esportshub.backend.user.UserRepository;
@@ -33,6 +34,7 @@ public class TournamentService {
     private final UserRepository userRepository;
     private final TournamentRegistrationRepository tournamentRegistrationRepository;
     private final TeamRepository teamRepository;
+    private final TeamMembershipRepository teamMembershipRepository;
 
     public TournamentResponse create(String username, CreateTournamentRequest request) {
         User organizer = userRepository.findByUsername(username)
@@ -111,6 +113,12 @@ public class TournamentService {
 
         if (!team.getCaptain().getUsername().equals(username)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "nisi kapiten tima");
+        }
+
+        String organizer = tournament.getOrganizer().getUsername();
+        if (team.getCaptain().getUsername().equals(organizer)
+                || teamMembershipRepository.existsByTeam_IdAndGameAccount_User_UsernameAndActiveTrue(team.getId(), organizer)) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Organizator ne moze prijaviti svoj tim na svoj turnir");
         }
 
         if (!team.getGame().getId().equals(tournament.getGame().getId())) {

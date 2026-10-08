@@ -164,7 +164,9 @@ class MatchBroadcastIntegrationTest extends AbstractIntegrationTest {
         assertThat(firstOnMatchTopic).isNotNull().containsEntry("type", MatchEvent.STARTED)
                 .containsEntry("actor", organizer.getUsername());
 
-        List<MatchEventResponse> log = matchEventLogger.findByMatch(semifinalId);
+        List<MatchEventResponse> log = matchEventLogger.findByMatch(semifinalId).stream()
+                .filter(event -> !"SISTEM".equals(event.actor()))
+                .toList();
         assertThat(log).extracting(MatchEventResponse::type).containsExactly(
                 MatchEvent.STARTED, MatchEvent.SCORE_UPDATED, MatchEvent.FINISHED, MatchEvent.WINNER_ADVANCED);
         assertThat(log).extracting(MatchEventResponse::source).containsOnly("ORGANIZER");

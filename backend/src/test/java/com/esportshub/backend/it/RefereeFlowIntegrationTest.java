@@ -52,7 +52,6 @@ class RefereeFlowIntegrationTest extends AbstractIntegrationTest {
         assertThat(usernames(referees)).contains(refereeName);
         assertThat(usernames(api.get("/api/referees", admin).expect(200).json())).contains(refereeName);
 
-        assertThat(api.get("/api/matches/" + semifinal, null).expect(200).json().get("refereeUsername").isNull()).isTrue();
         JsonNode assigned = api.put("/api/matches/" + semifinal + "/referee", organizer, Map.of("username", refereeName))
                 .expect(200).json();
         assertThat(assigned.get("refereeUsername").asString()).isEqualTo(refereeName);

@@ -4,6 +4,7 @@ import com.esportshub.backend.game.Game;
 import com.esportshub.backend.game.GameRepository;
 import com.esportshub.backend.support.TestData;
 import com.esportshub.backend.team.Team;
+import com.esportshub.backend.team.TeamMembershipRepository;
 import com.esportshub.backend.team.TeamRepository;
 import com.esportshub.backend.user.User;
 import com.esportshub.backend.user.UserRepository;
@@ -39,6 +40,8 @@ class TournamentRegistrationTest {
     private TournamentRegistrationRepository tournamentRegistrationRepository;
     @Mock
     private TeamRepository teamRepository;
+    @Mock
+    private TeamMembershipRepository teamMembershipRepository;
 
     @InjectMocks
     private TournamentService tournamentService;
@@ -78,6 +81,26 @@ class TournamentRegistrationTest {
 
         assertStatus(() -> tournamentService.register("cap", tournament.getId(), new RegisterTeamRequest(csTeam.getId())),
                 HttpStatus.BAD_REQUEST, "nisu ista igra");
+    }
+
+    @Test
+    void organizerCannotRegisterTeamTheyCaptain() {
+        Team own = TestData.team(9L, "Org tim", lol, tournament.getOrganizer());
+        when(tournamentRepository.findById(tournament.getId())).thenReturn(Optional.of(tournament));
+        when(teamRepository.findById(own.getId())).thenReturn(Optional.of(own));
+
+        assertStatus(() -> tournamentService.register("org", tournament.getId(), new RegisterTeamRequest(own.getId())),
+                HttpStatus.CONFLICT, "Organizator ne moze prijaviti svoj tim na svoj turnir");
+        verify(tournamentRegistrationRepository, never()).save(any());
+    }
+
+    @Test
+    void organizerCannotRegisterTeamTheyPlayIn() {
+        teamIsKnown();
+        when(teamMembershipRepository.existsByTeam_IdAndGameAccount_User_UsernameAndActiveTrue(team.getId(), "org"))
+                .thenReturn(true);
+
+        assertStatus(() -> register("cap"), HttpStatus.CONFLICT, "Organizator ne moze prijaviti svoj tim");
     }
 
     @Test
