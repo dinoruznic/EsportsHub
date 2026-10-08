@@ -150,7 +150,14 @@
     <section class="bracket-section" aria-labelledby="bracket-heading">
       <div class="section-head">
         <h2 id="bracket-heading" class="section-title">Bracket</h2>
-        <button type="button" class="btn btn-ghost refresh" (click)="reloadAll()">Osvježi</button>
+        <div class="section-tools">
+          <app-connection-indicator [state]="realtime.state()" />
+          @if (realtime.state() === 'offline') {
+            <button type="button" class="btn btn-ghost refresh" (click)="reloadAll()">
+              Osvježi
+            </button>
+          }
+        </div>
       </div>
       @if (bracket.error()) {
         <app-error-state [message]="bracketError()" (retry)="bracket.reload()" />
@@ -160,7 +167,12 @@
         @if (highlights(); as h) {
           <app-match-highlights [highlights]="h" [tournamentId]="tour.id" />
         }
-        <app-bracket-view [bracket]="bracket.value()" [seeds]="seeds()" [tournamentId]="tour.id" />
+        <app-bracket-view
+          [bracket]="bracket.value()"
+          [seeds]="seeds()"
+          [tournamentId]="tour.id"
+          [flash]="flashed()"
+        />
       } @else if (closed()) {
         <app-empty-state class="bracket-empty" title="Bracket neće biti odigran." />
       } @else if (preview(); as preview) {

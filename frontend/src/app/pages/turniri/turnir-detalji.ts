@@ -1,14 +1,17 @@
-import { Component, computed, effect, inject, signal } from '@angular/core';
-import { rxResource, toSignal } from '@angular/core/rxjs-interop';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
+import { rxResource, takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Title } from '@angular/platform-browser';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Observable, map } from 'rxjs';
+import { Observable, map, switchMap } from 'rxjs';
 import { toApiError } from '../../core/api/api-error';
 import { GamesApi } from '../../core/api/games-api';
 import { formatLabel } from '../../core/api/models';
 import { TeamsApi } from '../../core/api/teams-api';
 import { TournamentsApi } from '../../core/api/tournaments-api';
 import { AuthService } from '../../core/auth/auth.service';
+import { TournamentTopicMessage, tournamentTopic } from '../../core/realtime/messages';
+import { RealtimeService } from '../../core/realtime/realtime.service';
+import { ConnectionIndicator } from '../../shared/connection-indicator/connection-indicator';
 import { ConfirmInline } from '../../shared/confirm-inline/confirm-inline';
 import { EmptyState } from '../../shared/empty-state/empty-state';
 import { ErrorState } from '../../shared/error-state/error-state';
@@ -21,6 +24,7 @@ import {
   matchHighlights,
   placements,
   previewBracket,
+  withMatch,
 } from './bracket/bracket-layout';
 import { BracketView } from './bracket/bracket-view';
 import { ChampionBanner } from './champion-banner';
@@ -35,6 +39,7 @@ import { TournamentStats } from './tournament-stats';
     BracketView,
     ChampionBanner,
     ConfirmInline,
+    ConnectionIndicator,
     MatchHighlights,
     EmptyState,
     ErrorState,
@@ -52,6 +57,8 @@ export default class TurnirDetalji {
   private readonly teamsApi = inject(TeamsApi);
   private readonly auth = inject(AuthService);
   private readonly title = inject(Title);
+  protected readonly realtime = inject(RealtimeService);
+  protected readonly flashed = signal<number[]>([]);
 
   private readonly id = toSignal(
     inject(ActivatedRoute).paramMap.pipe(map((params) => Number(params.get('id')))),
@@ -223,6 +230,30 @@ export default class TurnirDetalji {
   protected readonly actionError = signal<string | null>(null);
 
   constructor() {
+    const destroyRef = inject(DestroyRef);
+    const timers = new Set<ReturnType<typeof setTimeout>>();
+    destroyRef.onDestroy(() => timers.forEach((timer) => clearTimeout(timer)));
+
+    toObservable(this.id)
+      .pipe(
+        switchMap((id) => this.realtime.subscribe<TournamentTopicMessage>(tournamentTopic(id))),
+        takeUntilDestroyed(),
+      )
+      .subscribe((message) => {
+        this.applyMessage(message);
+        if (message.match) {
+          const id = message.match.id;
+          this.flashed.update((ids) => [...ids.filter((value) => value !== id), id]);
+          const timer = setTimeout(() => {
+            timers.delete(timer);
+            this.flashed.update((ids) => ids.filter((value) => value !== id));
+          }, 800);
+          timers.add(timer);
+        }
+      });
+
+    this.realtime.reconnected.pipe(takeUntilDestroyed()).subscribe(() => this.reloadAll());
+
     effect(() => {
       const t = this.t();
       if (t) {
@@ -273,6 +304,18 @@ export default class TurnirDetalji {
 
   protected reject(): void {
     this.run(this.api.reject(this.id()), () => this.tournament.reload());
+  }
+
+  private applyMessage(message: TournamentTopicMessage): void {
+    if (message.type === 'LIVE_SNAPSHOT') {
+      return;
+    }
+    if (message.match && this.bracket.hasValue()) {
+      this.bracket.set(withMatch(this.bracket.value(), message.match));
+    }
+    if (message.type === 'TOURNAMENT_COMPLETED') {
+      this.tournament.reload();
+    }
   }
 
   protected reloadAll(): void {

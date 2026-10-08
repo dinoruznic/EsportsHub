@@ -4,6 +4,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { provideRouter, Router } from '@angular/router';
 import { App } from './app';
 import { routes } from './app.routes';
+import { provideFakeStomp } from './testing/fake-stomp';
 import { storeSession } from './testing/fake-session';
 
 describe('App', () => {
@@ -11,7 +12,12 @@ describe('App', () => {
     localStorage.clear();
     TestBed.configureTestingModule({
       imports: [App],
-      providers: [provideRouter(routes), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideRouter(routes),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideFakeStomp().provider,
+      ],
     });
   });
 

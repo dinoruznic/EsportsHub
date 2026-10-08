@@ -14,6 +14,7 @@ import {
   team,
   tournament,
 } from '../../testing/tournament-data';
+import { FakeStomp, provideFakeStomp } from '../../testing/fake-stomp';
 import TurnirDetalji from './turnir-detalji';
 
 interface Setup {
@@ -38,6 +39,7 @@ describe('TurnirDetalji', () => {
   let http: HttpTestingController;
   let harness: RouterTestingHarness;
   let element: HTMLElement;
+  let stomp: FakeStomp;
 
   afterEach(() => {
     http.verify();
@@ -52,11 +54,14 @@ describe('TurnirDetalji', () => {
       username: setup.username ?? 'igrac',
       roles: setup.roles ?? ['PLAYER'],
     });
+    const fake = provideFakeStomp();
+    stomp = fake.stomp;
     TestBed.configureTestingModule({
       providers: [
         provideRouter([{ path: 'turniri/:id', component: TurnirDetalji }]),
         provideHttpClient(),
         provideHttpClientTesting(),
+        fake.provider,
       ],
     });
     http = TestBed.inject(HttpTestingController);

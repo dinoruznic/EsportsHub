@@ -90,6 +90,10 @@
   }
 }
 
+a.match.flash {
+  animation: flash 0.8s ease-out;
+}
+
 a.match {
   display: block;
   color: inherit;
@@ -253,6 +257,20 @@ a.match {
 
   .row:not(.tbd) .team {
     color: var(--muted);
+  }
+}
+
+@keyframes flash {
+  0%,
+  60% {
+    outline: 2px solid var(--gold);
+    outline-offset: 2px;
+    box-shadow: 0 0 22px rgb(226 177 84 / 0.4);
+  }
+
+  100% {
+    outline: 2px solid transparent;
+    outline-offset: 6px;
   }
 }
 

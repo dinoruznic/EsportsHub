@@ -32,6 +32,7 @@
                   [attr.data-status]="match.status"
                   [class.live]="match.status === 'LIVE'"
                   [class.champion-path]="match.championPath"
+                  [class.flash]="flash().includes(match.id)"
                 >
                   <ng-container
                     [ngTemplateOutlet]="card"

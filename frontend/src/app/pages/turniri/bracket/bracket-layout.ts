@@ -1,4 +1,11 @@
-import { Bracket, BracketMatch, BracketRound, MatchStatus, Registration, TeamBrief } from '../../../core/api/models';
+import {
+  Bracket,
+  BracketMatch,
+  BracketRound,
+  MatchStatus,
+  Registration,
+  TeamBrief,
+} from '../../../core/api/models';
 import { isPowerOfTwo } from '../../../shared/format';
 import { initials } from '../../../shared/team-hex/team-hex';
 
@@ -106,7 +113,10 @@ function backendRoundName(roundNumber: number, matchCount: number): string {
   }
 }
 
-export function previewBracket(maxTeams: number | null, registrations: Registration[]): Bracket | null {
+export function previewBracket(
+  maxTeams: number | null,
+  registrations: Registration[],
+): Bracket | null {
   if (!maxTeams || !isPowerOfTwo(maxTeams)) {
     return null;
   }
@@ -135,12 +145,18 @@ export function previewBracket(maxTeams: number | null, registrations: Registrat
   }
   rounds.forEach((round, index) => {
     const next = rounds[index + 1];
-    round.matches.forEach((match, at) => (match.nextMatchId = next ? next.matches[Math.floor(at / 2)].id : null));
+    round.matches.forEach(
+      (match, at) => (match.nextMatchId = next ? next.matches[Math.floor(at / 2)].id : null),
+    );
   });
   return { tournamentId: 0, tournamentName: '', status: 'REGISTRATION', rounds };
 }
 
-export function buildBracket(bracket: Bracket, seeds: Record<number, number>, preview = false): RoundColumn[] {
+export function buildBracket(
+  bracket: Bracket,
+  seeds: Record<number, number>,
+  preview = false,
+): RoundColumn[] {
   const rounds = [...bracket.rounds].sort((a, b) => a.roundNumber - b.roundNumber);
   const ordered: BracketMatch[][] = [];
 
@@ -156,7 +172,11 @@ export function buildBracket(bracket: Bracket, seeds: Record<number, number>, pr
         .filter((at) => at >= 0);
       return feeders.length > 0 ? Math.min(...feeders) : Number.MAX_SAFE_INTEGER;
     };
-    ordered.push([...round.matches].sort((a, b) => position(a) - position(b) || Math.abs(a.id) - Math.abs(b.id)));
+    ordered.push(
+      [...round.matches].sort(
+        (a, b) => position(a) - position(b) || Math.abs(a.id) - Math.abs(b.id),
+      ),
+    );
   });
 
   const numbers = new Map<number, number>();
@@ -206,7 +226,11 @@ function slot(
     team,
     seed: team ? (seeds[team.id] ?? null) : null,
     monogram: team ? monogram(team) : '',
-    placeholder: feeder ? `Pobjednik meča ${numbers.get(feeder.id)}` : preview ? 'Slobodno mjesto' : 'Čeka se',
+    placeholder: feeder
+      ? `Pobjednik meča ${numbers.get(feeder.id)}`
+      : preview
+        ? 'Slobodno mjesto'
+        : 'Čeka se',
     score: team && played ? (score ?? 0) : null,
     winner,
     loser: !!team && match.winnerTeamId !== null && !winner,
@@ -228,7 +252,9 @@ export interface Highlights {
 }
 
 export function matchHighlights(columns: RoundColumn[]): Highlights | null {
-  const cards = columns.flatMap((column) => column.matches.map((match) => ({ match, round: column.label })));
+  const cards = columns.flatMap((column) =>
+    column.matches.map((match) => ({ match, round: column.label })),
+  );
   const chip = ({ match, round }: (typeof cards)[number]): HighlightChip => ({
     id: match.id,
     teamA: match.slots[0].team?.name ?? match.slots[0].placeholder,
@@ -242,7 +268,8 @@ export function matchHighlights(columns: RoundColumn[]): Highlights | null {
     return { live: true, chips: live.map(chip) };
   }
   const next = cards.find(
-    ({ match }) => match.status === 'SCHEDULED' && match.slots.every((slotView) => slotView.team !== null),
+    ({ match }) =>
+      match.status === 'SCHEDULED' && match.slots.every((slotView) => slotView.team !== null),
   );
   return next ? { live: false, chips: [chip(next)] } : null;
 }
@@ -301,7 +328,21 @@ export function placements(bracket: Bracket, registrations: Registration[]): Pla
     .map((registration, index) => ({
       registration,
       seed: registration.seed ?? index + 1,
-      ...(outcome.get(registration.teamId) ?? { rank: Number.MAX_SAFE_INTEGER, label: '', kind: 'unknown' as const }),
+      ...(outcome.get(registration.teamId) ?? {
+        rank: Number.MAX_SAFE_INTEGER,
+        label: '',
+        kind: 'unknown' as const,
+      }),
     }))
     .sort((a, b) => a.rank - b.rank || a.seed - b.seed);
+}
+
+export function withMatch(bracket: Bracket, updated: BracketMatch): Bracket {
+  return {
+    ...bracket,
+    rounds: bracket.rounds.map((round) => ({
+      ...round,
+      matches: round.matches.map((match) => (match.id === updated.id ? updated : match)),
+    })),
+  };
 }
