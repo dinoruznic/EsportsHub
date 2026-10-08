@@ -6,7 +6,7 @@ import { RouterTestingHarness } from '@angular/router/testing';
 import { BracketMatch } from '../../core/api/models';
 import { storeSession } from '../../testing/fake-session';
 import { FakeStomp, provideFakeStomp } from '../../testing/fake-stomp';
-import { GAMES, fourTeamBracket, tournament } from '../../testing/tournament-data';
+import { GAMES, fourTeamBracket } from '../../testing/tournament-data';
 import Mec from './mec';
 
 async function settle(): Promise<void> {
@@ -25,6 +25,10 @@ const LIVE: BracketMatch = {
   scoreB: 0,
   winnerTeamId: null,
   nextMatchId: 12,
+  tournamentId: 1,
+  tournamentName: 'Balkan Kup',
+  gameCode: 'LOL',
+  roundName: 'Polufinale',
 };
 
 describe('Mec', () => {
@@ -38,7 +42,7 @@ describe('Mec', () => {
     localStorage.clear();
   });
 
-  async function render(snapshot: object | null = null): Promise<void> {
+  async function render(snapshot: object | null = null, url = '/mecevi/11'): Promise<void> {
     localStorage.clear();
     storeSession();
     const fake = provideFakeStomp();
@@ -53,7 +57,7 @@ describe('Mec', () => {
     });
     http = TestBed.inject(HttpTestingController);
     harness = await RouterTestingHarness.create();
-    await harness.navigateByUrl('/mecevi/11?turnir=1');
+    await harness.navigateByUrl(url);
     await settle();
     http.expectOne('/api/matches/11').flush(LIVE);
     http
@@ -79,9 +83,10 @@ describe('Mec', () => {
         createdAt: '2026-10-08T10:05:00Z',
       },
     ]);
-    http.expectOne('/api/tournaments/1').flush(tournament({ status: 'ONGOING' }));
-    http.expectOne('/api/tournaments/1/bracket').flush(fourTeamBracket());
     http.expectOne('/api/games').flush(GAMES);
+    await settle();
+    http.expectOne('/api/tournaments/1/bracket').flush(fourTeamBracket());
+    http.expectNone('/api/tournaments/1');
     await harness.fixture.whenStable();
     element = harness.routeNativeElement as HTMLElement;
     stomp.last.connect();
@@ -108,6 +113,15 @@ describe('Mec', () => {
     expect(feed()).toEqual(['Rezultat 1 : 0', 'Meč počinje']);
     expect(document.title).toBe('Tim 2 vs Tim 3 · EsportsHub');
     expect([...stomp.last.topics.keys()]).toEqual(['/topic/matches/11']);
+  });
+
+  it('reads the tournament and round from the match and still accepts old links with ?turnir=', async () => {
+    await render(null, '/mecevi/11?turnir=99');
+
+    expect(text('.eyebrow')).toBe('League of Legends · Polufinale · M2');
+    expect(element.querySelector('.back')!.getAttribute('href')).toBe('/turniri/1');
+    http.expectNone('/api/tournaments/99');
+    http.expectNone('/api/matches/live');
   });
 
   it('applies SCORE_UPDATED from the match topic', async () => {

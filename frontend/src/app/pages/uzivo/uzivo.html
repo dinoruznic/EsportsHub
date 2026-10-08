@@ -32,7 +32,6 @@
           <a
             class="live-card"
             [routerLink]="['/mecevi', m.matchId]"
-            [queryParams]="{ turnir: m.tournamentId }"
             [attr.data-match-id]="m.matchId"
           >
             <div class="card-top">
@@ -77,8 +76,7 @@
             <a
               class="next-row"
               [routerLink]="['/mecevi', m.matchId]"
-              [queryParams]="{ turnir: m.tournamentId }"
-              [attr.data-match-id]="m.matchId"
+                [attr.data-match-id]="m.matchId"
             >
               <app-game-badge [code]="m.gameCode" />
               <span class="teams">

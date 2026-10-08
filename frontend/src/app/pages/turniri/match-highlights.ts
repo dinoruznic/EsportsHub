@@ -21,7 +21,6 @@ import { Highlights } from './bracket/bracket-layout';
           <a
             class="chip"
             [routerLink]="['/mecevi', chip.id]"
-            [queryParams]="tournamentId() ? { turnir: tournamentId() } : {}"
             [attr.data-match-id]="chip.id"
           >
             <span class="team">{{ chip.teamA }}</span>
@@ -130,5 +129,4 @@ import { Highlights } from './bracket/bracket-layout';
 })
 export class MatchHighlights {
   readonly highlights = input.required<Highlights>();
-  readonly tournamentId = input<number | null>(null);
 }

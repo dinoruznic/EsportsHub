@@ -66,6 +66,10 @@ export interface BracketMatch {
   scoreB: number | null;
   winnerTeamId: number | null;
   nextMatchId: number | null;
+  tournamentId?: number | null;
+  tournamentName?: string | null;
+  gameCode?: string | null;
+  roundName?: string | null;
 }
 
 export interface BracketRound {

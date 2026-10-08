@@ -14,7 +14,7 @@ import { ConnectionIndicator } from '../../shared/connection-indicator/connectio
 import { ErrorState } from '../../shared/error-state/error-state';
 import { Skeleton } from '../../shared/skeleton/skeleton';
 import { TeamHex } from '../../shared/team-hex/team-hex';
-import { buildBracket } from '../turniri/bracket/bracket-layout';
+import { buildBracket, roundLabel } from '../turniri/bracket/bracket-layout';
 import { FeedContext, FeedEntry, fromMessage, historyFeed, prependEntry } from './match-events';
 import { MatchFeed } from './match-feed';
 import { formatClock, liveClock } from './match-format';
@@ -47,10 +47,6 @@ export default class Mec {
       requireSync: true,
     },
   );
-  private readonly hint = toSignal(
-    this.route.queryParamMap.pipe(map((params) => Number(params.get('turnir')) || null)),
-    { requireSync: true },
-  );
 
   protected readonly match = signal<BracketMatch | null>(null);
   protected readonly snapshot = signal<SnapshotStats | null>(null);
@@ -58,24 +54,23 @@ export default class Mec {
   private readonly liveEntries = signal<FeedEntry[]>([]);
   private readonly snapshotAt = signal(0);
   protected readonly loadError = signal<string | null>(null);
-  private readonly tournamentId = signal<number | null>(null);
   private readonly now = signal(Date.now());
 
+  private readonly tournamentId = computed(() => this.match()?.tournamentId ?? null);
   private readonly context = rxResource({
     params: () => this.tournamentId() ?? undefined,
-    stream: ({ params }) =>
-      forkJoin({
-        tournament: this.tournamentsApi.get(params),
-        bracket: this.tournamentsApi.bracket(params),
-        games: this.gamesApi.list(),
-      }),
+    stream: ({ params }) => this.tournamentsApi.bracket(params),
   });
+  private readonly games = rxResource({ stream: () => this.gamesApi.list() });
 
-  protected readonly tournament = computed(() =>
-    this.context.hasValue() ? this.context.value().tournament : null,
-  );
+  protected readonly tournament = computed(() => {
+    const match = this.match();
+    return match?.tournamentId
+      ? { id: match.tournamentId, name: match.tournamentName ?? 'Turnir' }
+      : null;
+  });
   private readonly columns = computed(() =>
-    this.context.hasValue() ? buildBracket(this.context.value().bracket, {}) : [],
+    this.context.hasValue() ? buildBracket(this.context.value(), {}) : [],
   );
   protected readonly card = computed(() => {
     for (const column of this.columns()) {
@@ -87,15 +82,15 @@ export default class Mec {
     return null;
   });
   protected readonly eyebrow = computed(() => {
-    const value = this.context.hasValue() ? this.context.value() : null;
-    const card = this.card();
-    if (!value) {
+    const match = this.match();
+    if (!match?.gameCode) {
       return 'Meč';
     }
-    const game =
-      value.games.find((g) => g.code === value.tournament.gameCode)?.name ??
-      value.tournament.gameCode;
-    return [game, card?.round, card ? `M${card.number}` : null].filter(Boolean).join(' · ');
+    const card = this.card();
+    const games = this.games.hasValue() ? this.games.value() : [];
+    const game = games.find((g) => g.code === match.gameCode)?.name ?? match.gameCode;
+    const round = card?.round ?? (match.roundName ? roundLabel(match.roundName, 0) : null);
+    return [game, round, card ? `M${card.number}` : null].filter(Boolean).join(' · ');
   });
 
   protected readonly feed = computed(() =>
@@ -122,7 +117,6 @@ export default class Mec {
       .pipe(
         switchMap((id) => {
           this.load(id);
-          this.resolveTournament(id);
           return this.realtime.subscribe<MatchTopicMessage>(matchTopic(id));
         }),
         takeUntilDestroyed(),
@@ -178,20 +172,6 @@ export default class Mec {
       },
       error: (error: unknown) => this.loadError.set(toApiError(error).message),
     });
-  }
-
-  private resolveTournament(id: number): void {
-    const hint = this.hint();
-    if (hint) {
-      this.tournamentId.set(hint);
-      return;
-    }
-    this.matchesApi
-      .live()
-      .pipe(catchError(() => of([])))
-      .subscribe((list) =>
-        this.tournamentId.set(list.find((item) => item.matchId === id)?.tournamentId ?? null),
-      );
   }
 
   private apply(message: MatchTopicMessage): void {

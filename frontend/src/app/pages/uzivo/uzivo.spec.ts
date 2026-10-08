@@ -97,7 +97,7 @@ describe('Uzivo', () => {
     const next = element.querySelector('.next-row[data-match-id="8"]')!;
 
     expect(element.querySelector('h1')!.textContent).toBe('Uživo');
-    expect(card.getAttribute('href')).toBe('/mecevi/7?turnir=5');
+    expect(card.getAttribute('href')).toBe('/mecevi/7');
     expect(card.querySelector('.context')!.textContent).toBe('Balkan Kup · Četvrtfinale');
     expect(card.querySelector('.series')!.textContent!.trim()).toBe('1 : 0');
     expect(card.querySelector('.live-pill')!.textContent!.trim()).toBe('Uživo');

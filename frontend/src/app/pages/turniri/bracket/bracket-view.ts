@@ -40,7 +40,6 @@ export class BracketView {
   readonly bracket = input.required<Bracket>();
   readonly seeds = input<Record<number, number>>({});
   readonly preview = input(false);
-  readonly tournamentId = input<number | null>(null);
   readonly flash = input<number[]>([]);
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);

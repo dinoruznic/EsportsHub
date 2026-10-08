@@ -165,14 +165,9 @@
         <app-skeleton [count]="1" [height]="320" />
       } @else if (hasBracket()) {
         @if (highlights(); as h) {
-          <app-match-highlights [highlights]="h" [tournamentId]="tour.id" />
+          <app-match-highlights [highlights]="h" />
         }
-        <app-bracket-view
-          [bracket]="bracket.value()"
-          [seeds]="seeds()"
-          [tournamentId]="tour.id"
-          [flash]="flashed()"
-        />
+        <app-bracket-view [bracket]="bracket.value()" [seeds]="seeds()" [flash]="flashed()" />
       } @else if (closed()) {
         <app-empty-state class="bracket-empty" title="Bracket neće biti odigran." />
       } @else if (preview(); as preview) {

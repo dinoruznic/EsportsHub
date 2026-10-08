@@ -27,7 +27,6 @@
                 <a
                   class="match"
                   [routerLink]="['/mecevi', match.id]"
-                  [queryParams]="tournamentId() ? { turnir: tournamentId() } : {}"
                   [attr.data-match-id]="match.id"
                   [attr.data-status]="match.status"
                   [class.live]="match.status === 'LIVE'"
