@@ -101,3 +101,40 @@ export const TOURNAMENT_FORMATS: { value: string; label: string }[] = [
 export function formatLabel(format: string): string {
   return TOURNAMENT_FORMATS.find((item) => item.value === format)?.label ?? format;
 }
+
+export interface LiveSnapshot {
+  matchId: number;
+  capturedAt: string;
+  gameTimeSeconds: number | null;
+  killsA: number | null;
+  killsB: number | null;
+  goldA: number | null;
+  goldB: number | null;
+  towersA: number | null;
+  towersB: number | null;
+}
+
+export interface MatchEventRecord {
+  id: number;
+  matchId: number;
+  type: string;
+  source: string;
+  actor: string | null;
+  data: Record<string, unknown> | null;
+  createdAt: string;
+}
+
+export interface LiveMatch {
+  matchId: number;
+  status: MatchStatus;
+  tournamentId: number;
+  tournamentName: string;
+  gameCode: string;
+  roundNumber: number | null;
+  roundName: string | null;
+  teamA: TeamBrief | null;
+  teamB: TeamBrief | null;
+  scoreA: number | null;
+  scoreB: number | null;
+  startedAt: string | null;
+}
