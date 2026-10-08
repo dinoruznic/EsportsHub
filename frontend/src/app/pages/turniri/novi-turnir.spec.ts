@@ -128,7 +128,7 @@ describe('NoviTurnir', () => {
 
     http
       .expectOne({ method: 'POST', url: '/api/tournaments' })
-      .flush({ message: 'unknown game' }, { status: 400, statusText: 'Bad Request' });
+      .flush({ message: 'Nepoznata igra' }, { status: 400, statusText: 'Bad Request' });
     await harness.fixture.whenStable();
 
     expect(element.querySelector('.banner')!.textContent).toContain('Nepoznata igra.');

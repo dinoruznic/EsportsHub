@@ -55,6 +55,15 @@ class MarketFlowIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void offerAmountMustBePositive() {
+        long listingId = listing();
+
+        assertThat(offer(captainA, listingId, teamA, 0).expect(400).fieldError("amount")).isEqualTo("Positive");
+        assertThat(offer(captainA, listingId, teamA, -50).expect(400).fieldError("amount")).isEqualTo("Positive");
+        offer(captainA, listingId, teamA, 1).expect(201);
+    }
+
+    @Test
     void offerRulesAndVisibility() {
         long listingId = listing();
         String cs2Captain = api.register(unique("kapCS"));

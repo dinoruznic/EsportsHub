@@ -31,8 +31,8 @@ export const MESSAGES = {
 
 const BACKEND_MESSAGES: Record<string, string> = {
   'turnir ne postoji': 'Turnir ne postoji.',
-  'unknown game': 'Nepoznata igra.',
-  'already have an account for this game': 'Već imaš nalog za ovu igru.',
+  'nepoznata igra': 'Nepoznata igra.',
+  'vec imas nalog za ovu igru': 'Već imaš nalog za ovu igru.',
   'ova igra koristi rank, ne rating': 'Ova igra koristi rang, a ne rating.',
   'ova igra koristi rating, ne rank': 'Ova igra koristi rating, a ne rang.',
   'ova igra nema rank': 'Ova igra nema ni rang ni rating.',
@@ -45,10 +45,10 @@ const BACKEND_MESSAGES: Record<string, string> = {
   'oglas nije otvoren': 'Oglas više nije otvoren.',
   'oglas ne postoji': 'Oglas ne postoji.',
   'igrac ne postoji': 'Igrač ne postoji.',
-  'team name taken': 'Naziv tima je već zauzet.',
-  'team tag taken': 'Tag tima je već zauzet.',
-  'already a member': 'Igrač je već član ovog tima.',
-  'account game does not match team game': 'Nalog nije za igru ovog tima.',
+  'naziv tima je zauzet': 'Naziv tima je već zauzet.',
+  'tag tima je zauzet': 'Tag tima je već zauzet.',
+  'igrac je vec clan tima': 'Igrač je već član ovog tima.',
+  'nalog nije za igru ovog tima': 'Nalog nije za igru ovog tima.',
   'samo kapiten moze mijenjati sastav tima': 'Samo kapiten može mijenjati sastav tima.',
   'clanstvo ne postoji': 'Član ne postoji.',
   'tim i igrac nisu ista igra': 'Tim i igrač nisu iz iste igre.',
@@ -78,6 +78,8 @@ const BACKEND_MESSAGES: Record<string, string> = {
   'bracket vec postoji': 'Bracket je već generisan.',
   'premalo timova': 'Premalo prijavljenih timova za bracket.',
   'broj timova mora biti stepen dvojke (2,4,8,16...)': 'Broj timova mora biti 2, 4, 8 ili 16.',
+  'broj timova mora biti 2, 4, 8 ili 16': 'Broj timova mora biti 2, 4, 8 ili 16.',
+  'datum pocetka ne moze biti u proslosti': 'Datum početka ne može biti u prošlosti.',
   'nepodrzan format turnira': 'Format turnira nije podržan.',
   'korisnik vec ima ovu ulogu': 'Korisnik već ima ovu ulogu.',
   'korisnik nema ovu ulogu': 'Korisnik nema ovu ulogu.',
@@ -109,6 +111,8 @@ const FIELD_MESSAGES: Record<string, Record<string, string>> = {
   inGameName: { Size: 'Ime u igri može imati najviše 60 znakova.' },
   tag: { Size: 'Tag može imati najviše 5 znakova.' },
   message: { Size: 'Poruka može imati najviše 255 znakova.' },
+  amount: { Positive: 'Iznos mora biti veći od 0.' },
+  prizePool: { PositiveOrZero: 'Nagradni fond ne može biti negativan.' },
 };
 
 export function toApiError(error: unknown): ApiError {

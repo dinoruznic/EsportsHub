@@ -191,7 +191,7 @@ describe('Timovi', () => {
       element.querySelector<HTMLButtonElement>('.submit')!.click();
       http
         .expectOne({ method: 'POST', url: '/api/teams' })
-        .flush({ message: 'team tag taken' }, { status: 409, statusText: 'Conflict' });
+        .flush({ message: 'Tag tima je zauzet' }, { status: 409, statusText: 'Conflict' });
       await harness.fixture.whenStable();
 
       expect(text('#team-tag-error')).toBe('Tag tima je već zauzet.');

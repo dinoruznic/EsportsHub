@@ -18,8 +18,8 @@ import {
 } from '../landing/auth-form-utils';
 
 const FIELD_FOR_CONFLICT: Record<string, string> = {
-  'team name taken': 'name',
-  'team tag taken': 'tag',
+  'naziv tima je zauzet': 'name',
+  'tag tima je zauzet': 'tag',
 };
 
 @Component({

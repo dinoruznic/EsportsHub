@@ -5,7 +5,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.JsonNode;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.StreamSupport;
@@ -155,6 +158,38 @@ class TournamentFlowIntegrationTest extends AbstractIntegrationTest {
         api.post("/api/tournaments", player, request).expect(403);
         api.post("/api/tournaments", api.adminToken(), request).expect(201);
         api.post("/api/tournaments", organizer, request).expect(201);
+    }
+
+    @Test
+    void createTournamentValidatesTeamsPrizeAndStartDate() {
+        assertThat(api.post("/api/tournaments", organizer, tournamentRequest(Map.of()))
+                .expect(400).fieldError("maxTeams")).isEqualTo("NotNull");
+        assertThat(api.post("/api/tournaments", organizer, tournamentRequest(Map.of("maxTeams", 6)))
+                .expect(400).message()).isEqualTo("broj timova mora biti 2, 4, 8 ili 16");
+        assertThat(api.post("/api/tournaments", organizer, tournamentRequest(Map.of("maxTeams", 32)))
+                .expect(400).message()).isEqualTo("broj timova mora biti 2, 4, 8 ili 16");
+        assertThat(api.post("/api/tournaments", organizer, tournamentRequest(Map.of("maxTeams", 4, "prizePool", -1)))
+                .expect(400).fieldError("prizePool")).isEqualTo("PositiveOrZero");
+        assertThat(api.post("/api/tournaments", organizer, tournamentRequest(Map.of(
+                "maxTeams", 4, "startDate", Instant.now().minus(Duration.ofDays(3)).toString())))
+                .expect(400).message()).isEqualTo("datum pocetka ne moze biti u proslosti");
+        assertThat(api.post("/api/tournaments", organizer, tournamentRequest(Map.of("maxTeams", 4, "gameId", 999999)))
+                .expect(400).message()).isEqualTo("Nepoznata igra");
+
+        JsonNode today = api.post("/api/tournaments", organizer, tournamentRequest(Map.of(
+                "maxTeams", 16, "prizePool", 0, "startDate", Instant.now().minus(Duration.ofHours(2)).toString())))
+                .expect(201).json();
+        assertThat(today.get("maxTeams").asInt()).isEqualTo(16);
+        assertThat(today.get("prizePool").asInt()).isZero();
+    }
+
+    private Map<String, Object> tournamentRequest(Map<String, Object> overrides) {
+        Map<String, Object> request = new HashMap<>(Map.of(
+                "name", unique("Kup "),
+                "gameId", lol,
+                "format", "SINGLE_ELIMINATION"));
+        request.putAll(overrides);
+        return request;
     }
 
     private long createTournament() {

@@ -31,17 +31,17 @@ public class TeamService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Korisnik nije prijavljen"));
 
         Game game = gameRepository.findById(request.gameId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "unknown game"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nepoznata igra"));
 
         String name = request.name().trim();
         String tag = request.tag().trim();
 
         if (teamRepository.existsByName(name)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "team name taken");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Naziv tima je zauzet");
         }
 
         if (teamRepository.existsByTag(tag)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "team tag taken");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Tag tima je zauzet");
         }
 
         Team team = Team.builder()
@@ -84,11 +84,11 @@ public class TeamService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Nalog ne postoji"));
 
         if (!account.getGame().getId().equals(team.getGame().getId())) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "account game does not match team game");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nalog nije za igru ovog tima");
         }
 
         if (teamMembershipRepository.existsByTeam_IdAndGameAccount_IdAndActiveTrue(teamId, account.getId())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "already a member");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Igrac je vec clan tima");
         }
 
         TeamMembership membership = TeamMembership.builder()

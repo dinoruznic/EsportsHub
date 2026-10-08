@@ -60,6 +60,43 @@ describe('toApiError', () => {
     ).toBe('Tim nije iz iste igre kao turnir.');
   });
 
+  it('translates the Bosnian team, account and tournament validation messages', () => {
+    const cases: [number, string, string][] = [
+      [409, 'Naziv tima je zauzet', 'Naziv tima je već zauzet.'],
+      [409, 'Tag tima je zauzet', 'Tag tima je već zauzet.'],
+      [400, 'Nepoznata igra', 'Nepoznata igra.'],
+      [409, 'Vec imas nalog za ovu igru', 'Već imaš nalog za ovu igru.'],
+      [409, 'Igrac je vec clan tima', 'Igrač je već član ovog tima.'],
+      [400, 'Nalog nije za igru ovog tima', 'Nalog nije za igru ovog tima.'],
+      [400, 'broj timova mora biti 2, 4, 8 ili 16', 'Broj timova mora biti 2, 4, 8 ili 16.'],
+      [400, 'datum pocetka ne moze biti u proslosti', 'Datum početka ne može biti u prošlosti.'],
+    ];
+
+    for (const [status, message, expected] of cases) {
+      expect(toApiError(httpError(status, { message }, '/api/teams')).message).toBe(expected);
+    }
+  });
+
+  it('maps offer amount and prize pool validation to fields', () => {
+    const error = toApiError(
+      httpError(
+        400,
+        {
+          errors: [
+            { field: 'amount', code: 'Positive' },
+            { field: 'prizePool', code: 'PositiveOrZero' },
+          ],
+        },
+        '/api/market/listings/1/offers',
+      ),
+    );
+
+    expect(error.fieldErrors).toEqual({
+      amount: 'Iznos mora biti veći od 0.',
+      prizePool: 'Nagradni fond ne može biti negativan.',
+    });
+  });
+
   it('uses auth-only messages only for auth endpoints', () => {
     const url = '/api/tournaments/3/bracket';
 

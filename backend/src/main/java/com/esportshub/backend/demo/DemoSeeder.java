@@ -193,8 +193,10 @@ public class DemoSeeder {
     }
 
     private Long createTournament(String organizer, String name, String gameCode, int maxTeams, int prizePool, Instant startDate) {
-        return tournamentService.create(organizer, new CreateTournamentRequest(
-                name, game(gameCode).getId(), FORMAT, maxTeams, prizePool, startDate)).id();
+        Long id = tournamentService.create(organizer, new CreateTournamentRequest(
+                name, game(gameCode).getId(), FORMAT, maxTeams, prizePool, null)).id();
+        tournamentRepository.findById(id).orElseThrow().setStartDate(startDate);
+        return id;
     }
 
     private void startBracket(String organizer, Long tournamentId, List<String> seeds) {

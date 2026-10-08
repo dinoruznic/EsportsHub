@@ -32,10 +32,10 @@ public class GameAccountService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Korisnik nije prijavljen"));
 
         Game game = gameRepository.findById(request.gameId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "unknown game"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nepoznata igra"));
 
         if (gameAccountRepository.existsByUser_UsernameAndGame_Id(username, request.gameId())) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "already have an account for this game");
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Vec imas nalog za ovu igru");
         }
 
         GameAccount account = GameAccount.builder()

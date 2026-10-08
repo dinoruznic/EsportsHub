@@ -50,8 +50,12 @@ class TeamFlowIntegrationTest extends AbstractIntegrationTest {
     void duplicateNameOrTagIsConflict() {
         String other = api.register(unique("kap"));
 
-        api.post("/api/teams", other, Map.of("name", teamName, "tag", uniqueTag(), "gameId", lol)).expect(409);
-        api.post("/api/teams", other, Map.of("name", unique("Tim "), "tag", tag, "gameId", lol)).expect(409);
+        assertThat(api.post("/api/teams", other, Map.of("name", teamName, "tag", uniqueTag(), "gameId", lol))
+                .expect(409).message()).isEqualTo("Naziv tima je zauzet");
+        assertThat(api.post("/api/teams", other, Map.of("name", unique("Tim "), "tag", tag, "gameId", lol))
+                .expect(409).message()).isEqualTo("Tag tima je zauzet");
+        assertThat(api.post("/api/teams", other, Map.of("name", unique("Tim "), "tag", uniqueTag(), "gameId", 999999))
+                .expect(400).message()).isEqualTo("Nepoznata igra");
     }
 
     @Test
@@ -63,7 +67,8 @@ class TeamFlowIntegrationTest extends AbstractIntegrationTest {
         assertThat(member.get("roleInTeam").asString()).isEqualTo("STARTER");
         assertThat(api.get("/api/teams/" + teamId, null).json().get("members")).hasSize(1);
 
-        api.post("/api/teams/" + teamId + "/members", captain, Map.of("gameAccountId", accountId)).expect(409);
+        assertThat(api.post("/api/teams/" + teamId + "/members", captain, Map.of("gameAccountId", accountId))
+                .expect(409).message()).isEqualTo("Igrac je vec clan tima");
 
         api.delete("/api/teams/" + teamId + "/members/" + member.get("membershipId").asLong(), captain).expect(204);
         JsonNode team = api.get("/api/teams/" + teamId, null).expect(200).json();
@@ -73,7 +78,8 @@ class TeamFlowIntegrationTest extends AbstractIntegrationTest {
 
     @Test
     void accountOfAnotherGameCannotJoin() {
-        api.post("/api/teams/" + teamId + "/members", captain, Map.of("gameAccountId", account(cs2))).expect(400);
+        assertThat(api.post("/api/teams/" + teamId + "/members", captain, Map.of("gameAccountId", account(cs2)))
+                .expect(400).message()).isEqualTo("Nalog nije za igru ovog tima");
     }
 
     @Test

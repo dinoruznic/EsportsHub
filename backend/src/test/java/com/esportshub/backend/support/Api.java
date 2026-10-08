@@ -42,6 +42,19 @@ public class Api {
         public long id() {
             return body.get("id").asLong();
         }
+
+        public String message() {
+            return body.get("message").asString();
+        }
+
+        public String fieldError(String field) {
+            for (JsonNode error : body.get("errors")) {
+                if (field.equals(error.get("field").asString())) {
+                    return error.get("code").asString();
+                }
+            }
+            return null;
+        }
     }
 
     public String register(String username) {

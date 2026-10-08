@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
@@ -29,6 +30,9 @@ public class TournamentService {
             TournamentStatus.ONGOING,
             TournamentStatus.COMPLETED);
 
+    private static final Set<Integer> TEAM_COUNTS = Set.of(2, 4, 8, 16);
+    private static final Duration START_DATE_TOLERANCE = Duration.ofDays(1);
+
     private final TournamentRepository tournamentRepository;
     private final GameRepository gameRepository;
     private final UserRepository userRepository;
@@ -40,8 +44,16 @@ public class TournamentService {
         User organizer = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Korisnik nije prijavljen"));
 
+        if (!TEAM_COUNTS.contains(request.maxTeams())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "broj timova mora biti 2, 4, 8 ili 16");
+        }
+
+        if (request.startDate() != null && request.startDate().isBefore(Instant.now().minus(START_DATE_TOLERANCE))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "datum pocetka ne moze biti u proslosti");
+        }
+
         Game game = gameRepository.findById(request.gameId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "unknown game"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Nepoznata igra"));
 
         Tournament tournament = Tournament.builder()
                 .name(request.name().trim())

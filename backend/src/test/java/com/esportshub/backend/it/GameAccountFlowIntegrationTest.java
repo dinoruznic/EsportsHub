@@ -81,7 +81,8 @@ class GameAccountFlowIntegrationTest extends AbstractIntegrationTest {
     void secondAccountForSameGameIsConflict() {
         create(lol, Map.of()).expect(201);
 
-        create(lol, Map.of()).expect(409);
+        assertThat(create(lol, Map.of()).expect(409).message()).isEqualTo("Vec imas nalog za ovu igru");
+        assertThat(create(999999, Map.of()).expect(400).message()).isEqualTo("Nepoznata igra");
     }
 
     @Test
