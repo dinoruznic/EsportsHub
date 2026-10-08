@@ -19,6 +19,7 @@ export interface MatchCard {
   statusLabel: string;
   nextMatchId: number | null;
   decided: boolean;
+  championPath: boolean;
   slots: [SlotView, SlotView];
 }
 
@@ -160,6 +161,7 @@ export function buildBracket(bracket: Bracket, seeds: Record<number, number>, pr
 
   const numbers = new Map<number, number>();
   ordered.flat().forEach((match, index) => numbers.set(match.id, index + 1));
+  const championId = preview ? null : (findChampion(bracket)?.champion.id ?? null);
 
   const all = ordered.flat();
   const feedersOf = (match: BracketMatch) =>
@@ -179,6 +181,7 @@ export function buildBracket(bracket: Bracket, seeds: Record<number, number>, pr
         statusLabel: preview ? 'Pregled' : (STATUS_LABELS[match.status] ?? match.status),
         nextMatchId: match.nextMatchId,
         decided: match.winnerTeamId !== null,
+        championPath: championId !== null && match.winnerTeamId === championId,
         slots: [
           slot(match, match.teamA, match.scoreA, feeders[0], numbers, seeds, preview),
           slot(match, match.teamB, match.scoreB, feeders[1], numbers, seeds, preview),
@@ -208,4 +211,97 @@ function slot(
     winner,
     loser: !!team && match.winnerTeamId !== null && !winner,
   };
+}
+
+export interface HighlightChip {
+  id: number;
+  teamA: string;
+  teamB: string;
+  scoreA: number | null;
+  scoreB: number | null;
+  round: string;
+}
+
+export interface Highlights {
+  live: boolean;
+  chips: HighlightChip[];
+}
+
+export function matchHighlights(columns: RoundColumn[]): Highlights | null {
+  const cards = columns.flatMap((column) => column.matches.map((match) => ({ match, round: column.label })));
+  const chip = ({ match, round }: (typeof cards)[number]): HighlightChip => ({
+    id: match.id,
+    teamA: match.slots[0].team?.name ?? match.slots[0].placeholder,
+    teamB: match.slots[1].team?.name ?? match.slots[1].placeholder,
+    scoreA: match.slots[0].score,
+    scoreB: match.slots[1].score,
+    round,
+  });
+  const live = cards.filter(({ match }) => match.status === 'LIVE');
+  if (live.length > 0) {
+    return { live: true, chips: live.map(chip) };
+  }
+  const next = cards.find(
+    ({ match }) => match.status === 'SCHEDULED' && match.slots.every((slotView) => slotView.team !== null),
+  );
+  return next ? { live: false, chips: [chip(next)] } : null;
+}
+
+export type PlacementKind = 'champion' | 'finalist' | 'eliminated' | 'unknown';
+
+export interface Placement {
+  registration: Registration;
+  seed: number;
+  rank: number;
+  label: string;
+  kind: PlacementKind;
+}
+
+function eliminationLabel(matchCount: number): string {
+  const range = `${matchCount + 1}–${matchCount * 2}.`;
+  switch (matchCount) {
+    case 2:
+      return `${range} Polufinale`;
+    case 4:
+      return `${range} Četvrtfinale`;
+    case 8:
+      return `${range} Osmina finala`;
+    default:
+      return range;
+  }
+}
+
+export function placements(bracket: Bracket, registrations: Registration[]): Placement[] {
+  const champion = findChampion(bracket);
+  const outcome = new Map<number, Pick<Placement, 'rank' | 'label' | 'kind'>>();
+
+  for (const round of bracket.rounds) {
+    const matchCount = round.matches.length;
+    for (const match of round.matches) {
+      if (match.winnerTeamId === null) {
+        continue;
+      }
+      const loser = match.teamA?.id === match.winnerTeamId ? match.teamB : match.teamA;
+      if (!loser) {
+        continue;
+      }
+      outcome.set(
+        loser.id,
+        matchCount === 1
+          ? { rank: 2, label: '2. Finalista', kind: 'finalist' }
+          : { rank: matchCount + 1, label: eliminationLabel(matchCount), kind: 'eliminated' },
+      );
+    }
+  }
+  if (champion) {
+    outcome.set(champion.champion.id, { rank: 1, label: '1. Prvak', kind: 'champion' });
+  }
+
+  return registrations
+    .map((registration, index) => ({
+      registration,
+      seed: registration.seed ?? index + 1,
+      ...(outcome.get(registration.teamId) ?? { rank: Number.MAX_SAFE_INTEGER, label: '', kind: 'unknown' as const }),
+    }))
+    .sort((a, b) => a.rank - b.rank || a.seed - b.seed);
 }

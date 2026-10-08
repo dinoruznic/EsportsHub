@@ -36,6 +36,11 @@
   path.decided {
     stroke: rgb(226 177 84 / 0.5);
   }
+
+  path.champion {
+    stroke: var(--gold);
+    stroke-width: 2;
+  }
 }
 
 .round {
@@ -78,6 +83,10 @@
   &.live {
     border-color: rgb(255 67 87 / 0.75);
     box-shadow: 0 0 22px rgb(255 67 87 / 0.28);
+  }
+
+  &.champion-path {
+    border-color: rgb(226 177 84 / 0.45);
   }
 }
 

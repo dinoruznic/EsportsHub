@@ -21,7 +21,11 @@ export function tournament(overrides: Partial<Tournament> = {}): Tournament {
   };
 }
 
-export function registration(id: number, teamId: number, overrides: Partial<Registration> = {}): Registration {
+export function registration(
+  id: number,
+  teamId: number,
+  overrides: Partial<Registration> = {},
+): Registration {
   return {
     id,
     tournamentId: 1,
@@ -88,7 +92,14 @@ export function fourTeamBracket(): Bracket {
             winnerTeamId: 1,
             nextMatchId: 12,
           }),
-          match(11, { status: 'LIVE', teamA: brief(2), teamB: brief(3), scoreA: 1, scoreB: 0, nextMatchId: 12 }),
+          match(11, {
+            status: 'LIVE',
+            teamA: brief(2),
+            teamB: brief(3),
+            scoreA: 1,
+            scoreB: 0,
+            nextMatchId: 12,
+          }),
         ],
       },
       {
@@ -102,4 +113,52 @@ export function fourTeamBracket(): Bracket {
 
 export function emptyBracket(): Bracket {
   return { tournamentId: 1, tournamentName: 'Balkan Kup', status: 'REGISTRATION', rounds: [] };
+}
+
+export function completedFourTeamBracket(): Bracket {
+  return {
+    tournamentId: 1,
+    tournamentName: 'Balkan Kup',
+    status: 'COMPLETED',
+    rounds: [
+      {
+        roundNumber: 1,
+        name: 'Polufinale',
+        matches: [
+          match(10, {
+            status: 'FINISHED',
+            teamA: brief(1),
+            teamB: brief(4),
+            scoreA: 2,
+            scoreB: 1,
+            winnerTeamId: 1,
+            nextMatchId: 12,
+          }),
+          match(11, {
+            status: 'FINISHED',
+            teamA: brief(2),
+            teamB: brief(3),
+            scoreA: 0,
+            scoreB: 2,
+            winnerTeamId: 3,
+            nextMatchId: 12,
+          }),
+        ],
+      },
+      {
+        roundNumber: 2,
+        name: 'Finale',
+        matches: [
+          match(12, {
+            status: 'FINISHED',
+            teamA: brief(1),
+            teamB: brief(3),
+            scoreA: 1,
+            scoreB: 3,
+            winnerTeamId: 3,
+          }),
+        ],
+      },
+    ],
+  };
 }

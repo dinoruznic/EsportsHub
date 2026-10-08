@@ -5,7 +5,15 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { Bracket, Registration, Team, Tournament } from '../../core/api/models';
 import { TEST_USER, storeSession } from '../../testing/fake-session';
-import { GAMES, emptyBracket, fourTeamBracket, registration, team, tournament } from '../../testing/tournament-data';
+import {
+  GAMES,
+  completedFourTeamBracket,
+  emptyBracket,
+  fourTeamBracket,
+  registration,
+  team,
+  tournament,
+} from '../../testing/tournament-data';
 import TurnirDetalji from './turnir-detalji';
 
 interface Setup {
@@ -39,7 +47,11 @@ describe('TurnirDetalji', () => {
   async function render(setup: Setup = {}): Promise<void> {
     const t = setup.tournament ?? tournament();
     localStorage.clear();
-    storeSession(3600, { ...TEST_USER, username: setup.username ?? 'igrac', roles: setup.roles ?? ['PLAYER'] });
+    storeSession(3600, {
+      ...TEST_USER,
+      username: setup.username ?? 'igrac',
+      roles: setup.roles ?? ['PLAYER'],
+    });
     TestBed.configureTestingModule({
       providers: [
         provideRouter([{ path: 'turniri/:id', component: TurnirDetalji }]),
@@ -66,16 +78,21 @@ describe('TurnirDetalji', () => {
   }
 
   function buttons(): string[] {
-    return Array.from(element.querySelectorAll('section.actions button')).map((b) => b.textContent!.trim());
+    return Array.from(element.querySelectorAll('section.actions button')).map((b) =>
+      b.textContent!.trim(),
+    );
   }
 
   it('renders the header and the stats strip', async () => {
     await render({ registrations: [registration(1, 1), registration(2, 2)] });
     const cells = Array.from(element.querySelectorAll('app-tournament-stats .cell')).map(
-      (cell) => `${cell.querySelector('dt')!.textContent}: ${cell.querySelector('dd')!.textContent!.trim()}`,
+      (cell) =>
+        `${cell.querySelector('dt')!.textContent}: ${cell.querySelector('dd')!.textContent!.trim()}`,
     );
 
-    expect(element.querySelector('.eyebrow')!.textContent).toBe('League of Legends · Single elimination · 8 timova');
+    expect(element.querySelector('.eyebrow')!.textContent).toBe(
+      'League of Legends · Single elimination · 8 timova',
+    );
     expect(element.querySelector('h1')!.textContent).toBe('Balkan Kup');
     expect(cells).toEqual([
       'Status: Prijave otvorene',
@@ -94,13 +111,18 @@ describe('TurnirDetalji', () => {
   });
 
   it('lets a captain pick an eligible team and register it', async () => {
-    await render({ registrations: [registration(1, 1)], teams: [team(1, 'igrac'), team(7, 'igrac')] });
+    await render({
+      registrations: [registration(1, 1)],
+      teams: [team(1, 'igrac'), team(7, 'igrac')],
+    });
 
     expect(buttons()).toContain('Prijavi tim');
     element.querySelector<HTMLButtonElement>('.register')!.click();
     await harness.fixture.whenStable();
 
-    const options = Array.from(element.querySelectorAll('.team-option .team-name')).map((o) => o.textContent);
+    const options = Array.from(element.querySelectorAll('.team-option .team-name')).map(
+      (o) => o.textContent,
+    );
     expect(options).toEqual(['Tim 7']);
 
     element.querySelector<HTMLButtonElement>('.confirm-register')!.click();
@@ -109,7 +131,9 @@ describe('TurnirDetalji', () => {
     request.flush(registration(9, 7));
     await settle();
 
-    http.expectOne('/api/tournaments/1/registrations').flush([registration(1, 1), registration(9, 7)]);
+    http
+      .expectOne('/api/tournaments/1/registrations')
+      .flush([registration(1, 1), registration(9, 7)]);
     await harness.fixture.whenStable();
 
     expect(element.querySelector('.picker')).toBeNull();
@@ -142,7 +166,9 @@ describe('TurnirDetalji', () => {
     element.querySelector<HTMLButtonElement>('.withdraw .confirm')!.click();
     http.expectOne({ method: 'DELETE', url: '/api/tournaments/1/registrations/3' }).flush(null);
     await settle();
-    http.expectOne('/api/tournaments/1/registrations').flush([registration(3, 7, { status: 'WITHDRAWN' })]);
+    http
+      .expectOne('/api/tournaments/1/registrations')
+      .flush([registration(3, 7, { status: 'WITHDRAWN' })]);
     await harness.fixture.whenStable();
 
     expect(element.querySelector('.withdraw')).toBeNull();
@@ -156,7 +182,9 @@ describe('TurnirDetalji', () => {
     expect(generate.getAttribute('aria-disabled')).toBe('true');
     expect(generate.classList).not.toContain('btn-gold');
     expect(generate.querySelector('svg')).not.toBeNull();
-    expect(element.querySelector('#generate-hint')!.textContent).toBe('Potrebno 2, 4, 8 ili 16 timova · trenutno 3');
+    expect(element.querySelector('#generate-hint')!.textContent).toBe(
+      'Potrebno 2, 4, 8 ili 16 timova · trenutno 3',
+    );
 
     generate.click();
     http.expectNone({ method: 'POST', url: '/api/tournaments/1/bracket' });
@@ -173,7 +201,9 @@ describe('TurnirDetalji', () => {
     await settle();
 
     http.expectOne('/api/tournaments/1').flush(tournament({ status: 'ONGOING' }));
-    http.expectOne('/api/tournaments/1/registrations').flush(FOUR.map((r, i) => ({ ...r, seed: i + 1 })));
+    http
+      .expectOne('/api/tournaments/1/registrations')
+      .flush(FOUR.map((r, i) => ({ ...r, seed: i + 1 })));
     http.expectOne('/api/tournaments/1/bracket').flush(fourTeamBracket());
     await harness.fixture.whenStable();
 
@@ -190,7 +220,9 @@ describe('TurnirDetalji', () => {
   it('lets an admin approve a pending tournament', async () => {
     await render({ roles: ['ADMIN'], tournament: tournament({ status: 'PENDING' }) });
 
-    expect(element.querySelector('app-tournament-stats .note')!.textContent).toBe('Čeka odobrenje administratora.');
+    expect(element.querySelector('app-tournament-stats .note')!.textContent).toBe(
+      'Čeka odobrenje administratora.',
+    );
     expect(buttons()).toEqual(['Odobri', 'Odbij']);
 
     element.querySelector<HTMLButtonElement>('.approve')!.click();
@@ -208,10 +240,12 @@ describe('TurnirDetalji', () => {
   it('renders a ghosted preview with teams in seed order and open seats', async () => {
     await render({ registrations: FOUR.slice(0, 3) });
     const rounds = Array.from(element.querySelectorAll('.round-name')).map((r) => r.textContent);
-    const statuses = new Set(Array.from(element.querySelectorAll('.match-status')).map((s) => s.textContent!.trim()));
-    const firstRound = Array.from(element.querySelectorAll('.round')[0].querySelectorAll('.team')).map(
-      (t) => t.textContent,
+    const statuses = new Set(
+      Array.from(element.querySelectorAll('.match-status')).map((s) => s.textContent!.trim()),
     );
+    const firstRound = Array.from(
+      element.querySelectorAll('.round')[0].querySelectorAll('.team'),
+    ).map((t) => t.textContent);
 
     expect(element.querySelector('.preview-note')!.textContent).toContain('Pregled.');
     expect(element.querySelector('app-bracket-view')!.classList).toContain('preview');
@@ -243,7 +277,9 @@ describe('TurnirDetalji', () => {
   it('shows the explanation and no preview or actions for a rejected tournament', async () => {
     await render({ username: 'org', tournament: tournament({ status: 'REJECTED' }) });
 
-    expect(element.querySelector('app-tournament-stats .note')!.textContent).toBe('Turnir je odbijen.');
+    expect(element.querySelector('app-tournament-stats .note')!.textContent).toBe(
+      'Turnir je odbijen.',
+    );
     expect(element.querySelector('app-bracket-view')).toBeNull();
     expect(element.querySelector('section.actions')).toBeNull();
   });
@@ -260,21 +296,63 @@ describe('TurnirDetalji', () => {
     expect(element.querySelector('[data-champion]')!.textContent).toContain('Čeka se finale');
     expect(element.querySelectorAll('.match').length).toBe(3);
 
-    const finished = element.querySelector('[data-match-id="10"]')!;
+    const finished = element.querySelector('.match[data-match-id="10"]')!;
     const winner = finished.querySelector('.row.winner')!;
     expect(winner.querySelector('.team')!.textContent).toBe('Tim 1');
     expect(winner.querySelector('.score')!.textContent).toBe('2');
     expect(winner.querySelector('.seed')!.textContent).toBe('1');
     expect(finished.querySelector('.row.loser .team')!.textContent).toBe('Tim 4');
 
-    const live = element.querySelector('[data-match-id="11"]')!;
+    const live = element.querySelector('.match[data-match-id="11"]')!;
     expect(live.classList).toContain('live');
     expect(live.querySelector('.live-dot')).not.toBeNull();
     expect(live.querySelector('.match-status')!.textContent!.trim()).toBe('Uživo');
 
-    const final = element.querySelector('[data-match-id="12"]')!;
+    const final = element.querySelector('.match[data-match-id="12"]')!;
     const rows = Array.from(final.querySelectorAll('.team')).map((t) => t.textContent);
     expect(rows).toEqual(['Tim 1', 'Pobjednik meča 2']);
     expect(final.querySelector('.row.tbd')).not.toBeNull();
+  });
+
+  it('shows the live row above the bracket of an ongoing tournament', async () => {
+    await render({
+      tournament: tournament({ status: 'ONGOING' }),
+      registrations: FOUR.map((r, i) => ({ ...r, seed: i + 1 })),
+      bracket: fourTeamBracket(),
+    });
+    const row = element.querySelector('app-match-highlights')!;
+    const chip = row.querySelector('.chip')!;
+
+    expect(row.querySelector('.label')!.textContent!.trim()).toBe('Uživo sada');
+    expect(chip.getAttribute('data-match-id')).toBe('11');
+    expect(Array.from(chip.querySelectorAll('.team')).map((t) => t.textContent)).toEqual(['Tim 2', 'Tim 3']);
+    expect(chip.querySelector('.score')!.textContent).toBe('1 : 0');
+    expect(chip.querySelector('.round')!.textContent).toBe('· Polufinale');
+    expect(element.querySelector('app-champion-banner')).toBeNull();
+  });
+
+  it('shows the champion banner and the final placements for a completed tournament', async () => {
+    await render({
+      tournament: tournament({ status: 'COMPLETED' }),
+      registrations: FOUR.map((r, i) => ({ ...r, seed: i + 1 })),
+      bracket: completedFourTeamBracket(),
+    });
+    const banner = element.querySelector('app-champion-banner')!;
+    const kinds = Array.from(element.querySelectorAll('app-registered-teams li')).map((li) =>
+      li.getAttribute('data-kind'),
+    );
+
+    expect(banner.querySelector('.name')!.textContent).toBe('Tim 3');
+    expect(banner.querySelector('.line')!.textContent!.replace(/\s+/g, ' ').trim()).toBe(
+      'Pobijedio u finalu 3 : 1 protiv Tim 1',
+    );
+    expect(element.querySelector('app-registered-teams h2')!.textContent!.trim()).toBe(
+      'Konačni plasman',
+    );
+    expect(kinds).toEqual(['champion', 'finalist', 'eliminated', 'eliminated']);
+    expect(element.querySelector('[data-champion]')!.textContent).toContain('Tim 3');
+    expect(element.querySelectorAll('.match.champion-path').length).toBe(2);
+    expect(element.querySelector('app-match-highlights')).toBeNull();
+    expect(element.querySelector('section.actions')).toBeNull();
   });
 });

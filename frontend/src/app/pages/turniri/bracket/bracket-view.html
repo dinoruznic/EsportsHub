@@ -2,7 +2,7 @@
   <div class="inner" #inner>
     <svg class="lines" aria-hidden="true">
       @for (line of connectors(); track line.key) {
-        <path [attr.d]="line.d" [class.decided]="line.decided" />
+        <path [attr.d]="line.d" [class.decided]="line.decided" [class.champion]="line.champion" />
       }
     </svg>
 
@@ -17,6 +17,7 @@
                 [attr.data-match-id]="match.id"
                 [attr.data-status]="match.status"
                 [class.live]="match.status === 'LIVE'"
+                [class.champion-path]="match.championPath"
               >
                 <header class="match-head">
                   <span class="num">M{{ match.number }}</span>

@@ -18,6 +18,7 @@ interface Connector {
   key: string;
   d: string;
   decided: boolean;
+  champion: boolean;
 }
 
 interface Box {
@@ -77,21 +78,22 @@ export class BracketView {
         : null;
     };
     const lines: Connector[] = [];
-    const link = (key: string, from: Box | null, to: Box | null, decided: boolean) => {
+    const link = (key: string, from: Box | null, to: Box | null, decided: boolean, champion: boolean) => {
       if (!from || !to) {
         return;
       }
       const mid = (from.right + to.left) / 2;
-      lines.push({ key, decided, d: `M ${from.right} ${from.middle} H ${mid} V ${to.middle} H ${to.left}` });
+      lines.push({ key, decided, champion, d: `M ${from.right} ${from.middle} H ${mid} V ${to.middle} H ${to.left}` });
     };
 
     for (const column of this.columns()) {
       for (const match of column.matches) {
         const from = boxOf(`[data-match-id="${match.id}"]`);
         if (match.nextMatchId === null) {
-          link(`${match.id}-prvak`, from, boxOf('[data-champion]'), match.decided);
+          link(`${match.id}-prvak`, from, boxOf('[data-champion]'), match.decided, match.championPath);
         } else {
-          link(`${match.id}-${match.nextMatchId}`, from, boxOf(`[data-match-id="${match.nextMatchId}"]`), match.decided);
+          const to = boxOf(`[data-match-id="${match.nextMatchId}"]`);
+          link(`${match.id}-${match.nextMatchId}`, from, to, match.decided, match.championPath);
         }
       }
     }

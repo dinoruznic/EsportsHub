@@ -15,8 +15,16 @@ import { ErrorState } from '../../shared/error-state/error-state';
 import { isPowerOfTwo } from '../../shared/format';
 import { Skeleton } from '../../shared/skeleton/skeleton';
 import { TeamHex } from '../../shared/team-hex/team-hex';
-import { previewBracket } from './bracket/bracket-layout';
+import {
+  buildBracket,
+  findChampion,
+  matchHighlights,
+  placements,
+  previewBracket,
+} from './bracket/bracket-layout';
 import { BracketView } from './bracket/bracket-view';
+import { ChampionBanner } from './champion-banner';
+import { MatchHighlights } from './match-highlights';
 import { RegisteredTeams } from './registered-teams';
 import { TournamentStats } from './tournament-stats';
 
@@ -25,7 +33,9 @@ import { TournamentStats } from './tournament-stats';
   imports: [
     RouterLink,
     BracketView,
+    ChampionBanner,
     ConfirmInline,
+    MatchHighlights,
     EmptyState,
     ErrorState,
     Skeleton,
@@ -43,65 +53,118 @@ export default class TurnirDetalji {
   private readonly auth = inject(AuthService);
   private readonly title = inject(Title);
 
-  private readonly id = toSignal(inject(ActivatedRoute).paramMap.pipe(map((params) => Number(params.get('id')))), {
-    requireSync: true,
-  });
+  private readonly id = toSignal(
+    inject(ActivatedRoute).paramMap.pipe(map((params) => Number(params.get('id')))),
+    {
+      requireSync: true,
+    },
+  );
 
-  protected readonly tournament = rxResource({ params: () => this.id(), stream: ({ params }) => this.api.get(params) });
+  protected readonly tournament = rxResource({
+    params: () => this.id(),
+    stream: ({ params }) => this.api.get(params),
+  });
   protected readonly registrations = rxResource({
     params: () => this.id(),
     stream: ({ params }) => this.api.registrations(params),
   });
-  protected readonly bracket = rxResource({ params: () => this.id(), stream: ({ params }) => this.api.bracket(params) });
+  protected readonly bracket = rxResource({
+    params: () => this.id(),
+    stream: ({ params }) => this.api.bracket(params),
+  });
   private readonly games = rxResource({ stream: () => this.gamesApi.list() });
 
-  protected readonly t = computed(() => (this.tournament.hasValue() ? this.tournament.value() : null));
+  protected readonly t = computed(() =>
+    this.tournament.hasValue() ? this.tournament.value() : null,
+  );
   protected readonly game = computed(() => {
     const t = this.t();
-    return t && this.games.hasValue() ? (this.games.value().find((g) => g.code === t.gameCode) ?? null) : null;
+    return t && this.games.hasValue()
+      ? (this.games.value().find((g) => g.code === t.gameCode) ?? null)
+      : null;
   });
 
   protected readonly active = computed(() =>
     (this.registrations.hasValue() ? this.registrations.value() : [])
       .filter((r) => r.status === 'REGISTERED')
-      .sort((a, b) => (a.seed ?? 999) - (b.seed ?? 999) || a.registeredAt.localeCompare(b.registeredAt)),
+      .sort(
+        (a, b) => (a.seed ?? 999) - (b.seed ?? 999) || a.registeredAt.localeCompare(b.registeredAt),
+      ),
   );
   protected readonly seeds = computed(() =>
-    Object.fromEntries(this.active().filter((r) => r.seed !== null).map((r) => [r.teamId, r.seed!])),
+    Object.fromEntries(
+      this.active()
+        .filter((r) => r.seed !== null)
+        .map((r) => [r.teamId, r.seed!]),
+    ),
   );
-  protected readonly hasBracket = computed(() => this.bracket.hasValue() && this.bracket.value().rounds.length > 0);
-  protected readonly closed = computed(() => this.t()?.status === 'REJECTED' || this.t()?.status === 'CANCELLED');
+  protected readonly hasBracket = computed(
+    () => this.bracket.hasValue() && this.bracket.value().rounds.length > 0,
+  );
+  protected readonly closed = computed(
+    () => this.t()?.status === 'REJECTED' || this.t()?.status === 'CANCELLED',
+  );
   protected readonly preview = computed(() => {
     const t = this.t();
-    if (!t || (t.status !== 'PENDING' && t.status !== 'REGISTRATION') || !this.bracket.hasValue() || this.hasBracket()) {
+    if (
+      !t ||
+      (t.status !== 'PENDING' && t.status !== 'REGISTRATION') ||
+      !this.bracket.hasValue() ||
+      this.hasBracket()
+    ) {
       return null;
     }
     return previewBracket(t.maxTeams, this.active());
   });
+  protected readonly champion = computed(() =>
+    this.t()?.status === 'COMPLETED' && this.hasBracket()
+      ? findChampion(this.bracket.value()!)
+      : null,
+  );
+  protected readonly highlights = computed(() =>
+    this.t()?.status === 'ONGOING' && this.hasBracket()
+      ? matchHighlights(buildBracket(this.bracket.value()!, this.seeds()))
+      : null,
+  );
+  protected readonly ranking = computed(() =>
+    this.t()?.status === 'COMPLETED' && this.hasBracket()
+      ? placements(this.bracket.value()!, this.active())
+      : null,
+  );
   protected readonly previewSeeds = computed(() =>
-    Object.fromEntries(this.active().map((registration, index) => [registration.teamId, index + 1])),
+    Object.fromEntries(
+      this.active().map((registration, index) => [registration.teamId, index + 1]),
+    ),
   );
 
   private readonly username = computed(() => this.auth.currentUser()?.username ?? null);
   protected readonly isAdmin = computed(() => this.auth.hasRole('ADMIN'));
-  protected readonly isOrganizer = computed(() => !!this.t() && this.t()!.organizerUsername === this.username());
+  protected readonly isOrganizer = computed(
+    () => !!this.t() && this.t()!.organizerUsername === this.username(),
+  );
 
   private readonly myTeams = rxResource({
     params: () => {
       const username = this.username();
       const game = this.game();
-      return username && game && this.t()?.status === 'REGISTRATION' ? { username, gameId: game.id } : undefined;
+      return username && game && this.t()?.status === 'REGISTRATION'
+        ? { username, gameId: game.id }
+        : undefined;
     },
     stream: ({ params }) => this.teamsApi.captainedBy(params.username, params.gameId),
   });
 
   protected readonly myRegistrations = computed(() => {
-    const mine = new Set((this.myTeams.hasValue() ? this.myTeams.value() : []).map((team) => team.id));
+    const mine = new Set(
+      (this.myTeams.hasValue() ? this.myTeams.value() : []).map((team) => team.id),
+    );
     return this.active().filter((r) => mine.has(r.teamId));
   });
   protected readonly eligibleTeams = computed(() => {
     const registered = new Set(this.active().map((r) => r.teamId));
-    return (this.myTeams.hasValue() ? this.myTeams.value() : []).filter((team) => !registered.has(team.id));
+    return (this.myTeams.hasValue() ? this.myTeams.value() : []).filter(
+      (team) => !registered.has(team.id),
+    );
   });
   protected readonly isFull = computed(() => {
     const max = this.t()?.maxTeams;
@@ -109,7 +172,10 @@ export default class TurnirDetalji {
   });
 
   protected readonly canRegister = computed(
-    () => this.t()?.status === 'REGISTRATION' && this.registrations.hasValue() && this.eligibleTeams().length > 0,
+    () =>
+      this.t()?.status === 'REGISTRATION' &&
+      this.registrations.hasValue() &&
+      this.eligibleTeams().length > 0,
   );
   protected readonly canWithdraw = computed(
     () => this.t()?.status === 'REGISTRATION' && this.myRegistrations().length > 0,

@@ -16,7 +16,14 @@
     @if (hasActions()) {
       <section class="actions" aria-label="Akcije">
         @if (canReview()) {
-          <button type="button" class="btn btn-gold approve" [disabled]="busy()" (click)="approve()">Odobri</button>
+          <button
+            type="button"
+            class="btn btn-gold approve"
+            [disabled]="busy()"
+            (click)="approve()"
+          >
+            Odobri
+          </button>
           <app-confirm-inline
             label="Odbij"
             question="Odbiti turnir?"
@@ -30,7 +37,12 @@
           @if (isFull()) {
             <span class="hint">Turnir je popunjen.</span>
           } @else {
-            <button type="button" class="btn btn-gold register" [disabled]="busy()" (click)="openPicker()">
+            <button
+              type="button"
+              class="btn btn-gold register"
+              [disabled]="busy()"
+              (click)="openPicker()"
+            >
               Prijavi tim
             </button>
           }
@@ -40,7 +52,11 @@
           @for (registration of myRegistrations(); track registration.id) {
             <app-confirm-inline
               class="withdraw"
-              [label]="myRegistrations().length > 1 ? 'Povuci prijavu: ' + registration.teamTag : 'Povuci prijavu'"
+              [label]="
+                myRegistrations().length > 1
+                  ? 'Povuci prijavu: ' + registration.teamTag
+                  : 'Povuci prijavu'
+              "
               question="Povući prijavu tima {{ registration.teamName }}?"
               confirmLabel="Da, povuci"
               [busy]="busy()"
@@ -51,11 +67,18 @@
 
         @if (canGenerate()) {
           @if (generateReady()) {
-            <button type="button" class="btn btn-gold generate" [disabled]="busy()" (click)="generate()">
+            <button
+              type="button"
+              class="btn btn-gold generate"
+              [disabled]="busy()"
+              (click)="generate()"
+            >
               Generiši bracket
             </button>
           } @else {
-            <span class="hint" id="generate-hint">Potrebno 2, 4, 8 ili 16 timova · trenutno {{ active().length }}</span>
+            <span class="hint" id="generate-hint"
+              >Potrebno 2, 4, 8 ili 16 timova · trenutno {{ active().length }}</span
+            >
             <button
               type="button"
               class="btn locked generate"
@@ -74,6 +97,10 @@
       </section>
     }
   </app-tournament-stats>
+
+  @if (champion(); as info) {
+    <app-champion-banner [info]="info" />
+  }
 
   @if (picking()) {
     <div class="picker panel">
@@ -95,8 +122,20 @@
         }
       </div>
       <div class="picker-actions">
-        <button type="button" class="btn btn-ghost" [disabled]="busy()" (click)="picking.set(false)">Odustani</button>
-        <button type="button" class="btn btn-gold confirm-register" [disabled]="busy()" (click)="register()">
+        <button
+          type="button"
+          class="btn btn-ghost"
+          [disabled]="busy()"
+          (click)="picking.set(false)"
+        >
+          Odustani
+        </button>
+        <button
+          type="button"
+          class="btn btn-gold confirm-register"
+          [disabled]="busy()"
+          (click)="register()"
+        >
           {{ busy() ? 'Prijavljujem…' : 'Potvrdi prijavu' }}
         </button>
       </div>
@@ -118,6 +157,9 @@
       } @else if (!bracket.hasValue()) {
         <app-skeleton [count]="1" [height]="320" />
       } @else if (hasBracket()) {
+        @if (highlights(); as h) {
+          <app-match-highlights [highlights]="h" />
+        }
         <app-bracket-view [bracket]="bracket.value()" [seeds]="seeds()" />
       } @else if (closed()) {
         <app-empty-state class="bracket-empty" title="Bracket neće biti odigran." />
@@ -143,7 +185,11 @@
       } @else if (!registrations.hasValue()) {
         <app-skeleton [count]="1" [height]="200" />
       } @else {
-        <app-registered-teams [registrations]="active()" [maxTeams]="tour.maxTeams" />
+        <app-registered-teams
+          [registrations]="active()"
+          [maxTeams]="tour.maxTeams"
+          [placements]="ranking()"
+        />
       }
     </aside>
   </div>
