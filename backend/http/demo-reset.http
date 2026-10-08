@@ -1,0 +1,22 @@
+### EsportsHub — Demo podaci za prezentaciju
+### Run all (⏩). Admin brise sve podatke i puni bazu demo podacima.
+
+@host = http://localhost:8080
+
+### 1. Admin login
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "admin", "password": "admin12345" }
+
+> {% client.global.set("demoAdmin", response.body.token); %}
+
+### 2. Reset i demo podaci -> 200 { users, teams, tournaments, listings }
+POST {{host}}/api/admin/demo/reset
+Authorization: Bearer {{demoAdmin}}
+
+### 3. Dino se prijavljuje demo lozinkom
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "dino", "password": "lozinka123" }

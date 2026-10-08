@@ -49,3 +49,7 @@ app:
     username: admin
     email: admin@esportshub.local
     password: '${ADMIN_PASSWORD:admin12345}'
+
+esportshub:
+  demo:
+    enabled: true

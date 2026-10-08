@@ -24,6 +24,11 @@ class AdminFlowIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
+    void demoEndpointsAreMissingWhenDemoIsDisabled() {
+        api.post("/api/admin/demo/reset", api.adminToken(), null).expect(404);
+    }
+
+    @Test
     void adminSearchesUsersByQueryAndRole() {
         String admin = api.adminToken();
         String marker = unique("trazi");

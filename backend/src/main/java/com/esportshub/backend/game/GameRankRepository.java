@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface GameRankRepository extends JpaRepository<GameRank, Long> {
     List<GameRank> findByGame_IdOrderByOrdinal(Long gameId);
     Optional<GameRank> findByIdAndGame_Id(Long id, Long gameId);
+    Optional<GameRank> findByGame_IdAndCode(Long gameId, String code);
 }

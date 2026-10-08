@@ -8,4 +8,5 @@ import java.util.Optional;
 public interface GameRegionRepository extends JpaRepository<GameRegion, Long> {
     List<GameRegion> findByGame_IdOrderByLabel(Long gameId);
     Optional<GameRegion> findByIdAndGame_Id(Long id, Long gameId);
+    Optional<GameRegion> findByGame_IdAndCode(Long gameId, String code);
 }
