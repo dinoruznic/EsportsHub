@@ -14,6 +14,9 @@
       (click)="setTab(t.value)"
     >
       {{ t.label }}
+      @if (t.value === 'na-cekanju' && pendingCount() > 0) {
+        <span class="num badge">{{ pendingCount() }}</span>
+      }
     </button>
   }
 </nav>
@@ -21,6 +24,9 @@
 @switch (tab()) {
   @case ('korisnici') {
     <app-admin-users />
+  }
+  @case ('na-cekanju') {
+    <app-pending-tournaments [gameNames]="gameNames()" (changed)="stats.reload()" />
   }
   @default {
     @if (stats.error()) {
