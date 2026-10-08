@@ -8,11 +8,23 @@ import { Component, input, output, signal } from '@angular/core';
       <button type="button" class="btn btn-gold confirm" [disabled]="busy()" (click)="confirm()">
         {{ confirmLabel() }}
       </button>
-      <button type="button" class="btn btn-ghost cancel" [disabled]="busy()" (click)="asking.set(false)">
+      <button
+        type="button"
+        class="btn btn-ghost cancel"
+        [disabled]="busy()"
+        (click)="asking.set(false)"
+      >
         Ne
       </button>
     } @else {
-      <button type="button" class="btn btn-ghost trigger" [disabled]="busy()" (click)="asking.set(true)">
+      <button
+        type="button"
+        class="btn trigger"
+        [class.btn-ghost]="tone() === 'ghost'"
+        [class.btn-gold]="tone() === 'gold'"
+        [disabled]="busy()"
+        (click)="asking.set(true)"
+      >
         {{ label() }}
       </button>
     }
@@ -37,6 +49,7 @@ export class ConfirmInline {
   readonly question = input('Sigurno?');
   readonly confirmLabel = input('Da');
   readonly busy = input(false);
+  readonly tone = input<'ghost' | 'gold'>('ghost');
   readonly confirmed = output<void>();
 
   protected readonly asking = signal(false);

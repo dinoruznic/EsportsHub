@@ -202,6 +202,11 @@
 
 .offers {
   color: var(--muted);
+  text-decoration: none;
+
+  &:hover {
+    color: var(--gold);
+  }
 }
 
 .market-link {

@@ -90,9 +90,9 @@
       <p class="listed">
         <span class="on">Na transfer listi</span>
         @if (offers(); as label) {
-          <span class="offers">· {{ label }}</span>
+          <a class="offers" routerLink="/market" [queryParams]="{ tab: 'moji' }">· {{ label }}</a>
         }
-        <a class="market-link" routerLink="/market">Market →</a>
+        <a class="market-link" routerLink="/market" [queryParams]="{ tab: 'moji' }">Market →</a>
       </p>
     }
     @if (transfer()?.error; as message) {

@@ -81,3 +81,184 @@
     width: 100%;
   }
 }
+
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  margin-bottom: -1px;
+  padding: 0 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font: 600 14px/1 var(--body);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text);
+  }
+
+  &.active {
+    border-bottom-color: var(--gold);
+    color: var(--text);
+  }
+}
+
+.badge {
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--gold);
+  color: var(--ink);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.error {
+  color: var(--red);
+  font-size: 13px;
+}
+
+.my-listing {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+}
+
+.my-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.my-ign {
+  font: 800 24px/1 var(--display);
+}
+
+.my-since {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.cancel-listing {
+  margin-left: auto;
+}
+
+.sent {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sent-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.2fr) auto auto auto 84px;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 14px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--panel);
+  font-size: 14px;
+}
+
+.team {
+  overflow: hidden;
+  color: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--gold);
+  }
+}
+
+.player {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.amount {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.sent-date {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.drawer-title {
+  font: 700 18px/1 var(--display);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.my-offer {
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--panel-2);
+}
+
+.my-offer-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+  font-weight: 600;
+}
+
+.read-only {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+@media (max-width: 899.98px) {
+  .sent-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+}
+
+.contract-success {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  padding: 16px 18px;
+  border: 1px solid rgb(63 178 127 / 0.5);
+  border-radius: 10px;
+  background: rgb(63 178 127 / 0.1);
+}
+
+.contract-title {
+  color: var(--good);
+  font: 700 18px/1 var(--display);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
