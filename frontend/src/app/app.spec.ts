@@ -29,7 +29,10 @@ describe('App', () => {
       await Promise.resolve();
       TestBed.tick();
       for (const request of http.match(() => true)) {
-        const list = /\/api\/(games|teams|tournaments(\/pending)?|tournaments\/\d+\/registrations)$/.test(request.request.url);
+        const list =
+          /\/api\/(games|teams|tournaments(\/pending)?|tournaments\/\d+\/registrations)$/.test(
+            request.request.url,
+          );
         if (list) {
           request.flush([]);
         } else {
@@ -92,6 +95,29 @@ describe('App', () => {
     expect(element.querySelector('a.nav-item.active')?.getAttribute('href')).toBe('/turniri');
   });
 
+  it('adds the referee item to the rail for referees', async () => {
+    storeSession(3600, { userId: 3, username: 'sudija', roles: ['PLAYER', 'REFEREE'] });
+    const { element } = await renderAt('/turniri');
+    const sudija = element.querySelector<HTMLAnchorElement>('a.nav-item[href="/sudija"]');
+
+    expect(sudija?.textContent?.trim()).toBe('Sudija');
+    expect(element.querySelectorAll('a.nav-item')).toHaveLength(6);
+  });
+
+  it('shows the referee item to an admin', async () => {
+    storeSession();
+    const { element } = await renderAt('/turniri');
+
+    expect(element.querySelector('a.nav-item[href="/sudija"]')).not.toBeNull();
+  });
+
+  it('sends a player away from the referee pages', async () => {
+    storeSession(3600, { userId: 2, username: 'igrac', roles: ['PLAYER'] });
+    const { router } = await renderAt('/sudija/mecevi/11');
+
+    expect(router.url).toBe('/turniri');
+  });
+
   it('shows the gold wordmark in the top bar as a link to /turniri', async () => {
     storeSession();
     const { element } = await renderAt('/turniri');
@@ -120,9 +146,9 @@ describe('App', () => {
     const { fixture, element, router } = await renderAt('/turniri');
 
     expect(element.querySelector('.topbar .username')?.textContent).toBe('admin');
-    expect(Array.from(element.querySelectorAll('.topbar .role')).map((chip) => chip.textContent)).toEqual([
-      'ADMIN',
-    ]);
+    expect(
+      Array.from(element.querySelectorAll('.topbar .role')).map((chip) => chip.textContent),
+    ).toEqual(['ADMIN']);
 
     element.querySelector<HTMLButtonElement>('.topbar button')!.click();
     await fixture.whenStable();

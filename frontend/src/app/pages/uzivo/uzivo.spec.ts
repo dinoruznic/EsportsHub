@@ -45,7 +45,10 @@ describe('Uzivo', () => {
     localStorage.clear();
   });
 
-  async function render(list: LiveMatch[]): Promise<void> {
+  async function render(
+    list: LiveMatch[],
+    capturedAt: Record<number, string | null> = {},
+  ): Promise<void> {
     localStorage.clear();
     storeSession();
     const fake = provideFakeStomp();
@@ -66,9 +69,14 @@ describe('Uzivo', () => {
     http.expectOne('/api/matches/live').flush(list);
     await settle();
     for (const match of list.filter((m) => m.status === 'LIVE')) {
-      http.expectOne(`/api/matches/${match.matchId}/live`).flush({
+      const request = http.expectOne(`/api/matches/${match.matchId}/live`);
+      if (capturedAt[match.matchId] === null) {
+        request.flush(null, { status: 204, statusText: 'No Content' });
+        continue;
+      }
+      request.flush({
         matchId: match.matchId,
-        capturedAt: new Date().toISOString(),
+        capturedAt: capturedAt[match.matchId] ?? new Date().toISOString(),
         gameTimeSeconds: 90,
         killsA: 0,
         killsB: 0,
@@ -107,6 +115,21 @@ describe('Uzivo', () => {
       'Sava Sharks',
     ]);
     expect([...stomp.last.topics.keys()]).toEqual([]);
+  });
+
+  it('marks a stale clock and a card still waiting for the first data', async () => {
+    await render([liveMatch(7), liveMatch(9)], {
+      7: new Date(Date.now() - 6 * 60000).toISOString(),
+      9: null,
+    });
+    const stale = element.querySelector('.live-card[data-match-id="7"] app-live-clock')!;
+    const waiting = element.querySelector('.live-card[data-match-id="9"] app-live-clock')!;
+
+    expect(stale.getAttribute('data-state')).toBe('stale');
+    expect(stale.querySelector('.clock-time')!.textContent).toBe('01:30');
+    expect(stale.querySelector('.clock-note')!.textContent).toBe('zadnji podatak prije 6 min');
+    expect(waiting.getAttribute('data-state')).toBe('waiting');
+    expect(waiting.querySelector('.clock-wait')!.textContent).toBe('Čeka se prvi podatak iz igre');
   });
 
   it('updates the score live from the tournament topic', async () => {

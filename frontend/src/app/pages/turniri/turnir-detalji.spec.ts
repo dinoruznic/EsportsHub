@@ -471,4 +471,89 @@ describe('TurnirDetalji', () => {
     expect(element.querySelector('app-connection-indicator')!.textContent!.trim()).toBe('Bez veze');
     expect(element.querySelector('.refresh')).not.toBeNull();
   });
+
+  function withReferee(bracket: Bracket, matchId: number, refereeUsername: string): Bracket {
+    return {
+      ...bracket,
+      rounds: bracket.rounds.map((round) => ({
+        ...round,
+        matches: round.matches.map((m) => (m.id === matchId ? { ...m, refereeUsername } : m)),
+      })),
+    };
+  }
+
+  it('shows the referee on the card to everyone but no assign button to a player', async () => {
+    await render({
+      tournament: tournament({ status: 'ONGOING' }),
+      bracket: withReferee(fourTeamBracket(), 11, 'sudija1'),
+    });
+
+    expect(element.querySelector('.match[data-match-id="11"] .referee')!.textContent!.trim()).toBe(
+      'Sudija: sudija1',
+    );
+    expect(element.querySelector('.match[data-match-id="12"] .referee')!.textContent!.trim()).toBe(
+      'Bez sudije',
+    );
+    expect(element.querySelector('.assign')).toBeNull();
+  });
+
+  it('lets the organizer assign a referee from the list', async () => {
+    await render({
+      username: 'org',
+      tournament: tournament({ status: 'ONGOING' }),
+      bracket: withReferee(fourTeamBracket(), 11, 'sudija1'),
+    });
+    const assignButtons = Array.from(element.querySelectorAll<HTMLButtonElement>('.assign'));
+
+    expect(assignButtons.map((b) => b.textContent!.trim())).toEqual([
+      'Promijeni sudiju',
+      'Dodijeli sudiju',
+    ]);
+
+    assignButtons[1].click();
+    await settle();
+    http.expectOne('/api/referees').flush([
+      { username: 'sudija1', displayName: 'Prvi Sudija' },
+      { username: 'sudija2', displayName: 'Drugi Sudija' },
+    ]);
+    await harness.fixture.whenStable();
+
+    const drawer = document.querySelector('app-referee-picker')!;
+    expect(drawer.querySelector('.title')!.textContent).toBe('Sudija meča');
+    expect(Array.from(drawer.querySelectorAll('.option .name')).map((n) => n.textContent)).toEqual([
+      'Prvi Sudija',
+      'Drugi Sudija',
+    ]);
+
+    drawer.querySelector<HTMLButtonElement>('[data-username="sudija2"]')!.click();
+    const request = http.expectOne({ method: 'PUT', url: '/api/matches/12/referee' });
+    expect(request.request.body).toEqual({ username: 'sudija2' });
+    request.flush({
+      ...fourTeamBracket().rounds[1].matches[0],
+      refereeUsername: 'sudija2',
+    });
+    await harness.fixture.whenStable();
+
+    expect(document.querySelector('app-referee-picker')).toBeNull();
+    expect(element.querySelector('.match[data-match-id="12"] .referee')!.textContent!.trim()).toBe(
+      'Sudija: sudija2',
+    );
+  });
+
+  it('explains that the admin gives the referee role when the list is empty', async () => {
+    await render({
+      roles: ['ADMIN'],
+      tournament: tournament({ status: 'ONGOING' }),
+      bracket: fourTeamBracket(),
+    });
+
+    element.querySelector<HTMLButtonElement>('.assign')!.click();
+    await settle();
+    http.expectOne('/api/referees').flush([]);
+    await harness.fixture.whenStable();
+
+    expect(document.querySelector('app-referee-picker .empty')!.textContent).toBe(
+      'Nema sudija. Admin dodjeljuje ulogu sudije.',
+    );
+  });
 });
