@@ -84,6 +84,18 @@ java -jar agent/target/esportshub-agent.jar --mock --start=14:00 --interval=2 --
 
 The same flow is scripted for the IntelliJ HTTP client in `backend/http/demo-reset.http` and `backend/http/demo-mode.http`.
 
+### Screenshots
+
+Taken at 1600×900 right after "Resetuj demo podatke" with the demo mode running.
+
+| | |
+|---|---|
+| ![Landing](docs/screenshots/landing.png) Landing with login and registration | ![Tournaments](docs/screenshots/tournaments.png) Tournaments |
+| ![Sarajevo Open bracket](docs/screenshots/sarajevo-open-bracket.png) Sarajevo Open — live bracket | ![Live match](docs/screenshots/live-match.png) Live match page with snapshots and the DEMO tag |
+| ![Uživo](docs/screenshots/uzivo.png) Uživo | ![Profile](docs/screenshots/profile-dino.png) Profile of `dino` with three game accounts |
+| ![Market](docs/screenshots/market.png) Market — offers on `dino`'s listing | ![Referee panel](docs/screenshots/referee-panel.png) Referee panel of `sudija_amra` |
+| ![Admin panel](docs/screenshots/admin-panel.png) Admin panel — overview, demo mode and demo accounts | |
+
 ## Architecture
 
 ```mermaid
