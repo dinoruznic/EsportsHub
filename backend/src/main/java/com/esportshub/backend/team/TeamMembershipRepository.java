@@ -6,5 +6,6 @@ import java.util.List;
 
 public interface TeamMembershipRepository extends JpaRepository<TeamMembership, Long> {
     List<TeamMembership> findByTeam_IdAndActiveTrue(Long teamId);
+    List<TeamMembership> findByGameAccount_User_UsernameAndActiveTrue(String username);
     boolean existsByTeam_IdAndGameAccount_IdAndActiveTrue(Long teamId, Long gameAccountId);
 }

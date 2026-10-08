@@ -48,6 +48,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/tournaments/*/bracket").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/matches/*", "/api/matches/*/events", "/api/matches/*/live").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/players/*/game-accounts").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/players/*").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/games").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/games/*/regions", "/api/games/*/positions", "/api/games/*/ranks").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/teams", "/api/teams/*").permitAll()
