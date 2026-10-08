@@ -316,4 +316,54 @@ describe('Admin', () => {
     expect(element.querySelector('[data-tab="na-cekanju"] .badge')).toBeNull();
     expect(text('app-pending-tournaments .none')).toBe('Nema turnira koji čekaju odobrenje.');
   });
+
+  it('resets demo data after a confirmation and lists the demo accounts', async () => {
+    await render('/admin');
+    await harness.fixture.whenStable();
+    const demo = () => element.querySelector('app-admin-demo')!;
+
+    expect(text('.section-title', demo())).toBe('Demo');
+    expect(demo().querySelectorAll('tbody tr')).toHaveLength(8);
+    expect(text('[data-account="dino"] .password', demo())).toBe('lozinka123');
+    expect(text('[data-account="admin"] .password', demo())).toBe('admin12345');
+    expect(text('[data-account="sudija_amra"] app-role-chip', demo())).toBe('SUDIJA');
+
+    demo().querySelector<HTMLButtonElement>('.reset .trigger')!.click();
+    await harness.fixture.whenStable();
+    http.expectNone('/api/admin/demo/reset');
+    expect(text('.reset .question', demo())).toBe(
+      'Ovo briše sve podatke osim admin naloga i puni bazu demo podacima.',
+    );
+
+    demo().querySelector<HTMLButtonElement>('.reset .confirm')!.click();
+    await harness.fixture.whenStable();
+    expect(text('.progress', demo())).toBe('Punim bazu demo podacima…');
+    http
+      .expectOne({ method: 'POST', url: '/api/admin/demo/reset' })
+      .flush({ users: 60, teams: 10, tournaments: 4, listings: 4 });
+    await settle();
+    http.expectOne('/api/admin/stats').flush({ ...STATS, users: 60 });
+    await harness.fixture.whenStable();
+
+    expect(text('.success-title', demo())).toBe('Demo podaci su spremni');
+    expect(text('.success-text', demo())).toBe('Korisnici 60 · Timovi 10 · Turniri 4 · Oglasi 4');
+    expect(text('[data-tile="users"] .tile-value')).toBe('60');
+  });
+
+  it('explains when the demo is disabled on the server', async () => {
+    await render('/admin');
+    await harness.fixture.whenStable();
+    const demo = element.querySelector('app-admin-demo')!;
+
+    demo.querySelector<HTMLButtonElement>('.reset .trigger')!.click();
+    await harness.fixture.whenStable();
+    demo.querySelector<HTMLButtonElement>('.reset .confirm')!.click();
+    http
+      .expectOne({ method: 'POST', url: '/api/admin/demo/reset' })
+      .flush(null, { status: 404, statusText: 'Not Found' });
+    await harness.fixture.whenStable();
+
+    expect(text('.error', demo)).toBe('Demo režim je isključen na serveru.');
+    expect(demo.querySelector('.success')).toBeNull();
+  });
 });

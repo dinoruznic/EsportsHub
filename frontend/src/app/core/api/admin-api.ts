@@ -1,7 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
-import { AdminStats, AdminUser, Page } from './models';
+import { AdminStats, AdminUser, DemoResetSummary, Page } from './models';
 
 export interface AdminUserQuery {
   query: string;
@@ -38,5 +38,9 @@ export class AdminApi {
 
   stats(): Observable<AdminStats> {
     return this.http.get<AdminStats>(`${this.base}/stats`);
+  }
+
+  resetDemo(): Observable<DemoResetSummary> {
+    return this.http.post<DemoResetSummary>(`${this.base}/demo/reset`, null);
   }
 }

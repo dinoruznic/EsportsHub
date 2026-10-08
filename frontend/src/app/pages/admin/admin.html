@@ -36,5 +36,6 @@
     } @else {
       <app-admin-overview [stats]="stats.value()" />
     }
+    <app-admin-demo (changed)="stats.reload()" />
   }
 }

@@ -7,6 +7,7 @@ import { GamesApi } from '../../core/api/games-api';
 import { ErrorState } from '../../shared/error-state/error-state';
 import { Skeleton } from '../../shared/skeleton/skeleton';
 import { PendingTournaments } from '../turniri/pending-tournaments';
+import { AdminDemo } from './admin-demo';
 import { AdminOverview } from './admin-overview';
 import { AdminUsers } from './admin-users';
 
@@ -20,7 +21,7 @@ const TABS: { value: AdminTab; label: string }[] = [
 
 @Component({
   selector: 'app-admin',
-  imports: [AdminOverview, AdminUsers, ErrorState, PendingTournaments, Skeleton],
+  imports: [AdminDemo, AdminOverview, AdminUsers, ErrorState, PendingTournaments, Skeleton],
   templateUrl: './admin.html',
   styleUrl: './admin.scss',
 })

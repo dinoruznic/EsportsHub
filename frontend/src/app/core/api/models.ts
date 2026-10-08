@@ -338,3 +338,10 @@ export interface AdminStats {
   liveMatches: number;
   openListings: number;
 }
+
+export interface DemoResetSummary {
+  users: number;
+  teams: number;
+  tournaments: number;
+  listings: number;
+}
