@@ -34,7 +34,7 @@
         <a class="wordmark" routerLink="/turniri">EsportsHub</a>
         @if (user(); as user) {
           <div class="account">
-            <span class="username">{{ user.username }}</span>
+            <a class="username" routerLink="/profil">{{ user.username }}</a>
             <ul class="roles" aria-label="Uloge">
               @for (role of user.roles; track role) {
                 <li class="role">{{ role }}</li>

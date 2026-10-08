@@ -31,7 +31,21 @@ export const MESSAGES = {
 
 const BACKEND_MESSAGES: Record<string, string> = {
   'turnir ne postoji': 'Turnir ne postoji.',
-  'unknown game': 'Izabrana igra ne postoji.',
+  'unknown game': 'Nepoznata igra.',
+  'already have an account for this game': 'Već imaš nalog za ovu igru.',
+  'ova igra koristi rank, ne rating': 'Ova igra koristi rang, a ne rating.',
+  'ova igra koristi rating, ne rank': 'Ova igra koristi rating, a ne rang.',
+  'ova igra nema rank': 'Ova igra nema ni rang ni rating.',
+  'regija ne pripada igri': 'Izabrana regija ne pripada ovoj igri.',
+  'pozicija ne pripada igri': 'Izabrana pozicija ne pripada ovoj igri.',
+  'rank ne pripada igri': 'Izabrani rang ne pripada ovoj igri.',
+  'nalog ne postoji': 'Nalog ne postoji.',
+  'nije tvoj nalog': 'To nije tvoj nalog.',
+  'vec je na trzistu': 'Nalog je već na transfer listi.',
+  'oglas nije otvoren': 'Oglas više nije otvoren.',
+  'oglas ne postoji': 'Oglas ne postoji.',
+  'igrac ne postoji': 'Igrač ne postoji.',
+  'korisnik ne postoji': 'Igrač ne postoji.',
   'turnir nije u statusu pending': 'Turnir više ne čeka odobrenje.',
   'prijave nisu otvorene': 'Prijave za ovaj turnir nisu otvorene.',
   'tim ne postoji': 'Tim ne postoji.',
@@ -55,6 +69,7 @@ const FIELD_MESSAGES: Record<string, Record<string, string>> = {
   password: { Size: 'Lozinka mora imati 8 do 72 znaka.' },
   displayName: { Size: 'Ime za prikaz može imati najviše 60 znakova.' },
   name: { Size: 'Naziv može imati najviše 80 znakova.' },
+  inGameName: { Size: 'Ime u igri može imati najviše 60 znakova.' },
 };
 
 export function toApiError(error: unknown): ApiError {

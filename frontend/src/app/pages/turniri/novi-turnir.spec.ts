@@ -131,7 +131,7 @@ describe('NoviTurnir', () => {
       .flush({ message: 'unknown game' }, { status: 400, statusText: 'Bad Request' });
     await harness.fixture.whenStable();
 
-    expect(element.querySelector('.banner')!.textContent).toContain('Izabrana igra ne postoji.');
+    expect(element.querySelector('.banner')!.textContent).toContain('Nepoznata igra.');
     expect(TestBed.inject(Router).url).toBe('/turniri/novi');
   });
 });

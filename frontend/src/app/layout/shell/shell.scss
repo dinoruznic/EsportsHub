@@ -169,8 +169,13 @@
   overflow: hidden;
   color: var(--text);
   font-weight: 600;
+  text-decoration: none;
   text-overflow: ellipsis;
   white-space: nowrap;
+
+  &:hover {
+    color: var(--gold);
+  }
 }
 
 .roles {

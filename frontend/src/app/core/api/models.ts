@@ -142,3 +142,86 @@ export interface LiveMatch {
   scoreB: number | null;
   startedAt: string | null;
 }
+
+export interface Me {
+  id: number;
+  username: string;
+  email: string;
+  displayName: string | null;
+  roles: string[];
+  createdAt: string;
+}
+
+export interface PlayerTeam {
+  id: number;
+  name: string;
+  tag: string;
+  gameCode: string;
+  captain: boolean;
+}
+
+export interface PlayerProfile {
+  username: string;
+  displayName: string | null;
+  roles: string[];
+  createdAt: string;
+  teams: PlayerTeam[];
+}
+
+export type MarketStatus = 'INACTIVE' | 'AVAILABLE';
+
+export interface GameAccount {
+  id: number;
+  ownerUsername: string;
+  gameCode: string;
+  gameName: string;
+  inGameName: string;
+  region: string | null;
+  position: string | null;
+  rank: string | null;
+  rating: number | null;
+  marketStatus: MarketStatus;
+  createdAt: string;
+}
+
+export interface GameAccountRequest {
+  gameId?: number;
+  inGameName: string;
+  regionId: number | null;
+  positionId: number | null;
+  rankId: number | null;
+  rating: number | null;
+  marketStatus?: MarketStatus;
+}
+
+export interface GameOption {
+  id: number;
+  code: string;
+  label: string;
+}
+
+export interface Listing {
+  id: number;
+  gameAccountId: number;
+  ownerUsername: string;
+  gameCode: string;
+  inGameName: string;
+  rank: string | null;
+  position: string | null;
+  rating: number | null;
+  askingPrice: number | null;
+  status: string;
+  createdAt: string;
+}
+
+export interface Offer {
+  id: number;
+  listingId: number;
+  fromTeamId: number;
+  fromTeamName: string;
+  amount: number | null;
+  message: string | null;
+  status: string;
+  createdAt: string;
+  respondedAt: string | null;
+}
