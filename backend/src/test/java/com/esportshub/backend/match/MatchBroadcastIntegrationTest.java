@@ -144,7 +144,12 @@ class MatchBroadcastIntegrationTest extends AbstractIntegrationTest {
                 MatchEvent.WINNER_ADVANCED);
         assertThat(received).extracting(m -> m.get("actor")).containsOnly(organizer.getUsername());
 
-        assertThat(match(received.get(0))).containsEntry("status", "LIVE");
+        assertThat(match(received.get(0))).containsEntry("status", "LIVE")
+                .containsEntry("tournamentName", tournament.getName())
+                .containsEntry("gameCode", "LOL")
+                .containsEntry("roundName", "Polufinale");
+        assertThat(number(match(received.get(0)).get("tournamentId"))).isEqualTo(tournament.getId());
+        assertThat(match(received.get(4))).containsEntry("roundName", "Finale");
         assertThat(match(received.get(1))).containsEntry("scoreA", 1).containsEntry("scoreB", 0);
 
         Map<String, Object> finished = match(received.get(2));

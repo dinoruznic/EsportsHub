@@ -8,7 +8,11 @@ public record MatchView(
         Integer scoreA,
         Integer scoreB,
         Long winnerTeamId,
-        Long nextMatchId
+        Long nextMatchId,
+        Long tournamentId,
+        String tournamentName,
+        String gameCode,
+        String roundName
 ) {
     public static MatchView from(Match match) {
         return new MatchView(
@@ -19,6 +23,10 @@ public record MatchView(
                 match.getScoreA(),
                 match.getScoreB(),
                 match.getWinnerTeam() == null ? null : match.getWinnerTeam().getId(),
-                match.getNextMatchId());
+                match.getNextMatchId(),
+                match.getTournament().getId(),
+                match.getTournament().getName(),
+                match.getTournament().getGame().getCode(),
+                match.getRound() == null ? null : match.getRound().getName());
     }
 }

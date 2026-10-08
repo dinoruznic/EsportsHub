@@ -41,6 +41,13 @@ class LiveMatchesIntegrationTest extends AbstractIntegrationTest {
         api.post("/api/matches/" + liveId + "/start", organizer, null).expect(200);
         api.put("/api/matches/" + liveId + "/score", organizer, Map.of("scoreA", 1, "scoreB", 0)).expect(200);
 
+        JsonNode single = api.get("/api/matches/" + liveId, null).expect(200).json();
+        assertThat(single.get("tournamentId").asLong()).isEqualTo(tournamentId);
+        assertThat(single.get("tournamentName").asString()).isEqualTo(name);
+        assertThat(single.get("gameCode").asString()).isEqualTo("LOL");
+        assertThat(single.get("roundName").asString()).isEqualTo("Polufinale");
+        assertThat(bracket.get("rounds").get(1).get("matches").get(0).get("roundName").asString()).isEqualTo("Finale");
+
         List<JsonNode> matches = StreamSupport.stream(api.get("/api/matches/live", null).expect(200).json().spliterator(), false)
                 .toList();
 
