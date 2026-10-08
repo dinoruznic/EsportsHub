@@ -38,7 +38,14 @@
                     [ngTemplateOutletContext]="{ $implicit: match }"
                   />
                   <p class="referee">
-                    {{ match.refereeUsername ? 'Sudija: ' + match.refereeUsername : 'Bez sudije' }}
+                    @if (match.refereeName) {
+                      Sudija: {{ match.refereeName }}
+                      @if (match.refereeAutomatic) {
+                        <span class="auto">(automatski)</span>
+                      }
+                    } @else {
+                      Bez sudije
+                    }
                   </p>
                 </a>
                 @if (

@@ -4,6 +4,8 @@ import { toApiError } from '../../core/api/api-error';
 import { MeApi } from '../../core/api/me-api';
 import { Me, PlayerTeam } from '../../core/api/models';
 import { formatDate } from '../../shared/format';
+import { sortRoles } from '../../core/auth/roles';
+import { RoleChip } from '../../shared/role-chip/role-chip';
 import { TeamHex } from '../../shared/team-hex/team-hex';
 
 export function personInitials(name: string): string {
@@ -26,7 +28,7 @@ const MAX_NAME = 60;
 
 @Component({
   selector: 'app-profile-header',
-  imports: [RouterLink, TeamHex],
+  imports: [RouterLink, RoleChip, TeamHex],
   templateUrl: './profile-header.html',
   styleUrl: './profile-header.scss',
   host: { class: 'panel' },
@@ -37,6 +39,7 @@ export class ProfileHeader {
   readonly username = input.required<string>();
   readonly displayName = input<string | null>(null);
   readonly roles = input<string[]>([]);
+  protected readonly sortedRoles = computed(() => sortRoles(this.roles()));
   readonly createdAt = input<string | null>(null);
   readonly teams = input<PlayerTeam[]>([]);
   readonly editable = input(false);

@@ -121,7 +121,12 @@
     bottom: -1px;
     left: 0;
     height: 1px;
-    background: linear-gradient(90deg, transparent 25%, rgb(226 177 84 / 0.35) 50%, transparent 75%);
+    background: linear-gradient(
+      90deg,
+      transparent 25%,
+      rgb(226 177 84 / 0.35) 50%,
+      transparent 75%
+    );
   }
 }
 
@@ -184,17 +189,6 @@
   margin: 0;
   padding: 0;
   list-style: none;
-}
-
-.role {
-  padding: 3px 6px;
-  border: 1px solid var(--line);
-  border-radius: 4px;
-  background: var(--panel-2);
-  color: var(--muted);
-  font: 500 10px/1 var(--mono);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .content {

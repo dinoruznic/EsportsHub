@@ -28,6 +28,8 @@ export interface MatchCard {
   decided: boolean;
   championPath: boolean;
   refereeUsername: string | null;
+  refereeName: string | null;
+  refereeAutomatic: boolean;
   slots: [SlotView, SlotView];
 }
 
@@ -204,6 +206,8 @@ export function buildBracket(
         decided: match.winnerTeamId !== null,
         championPath: championId !== null && match.winnerTeamId === championId,
         refereeUsername: preview ? null : (match.refereeUsername ?? null),
+        refereeName: preview ? null : match.refereeDisplayName || match.refereeUsername || null,
+        refereeAutomatic: !preview && !!match.refereeUsername && !!match.refereeAutomatic,
         slots: [
           slot(match, match.teamA, match.scoreA, feeders[0], numbers, seeds, preview),
           slot(match, match.teamB, match.scoreB, feeders[1], numbers, seeds, preview),

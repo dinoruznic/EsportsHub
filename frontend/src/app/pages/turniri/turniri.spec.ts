@@ -78,10 +78,16 @@ describe('Turniri', () => {
     expect(first.textContent).toContain('League of Legends');
   });
 
-  it('shows Novi turnir to a logged-in user', async () => {
-    const { element } = await render();
+  it('shows Novi turnir to an organizer', async () => {
+    const { element } = await render('/turniri', ['PLAYER', 'ORGANIZER']);
 
     expect(element.querySelector('a.create')?.getAttribute('href')).toBe('/turniri/novi');
+  });
+
+  it('hides Novi turnir from a player who is not an organizer', async () => {
+    const { element } = await render();
+
+    expect(element.querySelector('a.create')).toBeNull();
   });
 
   it('filters by status and writes the filter to the query params', async () => {
@@ -175,7 +181,7 @@ describe('Turniri', () => {
     const element = harness.routeNativeElement as HTMLElement;
 
     expect(element.querySelector('app-empty-state')!.textContent).toContain('Još nema turnira.');
-    expect(element.querySelector('app-empty-state a')!.textContent).toContain('Novi turnir');
+    expect(element.querySelector('app-empty-state a')).toBeNull();
   });
 
   it('shows an error state with retry', async () => {

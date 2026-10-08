@@ -45,8 +45,8 @@
 
   @if (roles().length > 0 || teams().length > 0) {
     <div class="chips">
-      @for (role of roles(); track role) {
-        <span class="role">{{ role }}</span>
+      @for (role of sortedRoles(); track role) {
+        <app-role-chip class="role" [role]="role" [large]="true" />
       }
       @for (team of teams(); track team.id) {
         <a class="team" [routerLink]="['/timovi', team.id]" [attr.data-team-id]="team.id">

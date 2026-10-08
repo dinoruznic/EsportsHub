@@ -28,6 +28,7 @@ export const routes: Routes = [
       {
         path: 'turniri/novi',
         title: 'Novi turnir · EsportsHub',
+        canActivate: [roleGuard('ORGANIZER', 'ADMIN')],
         loadComponent: () => import('./pages/turniri/novi-turnir'),
       },
       {

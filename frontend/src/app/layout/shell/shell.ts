@@ -1,6 +1,8 @@
 import { Component, computed, inject } from '@angular/core';
 import { Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { AuthService } from '../../core/auth/auth.service';
+import { sortRoles } from '../../core/auth/roles';
+import { RoleChip } from '../../shared/role-chip/role-chip';
 
 interface NavItem {
   label: string;
@@ -11,7 +13,7 @@ interface NavItem {
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [RouterLink, RouterLinkActive, RouterOutlet, RoleChip],
   templateUrl: './shell.html',
   styleUrl: './shell.scss',
 })
@@ -20,6 +22,7 @@ export class Shell {
   private readonly auth = inject(AuthService);
 
   protected readonly user = this.auth.currentUser;
+  protected readonly roles = computed(() => sortRoles(this.user()?.roles ?? []));
 
   private readonly allNav: NavItem[] = [
     {

@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, computed, inject, signal } from '@angular/core';
+import { DOCUMENT, Injectable, computed, inject, signal } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
 export interface AuthUser {
@@ -34,11 +34,15 @@ interface Session {
 }
 
 export const AUTH_STORAGE_KEY = 'esportshub.auth';
+export const ROLE_REFRESH_INTERVAL_MS = 30000;
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private readonly http = inject(HttpClient);
+  private readonly document = inject(DOCUMENT);
   private readonly session = signal<Session | null>(restoreSession());
+  private lastRefresh = 0;
+  private watching = false;
 
   readonly currentUser = computed(() => this.session()?.user ?? null);
   readonly isLoggedIn = computed(() => this.session() !== null);
@@ -63,6 +67,41 @@ export class AuthService {
       .pipe(map((response) => this.startSession(response)));
   }
 
+  refreshRoles(): void {
+    const username = this.currentUser()?.username;
+    if (!username) {
+      return;
+    }
+    this.lastRefresh = Date.now();
+    this.http.get<{ username: string; roles: string[] }>('/api/me').subscribe({
+      next: (me) => {
+        const session = this.session();
+        if (!session || session.user.username !== me.username) {
+          return;
+        }
+        const roles = [...me.roles];
+        if (roles.slice().sort().join() === session.user.roles.slice().sort().join()) {
+          return;
+        }
+        this.store({ ...session, user: { ...session.user, roles } });
+      },
+      error: () => undefined,
+    });
+  }
+
+  watchRoles(): void {
+    if (this.watching) {
+      return;
+    }
+    this.watching = true;
+    this.refreshRoles();
+    this.document.defaultView?.addEventListener('focus', () => {
+      if (Date.now() - this.lastRefresh >= ROLE_REFRESH_INTERVAL_MS) {
+        this.refreshRoles();
+      }
+    });
+  }
+
   logout(): void {
     this.session.set(null);
     try {
@@ -75,11 +114,15 @@ export class AuthService {
       token: response.token,
       user: { userId: response.userId, username: response.username, roles: [...response.roles] },
     };
+    this.store(session);
+    return session.user;
+  }
+
+  private store(session: Session): void {
     this.session.set(session);
     try {
       localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(session));
     } catch {}
-    return session.user;
   }
 }
 

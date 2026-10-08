@@ -52,7 +52,7 @@ describe('Igrac', () => {
     http.expectOne('/api/players/yueen').flush({
       username: 'yueen',
       displayName: 'Dino Ruznic',
-      roles: ['PLAYER', 'CAPTAIN'],
+      roles: ['PLAYER', 'REFEREE'],
       createdAt: '2026-10-01T10:00:00Z',
       teams: [{ id: 4, name: 'Bosna Bisons', tag: 'BB', gameCode: 'LOL', captain: false }],
     });

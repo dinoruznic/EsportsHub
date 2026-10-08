@@ -63,7 +63,7 @@ const BACKEND_MESSAGES: Record<string, string> = {
   'nerijeseno nije dozvoljeno': 'Neriješeno nije dozvoljeno.',
   'korisnik nije sudija': 'Izabrani korisnik nije sudija.',
   'mec ne postoji': 'Meč ne postoji.',
-  'korisnik ne postoji': 'Igrač ne postoji.',
+  'korisnik ne postoji': 'Korisnik ne postoji.',
   'turnir nije u statusu pending': 'Turnir više ne čeka odobrenje.',
   'prijave nisu otvorene': 'Prijave za ovaj turnir nisu otvorene.',
   'tim ne postoji': 'Tim ne postoji.',
@@ -79,7 +79,26 @@ const BACKEND_MESSAGES: Record<string, string> = {
   'premalo timova': 'Premalo prijavljenih timova za bracket.',
   'broj timova mora biti stepen dvojke (2,4,8,16...)': 'Broj timova mora biti 2, 4, 8 ili 16.',
   'nepodrzan format turnira': 'Format turnira nije podržan.',
+  'korisnik vec ima ovu ulogu': 'Korisnik već ima ovu ulogu.',
+  'korisnik nema ovu ulogu': 'Korisnik nema ovu ulogu.',
+  'ne mozes ukloniti svoju admin ulogu': 'Ne možeš ukloniti svoju admin ulogu.',
+  'ova uloga se ne moze mijenjati': 'Ova uloga se ne može mijenjati.',
+  'nepostojeca uloga': 'Nepoznata uloga.',
+  'organizator ne moze prijaviti svoj tim na svoj turnir':
+    'Organizator ne može prijaviti svoj tim na svoj turnir.',
 };
+
+const REFEREE_CONFLICT = /^sudija je clan tima (.+) i ne moze suditi ovaj mec$/i;
+
+function patternMessage(message: string): string | undefined {
+  const conflict = REFEREE_CONFLICT.exec(message);
+  if (conflict) {
+    return `Sudija je član tima ${conflict[1]} i ne može suditi ovaj meč.`;
+  }
+  return message.toLowerCase().startsWith('nedozvoljen prelaz')
+    ? 'Ovaj korak nije dozvoljen u trenutnom stanju meča.'
+    : undefined;
+}
 
 const FIELD_MESSAGES: Record<string, Record<string, string>> = {
   username: { Size: 'Korisničko ime mora imati 3 do 30 znakova.' },
@@ -102,11 +121,7 @@ export function toApiError(error: unknown): ApiError {
   ) as SpringErrorBody;
 
   const normalized = (body.message ?? '').trim().toLowerCase();
-  const known =
-    BACKEND_MESSAGES[normalized] ??
-    (normalized.startsWith('nedozvoljen prelaz')
-      ? 'Ovaj korak nije dozvoljen u trenutnom stanju meča.'
-      : undefined);
+  const known = BACKEND_MESSAGES[normalized] ?? patternMessage((body.message ?? '').trim());
   if (known && error.status >= 400 && error.status < 500) {
     return { message: known, fieldErrors: {} };
   }

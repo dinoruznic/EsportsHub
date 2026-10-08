@@ -26,7 +26,14 @@ const STATUS_FILTERS: StatusFilter[] = [
   { value: 'zavrseni', label: 'Završeni', status: 'COMPLETED' },
 ];
 
-const STATUS_ORDER: TournamentStatus[] = ['REGISTRATION', 'ONGOING', 'PENDING', 'COMPLETED', 'REJECTED', 'CANCELLED'];
+const STATUS_ORDER: TournamentStatus[] = [
+  'REGISTRATION',
+  'ONGOING',
+  'PENDING',
+  'COMPLETED',
+  'REJECTED',
+  'CANCELLED',
+];
 
 @Component({
   selector: 'app-turniri',
@@ -42,7 +49,9 @@ export default class Turniri {
   private readonly route = inject(ActivatedRoute);
 
   protected readonly statusFilters = STATUS_FILTERS;
-  protected readonly canCreate = this.auth.isLoggedIn;
+  protected readonly canCreate = computed(
+    () => this.auth.hasRole('ORGANIZER') || this.auth.hasRole('ADMIN'),
+  );
   protected readonly isAdmin = computed(() => this.auth.hasRole('ADMIN'));
 
   private readonly query = toSignal(this.route.queryParamMap, { requireSync: true });
@@ -52,13 +61,16 @@ export default class Turniri {
 
   protected readonly games = rxResource({ stream: () => this.gamesApi.list() });
   protected readonly gameNames = computed(() =>
-    Object.fromEntries((this.games.hasValue() ? this.games.value() : []).map((g) => [g.code, g.name])),
+    Object.fromEntries(
+      (this.games.hasValue() ? this.games.value() : []).map((g) => [g.code, g.name]),
+    ),
   );
 
   protected readonly tournaments = rxResource({ stream: () => this.api.list() });
 
   protected readonly counts = rxResource({
-    params: () => (this.tournaments.hasValue() ? this.tournaments.value().map((t) => t.id) : undefined),
+    params: () =>
+      this.tournaments.hasValue() ? this.tournaments.value().map((t) => t.id) : undefined,
     stream: ({ params: ids }) =>
       ids.length === 0
         ? of({} as Record<number, number>)
@@ -69,7 +81,12 @@ export default class Turniri {
                 catchError(() => of(null)),
               ),
             ),
-          ).pipe(map((values) => Object.fromEntries(ids.map((id, i) => [id, values[i]])) as Record<number, number>)),
+          ).pipe(
+            map(
+              (values) =>
+                Object.fromEntries(ids.map((id, i) => [id, values[i]])) as Record<number, number>,
+            ),
+          ),
   });
 
   protected readonly visible = computed(() => {

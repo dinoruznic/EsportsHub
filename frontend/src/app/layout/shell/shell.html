@@ -36,8 +36,8 @@
           <div class="account">
             <a class="username" routerLink="/profil">{{ user.username }}</a>
             <ul class="roles" aria-label="Uloge">
-              @for (role of user.roles; track role) {
-                <li class="role">{{ role }}</li>
+              @for (role of roles(); track role) {
+                <li><app-role-chip class="role" [role]="role" /></li>
               }
             </ul>
             <button type="button" class="btn btn-ghost" (click)="logout()">Odjava</button>

@@ -66,6 +66,8 @@ export interface BracketMatch {
   gameCode?: string | null;
   roundName?: string | null;
   refereeUsername?: string | null;
+  refereeDisplayName?: string | null;
+  refereeAutomatic?: boolean;
 }
 
 export interface BracketRound {

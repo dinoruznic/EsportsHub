@@ -97,7 +97,7 @@ describe('Profil', () => {
     expect(text('app-profile-header h1')).toBe('Dino Ruznic');
     expect(text('.handle')).toBe('@yueen');
     expect(text('app-profile-header text')).toBe('DR');
-    expect(text('.role')).toBe('PLAYER');
+    expect(text('.role')).toBe('IGRAČ');
     expect(text('.team .tag')).toBe('BB');
     expect(text('.team .team-name')).toBe('Bosna Bisons');
     expect(text('.team .captain')).toBe('C');
