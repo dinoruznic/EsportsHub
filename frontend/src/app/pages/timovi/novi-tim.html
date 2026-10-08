@@ -1,0 +1,103 @@
+<a class="back" routerLink="/timovi">← Timovi</a>
+
+<header class="head">
+  <p class="eyebrow">Ekipe</p>
+  <h1 class="display-title">Novi tim</h1>
+  <p class="lead">Ti postaješ kapiten. Igrače kasnije dovodiš preko transfer marketa.</p>
+</header>
+
+<form class="panel form" [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  @if (serverError(); as message) {
+    <p class="banner" role="alert">{{ message }}</p>
+  }
+  @if (games.error()) {
+    <app-error-state [message]="gamesError()" (retry)="games.reload()" />
+  }
+
+  <div class="field wide">
+    <label class="field-label" for="team-name">
+      Naziv
+      <span class="field-hint">do 60 znakova</span>
+    </label>
+    <input
+      id="team-name"
+      class="field-input"
+      type="text"
+      formControlName="name"
+      autocomplete="off"
+      [attr.aria-invalid]="error('name') ? true : null"
+      [attr.aria-describedby]="error('name') ? 'team-name-error' : null"
+    />
+    @if (error('name'); as message) {
+      <p class="field-error" id="team-name-error">{{ message }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="team-tag">
+      Tag
+      <span class="field-hint">do 5 znakova</span>
+    </label>
+    <input
+      id="team-tag"
+      class="field-input tag-input"
+      type="text"
+      formControlName="tag"
+      autocomplete="off"
+      spellcheck="false"
+      [attr.aria-invalid]="error('tag') ? true : null"
+      [attr.aria-describedby]="error('tag') ? 'team-tag-error' : null"
+    />
+    @if (error('tag'); as message) {
+      <p class="field-error" id="team-tag-error">{{ message }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="team-game">Igra</label>
+    <select
+      id="team-game"
+      class="field-input"
+      formControlName="gameId"
+      [attr.aria-invalid]="error('gameId') ? true : null"
+      [attr.aria-describedby]="error('gameId') ? 'team-game-error' : null"
+    >
+      <option value="" disabled>Izaberi igru</option>
+      @if (games.hasValue()) {
+        @for (g of games.value(); track g.id) {
+          <option [value]="g.id">{{ g.name }}</option>
+        }
+      }
+    </select>
+    @if (error('gameId'); as message) {
+      <p class="field-error" id="team-game-error">{{ message }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="team-region">
+      Regija
+      <span class="field-hint">neobavezno</span>
+    </label>
+    <select id="team-region" class="field-input" formControlName="region">
+      <option value="">—</option>
+      @for (r of regions(); track r.id) {
+        <option [value]="r.label">{{ r.label }}</option>
+      }
+    </select>
+  </div>
+
+  @if (missingAccount()) {
+    <p class="hint wide" role="note">
+      Kao kapiten bi trebao imati nalog za {{ selectedGame()?.name }}.
+      <a routerLink="/profil">Dodaj ga na profilu</a>.
+    </p>
+  }
+
+  <div class="actions wide">
+    <a class="btn btn-ghost" routerLink="/timovi">Odustani</a>
+    <button type="submit" class="btn btn-gold submit" [disabled]="submitting()">
+      {{ submitting() ? 'Osnivam…' : 'Osnuj tim' }}
+    </button>
+  </div>
+</form>

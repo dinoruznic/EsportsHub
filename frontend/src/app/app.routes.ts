@@ -52,6 +52,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/market/market'),
       },
       {
+        path: 'timovi/novi',
+        title: 'Novi tim · EsportsHub',
+        loadComponent: () => import('./pages/timovi/novi-tim'),
+      },
+      {
         path: 'timovi',
         title: 'Timovi · EsportsHub',
         loadComponent: () => import('./pages/timovi/timovi'),
