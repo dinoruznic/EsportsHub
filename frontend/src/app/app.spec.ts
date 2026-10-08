@@ -111,6 +111,23 @@ describe('App', () => {
     expect(element.querySelector('a.nav-item[href="/sudija"]')).not.toBeNull();
   });
 
+  it('shows the admin item only to admins', async () => {
+    storeSession();
+    const { element } = await renderAt('/turniri');
+    const admin = element.querySelector<HTMLAnchorElement>('a.nav-item[href="/admin"]');
+
+    expect(admin?.textContent?.trim()).toBe('Admin');
+    expect(element.querySelectorAll('a.nav-item')).toHaveLength(7);
+  });
+
+  it('hides the admin item from a referee and guards the admin page', async () => {
+    storeSession(3600, { userId: 3, username: 'sudija', roles: ['PLAYER', 'REFEREE'] });
+    const { element, router } = await renderAt('/admin');
+
+    expect(router.url).toBe('/turniri');
+    expect(element.querySelector('a.nav-item[href="/admin"]')).toBeNull();
+  });
+
   it('sends a player away from the referee pages', async () => {
     storeSession(3600, { userId: 2, username: 'igrac', roles: ['PLAYER'] });
     const { router } = await renderAt('/sudija/mecevi/11');
