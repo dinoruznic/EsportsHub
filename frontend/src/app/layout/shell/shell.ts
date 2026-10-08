@@ -73,6 +73,12 @@ export class Shell {
       icon: ['M5 21V4', 'M5 4h12l-2.5 4L17 12H5'],
       roles: ['REFEREE', 'ADMIN'],
     },
+    {
+      label: 'Admin',
+      path: '/admin',
+      icon: ['M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3Z', 'M9 12l2 2 4-4'],
+      roles: ['ADMIN'],
+    },
   ];
 
   protected readonly nav = computed(() => {

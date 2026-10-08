@@ -1,0 +1,163 @@
+:host {
+  display: grid;
+  gap: 16px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 16px 24px;
+}
+
+.filter {
+  display: grid;
+  gap: 6px;
+}
+
+.search {
+  flex: 1 1 320px;
+  max-width: 460px;
+}
+
+.filter-label {
+  color: var(--faint);
+  font: 500 10.5px/1.2 var(--mono);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  height: 34px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font: 600 13px/1 var(--body);
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text);
+  }
+
+  &.active {
+    border-color: var(--gold);
+    background: rgb(226 177 84 / 0.12);
+    color: var(--gold);
+  }
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.users {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+
+  th {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    color: var(--faint);
+    font: 500 10.5px/1.2 var(--mono);
+    letter-spacing: 0.1em;
+    text-align: left;
+    text-transform: uppercase;
+  }
+
+  td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line-soft);
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+}
+
+.who {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 200px;
+}
+
+.names {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.display-name {
+  overflow: hidden;
+  color: var(--text);
+  font-weight: 600;
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  &:hover {
+    color: var(--gold);
+  }
+}
+
+.handle {
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.email {
+  color: var(--muted);
+  word-break: break-all;
+}
+
+.roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.since {
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.actions {
+  text-align: right;
+}
+
+.edit-roles {
+  height: 32px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.page-info {
+  color: var(--muted);
+  font-size: 13px;
+}

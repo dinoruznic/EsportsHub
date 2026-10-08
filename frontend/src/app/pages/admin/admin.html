@@ -1,0 +1,34 @@
+<header class="head">
+  <p class="eyebrow">Upravljanje</p>
+  <h1 class="display-title">Admin</h1>
+</header>
+
+<nav class="tabs" aria-label="Admin prikaz">
+  @for (t of tabs; track t.value) {
+    <button
+      type="button"
+      class="tab"
+      [attr.data-tab]="t.value"
+      [class.active]="tab() === t.value"
+      [attr.aria-current]="tab() === t.value ? 'page' : null"
+      (click)="setTab(t.value)"
+    >
+      {{ t.label }}
+    </button>
+  }
+</nav>
+
+@switch (tab()) {
+  @case ('korisnici') {
+    <app-admin-users />
+  }
+  @default {
+    @if (stats.error()) {
+      <app-error-state [message]="statsError()" (retry)="stats.reload()" />
+    } @else if (!stats.hasValue()) {
+      <app-skeleton [count]="1" [height]="120" />
+    } @else {
+      <app-admin-overview [stats]="stats.value()" />
+    }
+  }
+}

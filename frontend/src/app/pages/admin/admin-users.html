@@ -1,0 +1,109 @@
+<div class="filters" role="search">
+  <label class="filter search">
+    <span class="filter-label">Pretraga</span>
+    <input
+      class="field-input search-input"
+      type="search"
+      placeholder="Korisničko ime, ime ili email"
+      [value]="search()"
+      (input)="onSearch($any($event.target).value)"
+    />
+  </label>
+  <div class="filter">
+    <span class="filter-label" id="role-filter-label">Uloga</span>
+    <div class="chips" role="group" aria-labelledby="role-filter-label">
+      @for (f of roleFilters; track f.value) {
+        <button
+          type="button"
+          class="chip"
+          [attr.data-role-filter]="f.value || 'sve'"
+          [class.active]="roleFilter() === f.value"
+          [attr.aria-pressed]="roleFilter() === f.value"
+          (click)="setRole(f.value)"
+        >
+          {{ f.label }}
+        </button>
+      }
+    </div>
+  </div>
+</div>
+
+@if (users.error()) {
+  <app-error-state [message]="loadError()" (retry)="users.reload()" />
+} @else if (!users.hasValue()) {
+  <app-skeleton [count]="5" [height]="56" />
+} @else if (users.value().content.length === 0) {
+  <app-empty-state
+    title="Nema korisnika za ovu pretragu."
+    text="Promijeni pretragu ili filter uloge."
+  />
+} @else {
+  <div class="table-wrap panel">
+    <table class="users">
+      <thead>
+        <tr>
+          <th scope="col">Korisnik</th>
+          <th scope="col">Email</th>
+          <th scope="col">Uloge</th>
+          <th scope="col">Član od</th>
+          <th scope="col"><span class="sr-only">Akcije</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (u of users.value().content; track u.id) {
+          <tr [attr.data-username]="u.username">
+            <td>
+              <div class="who">
+                <app-team-hex [teamId]="u.id" [label]="monogram(u)" [size]="32" />
+                <div class="names">
+                  <a class="display-name" [routerLink]="['/igraci', u.username]">{{
+                    u.displayName || u.username
+                  }}</a>
+                  <span class="handle num">&#64;{{ u.username }}</span>
+                </div>
+              </div>
+            </td>
+            <td class="email">{{ u.email }}</td>
+            <td>
+              <div class="roles">
+                @for (role of roles(u); track role) {
+                  <app-role-chip [role]="role" />
+                }
+              </div>
+            </td>
+            <td class="since">{{ since(u) }}</td>
+            <td class="actions">
+              <button type="button" class="btn btn-ghost edit-roles" (click)="editing.set(u)">
+                Uloge
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <nav class="pager" aria-label="Stranice">
+    <button
+      type="button"
+      class="btn btn-ghost prev"
+      [disabled]="page() <= 1"
+      (click)="goTo(page() - 1)"
+    >
+      Prethodna
+    </button>
+    <span class="page-info">Stranica {{ page() }} od {{ totalPages() }}</span>
+    <button
+      type="button"
+      class="btn btn-ghost next"
+      [disabled]="page() >= totalPages()"
+      (click)="goTo(page() + 1)"
+    >
+      Sljedeća
+    </button>
+  </nav>
+}
+
+@if (editing(); as u) {
+  <app-user-roles-drawer [user]="u" (changed)="updated($event)" (close)="editing.set(null)" />
+}

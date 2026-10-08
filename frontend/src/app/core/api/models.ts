@@ -313,3 +313,28 @@ export interface Referee {
   username: string;
   displayName: string | null;
 }
+
+export interface Page<T> {
+  content: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface AdminUser {
+  id: number;
+  username: string;
+  displayName: string | null;
+  email: string;
+  roles: string[];
+  createdAt: string;
+}
+
+export interface AdminStats {
+  users: number;
+  teams: number;
+  tournamentsByStatus: Record<TournamentStatus, number>;
+  liveMatches: number;
+  openListings: number;
+}

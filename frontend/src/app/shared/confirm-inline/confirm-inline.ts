@@ -1,4 +1,4 @@
-import { Component, input, output, signal } from '@angular/core';
+import { Component, input, model, output } from '@angular/core';
 
 @Component({
   selector: 'app-confirm-inline',
@@ -58,7 +58,7 @@ export class ConfirmInline {
   readonly tone = input<'ghost' | 'gold'>('ghost');
   readonly confirmed = output<void>();
 
-  protected readonly asking = signal(false);
+  readonly asking = model(false);
 
   protected confirm(): void {
     this.asking.set(false);

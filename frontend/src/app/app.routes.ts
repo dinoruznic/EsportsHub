@@ -60,6 +60,12 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/sudija/sudija-mec'),
       },
       {
+        path: 'admin',
+        title: 'Admin · EsportsHub',
+        canActivate: [roleGuard('ADMIN')],
+        loadComponent: () => import('./pages/admin/admin'),
+      },
+      {
         path: 'market',
         title: 'Market · EsportsHub',
         loadComponent: () => import('./pages/market/market'),
