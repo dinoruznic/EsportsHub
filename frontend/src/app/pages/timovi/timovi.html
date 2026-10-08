@@ -1,0 +1,80 @@
+<header class="head">
+  <div>
+    <p class="eyebrow">Ekipe</p>
+    <h1 class="display-title">Timovi</h1>
+    <p class="lead">Pronađi ekipu, pogledaj sastav ili osnuj svoj tim.</p>
+  </div>
+  <a class="btn btn-gold create" routerLink="/timovi/novi">Novi tim</a>
+</header>
+
+@if (teams.error()) {
+  <app-error-state [message]="loadError()" (retry)="teams.reload()" />
+} @else if (!teams.hasValue()) {
+  <app-skeleton class="grid" [count]="6" [height]="190" />
+} @else {
+  @if (myTeams().length > 0) {
+    <section class="section my-teams" aria-labelledby="my-teams-heading">
+      <h2 id="my-teams-heading" class="section-title">Moji timovi</h2>
+      <div class="grid">
+        @for (t of myTeams(); track t.id) {
+          <app-team-card [team]="t" [gameName]="gameNames()[t.gameCode] ?? null" />
+        }
+      </div>
+    </section>
+  }
+
+  <section class="section all-teams" aria-labelledby="all-teams-heading">
+    <h2 id="all-teams-heading" class="section-title">Svi timovi</h2>
+
+    <div class="filters" role="search">
+      <label class="filter">
+        <span class="filter-label">Igra</span>
+        <select
+          class="field-input game-filter"
+          [value]="game()"
+          (change)="setFilter('igra', $any($event.target).value)"
+        >
+          <option value="">Sve igre</option>
+          @if (games.hasValue()) {
+            @for (g of games.value(); track g.id) {
+              <option [value]="g.code" [selected]="g.code === game()">{{ g.name }}</option>
+            }
+          }
+        </select>
+      </label>
+      <label class="filter search">
+        <span class="filter-label">Pretraga</span>
+        <input
+          class="field-input search-input"
+          type="search"
+          placeholder="Naziv ili tag tima"
+          [value]="search()"
+          (input)="setFilter('q', $any($event.target).value)"
+        />
+      </label>
+    </div>
+
+    @if (allTeams().length === 0) {
+      <app-empty-state
+        title="Još nema timova."
+        text="Osnuj prvi tim i pozovi igrače preko transfer marketa."
+      >
+        <a class="btn btn-gold" routerLink="/timovi/novi">Novi tim</a>
+      </app-empty-state>
+    } @else if (visible().length === 0) {
+      <app-empty-state title="Nema timova za izabrane filtere." text="Promijeni igru ili pretragu.">
+        @if (filtered()) {
+          <button type="button" class="btn btn-ghost" (click)="clearFilters()">
+            Očisti filtere
+          </button>
+        }
+      </app-empty-state>
+    } @else {
+      <div class="grid">
+        @for (t of visible(); track t.id) {
+          <app-team-card [team]="t" [gameName]="gameNames()[t.gameCode] ?? null" />
+        }
+      </div>
+    }
+  </section>
+}
