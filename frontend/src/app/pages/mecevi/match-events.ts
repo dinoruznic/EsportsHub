@@ -4,10 +4,13 @@ import { formatClock, localTime, teamName } from './match-format';
 
 export type FeedSource = 'RIOT' | 'SUDIJA' | 'SERVER';
 
+export const DEMO_ACTOR = 'DEMO';
+
 export interface FeedEntry {
   key: string;
   type: string;
   source: FeedSource;
+  demo: boolean;
   time: string;
   text: string;
 }
@@ -78,6 +81,7 @@ export function fromRecord(record: MatchEventRecord, context: FeedContext): Feed
     key: `r${record.id}`,
     type: record.type,
     source: sourceFor(record.type),
+    demo: record.actor === DEMO_ACTOR || record.source === DEMO_ACTOR,
     time: timeOf(record.type, record.data, record.createdAt),
     text: describe(record.type, record.data, context),
   };
@@ -88,6 +92,7 @@ export function fromMessage(message: MatchTopicMessage, context: FeedContext): F
     key: `m${message.type}${message.at}`,
     type: message.type,
     source: sourceFor(message.type),
+    demo: message.actor === DEMO_ACTOR,
     time: timeOf(message.type, message.data, message.at),
     text: describe(message.type, message.data, {
       ...context,

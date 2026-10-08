@@ -86,6 +86,8 @@ const BACKEND_MESSAGES: Record<string, string> = {
   'ne mozes ukloniti svoju admin ulogu': 'Ne možeš ukloniti svoju admin ulogu.',
   'ova uloga se ne moze mijenjati': 'Ova uloga se ne može mijenjati.',
   'nepostojeca uloga': 'Nepoznata uloga.',
+  'nema turnira u toku za demo': 'Nema turnira u toku. Prvo resetuj demo podatke.',
+  'turnir nije u toku': 'Turnir nije u toku.',
   'organizator ne moze prijaviti svoj tim na svoj turnir':
     'Organizator ne može prijaviti svoj tim na svoj turnir.',
 };

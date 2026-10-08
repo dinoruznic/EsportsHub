@@ -2,6 +2,7 @@ import { BracketMatch, MatchEventRecord } from '../../core/api/models';
 import {
   FeedContext,
   describe as sentence,
+  fromMessage,
   historyFeed,
   prependEntry,
   sourceFor,
@@ -62,6 +63,19 @@ describe('match events', () => {
     expect(sourceFor('TOURNAMENT_COMPLETED')).toBe('SERVER');
   });
 
+  it('marks events played by the demo mode', () => {
+    const demo = { ...record(3, 'STARTED'), source: 'DEMO', actor: 'DEMO' };
+    const feed = historyFeed([record(1, 'REFEREE_ASSIGNED'), demo], CONTEXT);
+
+    expect(feed.map((entry) => entry.demo)).toEqual([true, false]);
+    expect(
+      fromMessage(
+        { type: 'FINISHED', actor: 'DEMO', match: MATCH, data: null, at: '2026-10-08T10:00:00Z' },
+        CONTEXT,
+      ).demo,
+    ).toBe(true);
+  });
+
   it('puts the newest history event on top', () => {
     const feed = historyFeed(
       [record(1, 'STARTED'), record(2, 'SCORE_UPDATED', { scoreA: 1, scoreB: 0 })],
@@ -76,6 +90,7 @@ describe('match events', () => {
       key,
       type: 'LIVE_SNAPSHOT',
       source: 'RIOT' as const,
+      demo: false,
       time: '01:00',
       text: `kills ${kills}`,
     });

@@ -1,11 +1,13 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, inject, output, signal } from '@angular/core';
+import { Component, DestroyRef, inject, output, signal } from '@angular/core';
+import { Observable } from 'rxjs';
 import { AdminApi } from '../../core/api/admin-api';
 import { toApiError } from '../../core/api/api-error';
-import { DemoResetSummary } from '../../core/api/models';
+import { DemoResetSummary, DemoStatus } from '../../core/api/models';
 import { ConfirmInline } from '../../shared/confirm-inline/confirm-inline';
 import { formatNumber } from '../../shared/format';
 import { RoleChip } from '../../shared/role-chip/role-chip';
+import { AdminDemoMode } from './admin-demo-mode';
 
 interface DemoAccount {
   username: string;
@@ -27,72 +29,92 @@ export const DEMO_ACCOUNTS: DemoAccount[] = [
   { username: 'kap_wolves', role: 'PLAYER', password: PASSWORD, note: 'Kapiten Balkan Wolves' },
 ];
 
+const POLL_EVERY_SECONDS = 2;
+
 const RESET_QUESTION = 'Ovo briše sve podatke osim admin naloga i puni bazu demo podacima.';
 
 @Component({
   selector: 'app-admin-demo',
-  imports: [ConfirmInline, RoleChip],
+  imports: [AdminDemoMode, ConfirmInline, RoleChip],
   template: `
-    <section class="panel demo" aria-labelledby="demo-title">
-      <div class="head">
-        <div>
-          <h2 class="section-title" id="demo-title">Demo</h2>
-          <p class="hint">Čisti podaci za prezentaciju jednim klikom.</p>
-        </div>
-        <app-confirm-inline
-          class="reset"
-          label="Resetuj demo podatke"
-          [question]="question"
-          confirmLabel="Da, resetuj"
-          [busy]="busy()"
-          (confirmed)="reset()"
-        />
-      </div>
+    @if (status(); as s) {
+      <app-admin-demo-mode
+        [status]="s"
+        [now]="now()"
+        [busy]="modeBusy()"
+        [error]="modeError()"
+        (start)="start()"
+        (stop)="stop()"
+      />
+    }
 
-      @if (busy()) {
-        <p class="progress" role="status">Punim bazu demo podacima…</p>
-      }
-      @if (summary(); as s) {
-        <div class="success" role="status">
-          <p class="success-title">Demo podaci su spremni</p>
-          <p class="success-text">
-            Korisnici <span class="num">{{ format(s.users) }}</span> · Timovi
-            <span class="num">{{ format(s.teams) }}</span> · Turniri
-            <span class="num">{{ format(s.tournaments) }}</span> · Oglasi
-            <span class="num">{{ format(s.listings) }}</span>
-          </p>
+    @if (!disabled()) {
+      <section class="panel demo" aria-labelledby="demo-title">
+        <div class="head">
+          <div>
+            <h2 class="section-title" id="demo-title">Demo</h2>
+            <p class="hint">Čisti podaci za prezentaciju jednim klikom.</p>
+          </div>
+          <app-confirm-inline
+            class="reset"
+            label="Resetuj demo podatke"
+            [question]="question"
+            confirmLabel="Da, resetuj"
+            [busy]="busy()"
+            (confirmed)="reset()"
+          />
         </div>
-      }
-      @if (error(); as message) {
-        <p class="error" role="alert">{{ message }}</p>
-      }
 
-      <h3 class="table-title">Demo nalozi</h3>
-      <div class="table-wrap">
-        <table class="accounts">
-          <thead>
-            <tr>
-              <th scope="col">Korisnik</th>
-              <th scope="col">Uloga</th>
-              <th scope="col">Lozinka</th>
-              <th scope="col">Za demo</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (a of accounts; track a.username) {
-              <tr [attr.data-account]="a.username">
-                <td class="num">{{ a.username }}</td>
-                <td><app-role-chip [role]="a.role" /></td>
-                <td class="num password">{{ a.password }}</td>
-                <td class="note">{{ a.note }}</td>
+        @if (busy()) {
+          <p class="progress" role="status">Punim bazu demo podacima…</p>
+        }
+        @if (summary(); as s) {
+          <div class="success" role="status">
+            <p class="success-title">Demo podaci su spremni</p>
+            <p class="success-text">
+              Korisnici <span class="num">{{ format(s.users) }}</span> · Timovi
+              <span class="num">{{ format(s.teams) }}</span> · Turniri
+              <span class="num">{{ format(s.tournaments) }}</span> · Oglasi
+              <span class="num">{{ format(s.listings) }}</span>
+            </p>
+          </div>
+        }
+        @if (error(); as message) {
+          <p class="error" role="alert">{{ message }}</p>
+        }
+
+        <h3 class="table-title">Demo nalozi</h3>
+        <div class="table-wrap">
+          <table class="accounts">
+            <thead>
+              <tr>
+                <th scope="col">Korisnik</th>
+                <th scope="col">Uloga</th>
+                <th scope="col">Lozinka</th>
+                <th scope="col">Za demo</th>
               </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-    </section>
+            </thead>
+            <tbody>
+              @for (a of accounts; track a.username) {
+                <tr [attr.data-account]="a.username">
+                  <td class="num">{{ a.username }}</td>
+                  <td><app-role-chip [role]="a.role" /></td>
+                  <td class="num password">{{ a.password }}</td>
+                  <td class="note">{{ a.note }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+    }
   `,
   styles: `
+    :host {
+      display: grid;
+      gap: 20px;
+    }
+
     .demo {
       display: grid;
       gap: 14px;
@@ -202,6 +224,32 @@ export class AdminDemo {
   protected readonly busy = signal(false);
   protected readonly summary = signal<DemoResetSummary | null>(null);
   protected readonly error = signal<string | null>(null);
+  protected readonly status = signal<DemoStatus | null>(null);
+  protected readonly disabled = signal(false);
+  protected readonly modeBusy = signal(false);
+  protected readonly modeError = signal<string | null>(null);
+  protected readonly now = signal(Date.now());
+
+  constructor() {
+    this.loadStatus();
+    let ticks = 0;
+    const timer = setInterval(() => {
+      this.now.set(Date.now());
+      ticks++;
+      if (this.status()?.running && ticks % POLL_EVERY_SECONDS === 0) {
+        this.loadStatus();
+      }
+    }, 1000);
+    inject(DestroyRef).onDestroy(() => clearInterval(timer));
+  }
+
+  protected start(): void {
+    this.changeMode(this.adminApi.startDemo());
+  }
+
+  protected stop(): void {
+    this.changeMode(this.adminApi.stopDemo());
+  }
 
   protected reset(): void {
     this.busy.set(true);
@@ -212,6 +260,7 @@ export class AdminDemo {
         this.busy.set(false);
         this.summary.set(summary);
         this.changed.emit();
+        this.loadStatus();
       },
       error: (error: unknown) => {
         this.busy.set(false);
@@ -220,6 +269,39 @@ export class AdminDemo {
             ? 'Demo režim je isključen na serveru.'
             : toApiError(error).message,
         );
+      },
+    });
+  }
+
+  private changeMode(request: Observable<DemoStatus>): void {
+    this.modeBusy.set(true);
+    this.modeError.set(null);
+    request.subscribe({
+      next: (status) => {
+        this.modeBusy.set(false);
+        this.status.set(status);
+        this.changed.emit();
+      },
+      error: (error: unknown) => {
+        this.modeBusy.set(false);
+        this.modeError.set(toApiError(error).message);
+      },
+    });
+  }
+
+  private loadStatus(): void {
+    this.adminApi.demoStatus().subscribe({
+      next: (status) => {
+        const previous = this.status();
+        this.status.set(status);
+        if (previous && previous.liveMatches !== status.liveMatches) {
+          this.changed.emit();
+        }
+      },
+      error: (error: unknown) => {
+        if (error instanceof HttpErrorResponse && error.status === 404) {
+          this.disabled.set(true);
+        }
       },
     });
   }

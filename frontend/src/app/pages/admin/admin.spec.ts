@@ -3,10 +3,11 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Router, provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
-import { AdminStats, AdminUser, Page } from '../../core/api/models';
+import { AdminStats, AdminUser, DemoStatus, Page } from '../../core/api/models';
 import { storeSession } from '../../testing/fake-session';
 import { GAMES, tournament } from '../../testing/tournament-data';
 import Admin from './admin';
+import { formatUptime } from './admin-demo-mode';
 
 async function settle(rounds = 3): Promise<void> {
   for (let i = 0; i < rounds; i++) {
@@ -56,14 +57,25 @@ const USERS = [
   user(3, 'sudo', ['PLAYER', 'REFEREE']),
 ];
 
+const IDLE: DemoStatus = {
+  running: false,
+  tournamentId: null,
+  liveMatches: 0,
+  snapshotsSent: 0,
+  startedAt: null,
+};
+
 describe('Admin', () => {
   let http: HttpTestingController;
+  let demoStatus: DemoStatus | null = IDLE;
   let harness: RouterTestingHarness;
   let element: HTMLElement;
 
   afterEach(() => {
     http.verify();
     localStorage.clear();
+    demoStatus = IDLE;
+    vi.useRealTimers();
   });
 
   async function render(url: string): Promise<void> {
@@ -82,6 +94,13 @@ describe('Admin', () => {
     await settle();
     http.expectOne('/api/admin/stats').flush(STATS);
     http.expectOne('/api/games').flush(GAMES);
+    http
+      .match('/api/admin/demo/status')
+      .forEach((request) =>
+        demoStatus
+          ? request.flush(demoStatus)
+          : request.flush(null, { status: 404, statusText: 'Not Found' }),
+      );
     element = harness.routeNativeElement as HTMLElement;
   }
 
@@ -322,7 +341,7 @@ describe('Admin', () => {
     await harness.fixture.whenStable();
     const demo = () => element.querySelector('app-admin-demo')!;
 
-    expect(text('.section-title', demo())).toBe('Demo');
+    expect(text('#demo-title', demo())).toBe('Demo');
     expect(demo().querySelectorAll('tbody tr')).toHaveLength(8);
     expect(text('[data-account="dino"] .password', demo())).toBe('lozinka123');
     expect(text('[data-account="admin"] .password', demo())).toBe('admin12345');
@@ -343,6 +362,7 @@ describe('Admin', () => {
       .flush({ users: 60, teams: 10, tournaments: 4, listings: 4 });
     await settle();
     http.expectOne('/api/admin/stats').flush({ ...STATS, users: 60 });
+    http.expectOne('/api/admin/demo/status').flush(IDLE);
     await harness.fixture.whenStable();
 
     expect(text('.success-title', demo())).toBe('Demo podaci su spremni');
@@ -365,5 +385,98 @@ describe('Admin', () => {
 
     expect(text('.error', demo)).toBe('Demo režim je isključen na serveru.');
     expect(demo.querySelector('.success')).toBeNull();
+  });
+
+  it('starts the demo mode, polls its status and stops it', async () => {
+    vi.useFakeTimers({ toFake: ['setInterval', 'clearInterval', 'Date'] });
+    vi.setSystemTime(new Date('2026-10-09T18:00:00Z'));
+    await render('/admin');
+    await harness.fixture.whenStable();
+    const mode = () => element.querySelector('app-admin-demo-mode')!;
+    const running = {
+      running: true,
+      tournamentId: 34,
+      liveMatches: 0,
+      snapshotsSent: 0,
+      startedAt: '2026-10-09T17:58:55Z',
+    };
+
+    expect(text('.section-title', mode())).toBe('Demo režim');
+    expect(text('.state', mode())).toBe('Zaustavljen');
+    expect(text('.uptime', mode())).toBe('--:--');
+    expect(text('.hint', mode())).toBe(
+      'Mečevi se igraju sami kroz RabbitMQ; otvori Uživo da gledaš.',
+    );
+    expect(mode().querySelector('.hint a')!.getAttribute('href')).toBe('/uzivo');
+
+    mode().querySelector<HTMLButtonElement>('.start')!.click();
+    const start = http.expectOne({ method: 'POST', url: '/api/admin/demo/start' });
+    expect(start.request.body).toEqual({});
+    start.flush(running);
+    await settle();
+    http.expectOne('/api/admin/stats').flush(STATS);
+    await harness.fixture.whenStable();
+
+    expect(text('.state', mode())).toBe('Pokrenut');
+    expect(mode().querySelector('.state .live-dot')).not.toBeNull();
+    expect(text('.uptime', mode())).toBe('01:05');
+
+    vi.advanceTimersByTime(2000);
+    await settle();
+    http
+      .expectOne('/api/admin/demo/status')
+      .flush({ ...running, liveMatches: 2, snapshotsSent: 1234 });
+    await settle();
+    http.expectOne('/api/admin/stats').flush({ ...STATS, liveMatches: 2 });
+    await harness.fixture.whenStable();
+
+    expect(text('.live', mode())).toBe('2');
+    expect(text('.sent', mode())).toBe('1.234');
+    expect(text('.uptime', mode())).toBe('01:07');
+    expect(text('[data-tile="live"] .tile-value')).toBe('2');
+
+    mode().querySelector<HTMLButtonElement>('.stop')!.click();
+    http
+      .expectOne({ method: 'POST', url: '/api/admin/demo/stop' })
+      .flush({ ...IDLE, tournamentId: 34, snapshotsSent: 1234 });
+    await settle();
+    http.expectOne('/api/admin/stats').flush(STATS);
+    await harness.fixture.whenStable();
+
+    expect(text('.state', mode())).toBe('Zaustavljen');
+    expect(mode().querySelector('.start')).not.toBeNull();
+    vi.advanceTimersByTime(4000);
+    http.expectNone('/api/admin/demo/status');
+  });
+
+  it('shows why the demo mode cannot start', async () => {
+    await render('/admin');
+    await harness.fixture.whenStable();
+    const mode = element.querySelector('app-admin-demo-mode')!;
+
+    mode.querySelector<HTMLButtonElement>('.start')!.click();
+    http
+      .expectOne({ method: 'POST', url: '/api/admin/demo/start' })
+      .flush({ message: 'Nema turnira u toku za demo' }, { status: 409, statusText: 'Conflict' });
+    await harness.fixture.whenStable();
+
+    expect(text('.error', mode)).toBe('Nema turnira u toku. Prvo resetuj demo podatke.');
+    expect(text('.state', mode)).toBe('Zaustavljen');
+  });
+
+  it('hides the demo cards when the server has the demo disabled', async () => {
+    demoStatus = null;
+    await render('/admin');
+    await harness.fixture.whenStable();
+
+    expect(element.querySelector('app-admin-demo-mode')).toBeNull();
+    expect(element.querySelector('app-admin-demo .demo')).toBeNull();
+    expect(element.querySelector('app-admin-overview')).not.toBeNull();
+  });
+
+  it('formats the demo uptime with hours when needed', () => {
+    expect(formatUptime(59)).toBe('00:59');
+    expect(formatUptime(3725)).toBe('1:02:05');
+    expect(formatUptime(-3)).toBe('00:00');
   });
 });

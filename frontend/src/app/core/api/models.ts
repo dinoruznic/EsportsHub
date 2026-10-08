@@ -345,3 +345,11 @@ export interface DemoResetSummary {
   tournaments: number;
   listings: number;
 }
+
+export interface DemoStatus {
+  running: boolean;
+  tournamentId: number | null;
+  liveMatches: number;
+  snapshotsSent: number;
+  startedAt: string | null;
+}

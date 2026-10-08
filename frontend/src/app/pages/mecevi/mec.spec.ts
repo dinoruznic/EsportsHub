@@ -140,6 +140,24 @@ describe('Mec', () => {
     expect(feed()[0]).toBe('Rezultat 1 : 1');
   });
 
+  it('tags events played by the demo mode', async () => {
+    await render();
+
+    stomp.last.emit('/topic/matches/11', {
+      type: 'SCORE_UPDATED',
+      actor: 'DEMO',
+      match: { ...LIVE, scoreA: 2, scoreB: 0 },
+      data: { scoreA: 2, scoreB: 0 },
+      at: '2026-10-08T10:12:00Z',
+    });
+    await harness.fixture.whenStable();
+
+    const entries = element.querySelectorAll('app-match-feed .entry');
+    expect(entries[0].querySelector('.demo-tag')!.textContent).toBe('DEMO');
+    expect(entries[1].querySelector('.demo-tag')).toBeNull();
+    expect(feed()[0]).toBe('Rezultat 2 : 0');
+  });
+
   it('applies LIVE_SNAPSHOT, shows the clock and a dash for unknown gold, and collapses snapshots', async () => {
     await render();
     const snapshot = (kills: number) => ({

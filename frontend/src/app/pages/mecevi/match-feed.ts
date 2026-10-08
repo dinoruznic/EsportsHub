@@ -14,6 +14,9 @@ import { FeedEntry } from './match-events';
             <span class="num time">{{ entry.time }}</span>
             <span class="source" [attr.data-source]="entry.source">{{ entry.source }}</span>
             <span class="text">{{ entry.text }}</span>
+            @if (entry.demo) {
+              <span class="demo-tag">DEMO</span>
+            }
           </li>
         }
       </ol>
@@ -51,7 +54,7 @@ import { FeedEntry } from './match-events';
 
     .entry {
       display: grid;
-      grid-template-columns: 64px 64px minmax(0, 1fr);
+      grid-template-columns: 64px 64px minmax(0, 1fr) auto;
       align-items: center;
       gap: 10px;
       padding: 9px 8px;
@@ -87,6 +90,12 @@ import { FeedEntry } from './match-events';
 
     .text {
       overflow-wrap: anywhere;
+    }
+
+    .demo-tag {
+      color: var(--faint);
+      font: 700 9.5px/1 var(--mono);
+      letter-spacing: 0.08em;
     }
 
     @keyframes enter {
