@@ -162,7 +162,7 @@ describe('Mec', () => {
     stomp.last.emit('/topic/matches/11', snapshot(6));
     await harness.fixture.whenStable();
 
-    expect(text('.clock')).toBe('12:34');
+    expect(text('.clock-time')).toBe('12:34');
     expect(text('[data-stat="kills"] .value.blue')).toBe('6');
     expect(text('[data-stat="gold"] .value.blue')).toBe('—');
     expect(text('[data-stat="gold"] .value.red')).toBe('—');

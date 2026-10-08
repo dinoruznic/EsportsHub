@@ -29,7 +29,8 @@ import { ErrorState } from '../../shared/error-state/error-state';
 import { GameBadge } from '../../shared/game-badge/game-badge';
 import { Skeleton } from '../../shared/skeleton/skeleton';
 import { TeamHex } from '../../shared/team-hex/team-hex';
-import { liveClock } from '../mecevi/match-format';
+import { LiveClock } from '../mecevi/live-clock';
+import { ClockView, clockView } from '../mecevi/match-format';
 import { roundLabel } from '../turniri/bracket/bracket-layout';
 
 interface Clock {
@@ -41,7 +42,16 @@ const REFETCH_ON = new Set(['STARTED', 'FINISHED', 'WINNER_ADVANCED', 'TOURNAMEN
 
 @Component({
   selector: 'app-uzivo',
-  imports: [RouterLink, ConnectionIndicator, EmptyState, ErrorState, GameBadge, Skeleton, TeamHex],
+  imports: [
+    RouterLink,
+    ConnectionIndicator,
+    EmptyState,
+    ErrorState,
+    GameBadge,
+    LiveClock,
+    Skeleton,
+    TeamHex,
+  ],
   templateUrl: './uzivo.html',
   styleUrl: './uzivo.scss',
 })
@@ -104,12 +114,9 @@ export default class Uzivo {
     return match.roundName ? roundLabel(match.roundName, match.roundNumber ?? 0) : '';
   }
 
-  protected clock(match: LiveMatch): string | null {
+  protected clock(match: LiveMatch): ClockView {
     const clock = this.clocks()[match.matchId];
-    if (!clock) {
-      return null;
-    }
-    return liveClock(clock.seconds, clock.at, this.now());
+    return clockView(clock?.seconds ?? null, clock?.at ?? null, this.now());
   }
 
   protected load(): void {

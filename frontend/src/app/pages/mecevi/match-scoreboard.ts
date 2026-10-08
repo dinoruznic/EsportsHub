@@ -1,10 +1,12 @@
 import { Component, computed, input } from '@angular/core';
 import { BracketMatch } from '../../core/api/models';
 import { TeamHex } from '../../shared/team-hex/team-hex';
+import { LiveClock } from './live-clock';
+import { ClockView } from './match-format';
 
 @Component({
   selector: 'app-match-scoreboard',
-  imports: [TeamHex],
+  imports: [TeamHex, LiveClock],
   template: `
     @let m = match();
     <div class="side blue" [class.won]="finished() && m.teamA && m.winnerTeamId === m.teamA.id">
@@ -26,7 +28,7 @@ import { TeamHex } from '../../shared/team-hex/team-hex';
         <span [class.lead]="(m.scoreB ?? 0) > (m.scoreA ?? 0)">{{ m.scoreB ?? 0 }}</span>
       </div>
       @if (live()) {
-        <div class="clock num">{{ clock() ?? '--:--' }}</div>
+        <app-live-clock [view]="clock()" [large]="!compact()" />
       } @else {
         <div class="state">{{ statusLabel() }}</div>
       }
@@ -55,7 +57,7 @@ import { TeamHex } from '../../shared/team-hex/team-hex';
 })
 export class MatchScoreboard {
   readonly match = input.required<BracketMatch>();
-  readonly clock = input<string | null>(null);
+  readonly clock = input.required<ClockView>();
   readonly statusLabel = input('');
   readonly compact = input(false);
 

@@ -58,9 +58,8 @@
                 <span class="team-name">{{ m.teamB?.name ?? 'Čeka se' }}</span>
               </div>
             </div>
-            @if (clock(m); as time) {
-              <p class="num clock">{{ time }}</p>
-            }
+            @let c = clock(m);
+            <app-live-clock class="clock" [view]="c" />
           </a>
         }
       </div>
@@ -76,7 +75,7 @@
             <a
               class="next-row"
               [routerLink]="['/mecevi', m.matchId]"
-                [attr.data-match-id]="m.matchId"
+              [attr.data-match-id]="m.matchId"
             >
               <app-game-badge [code]="m.gameCode" />
               <span class="teams">

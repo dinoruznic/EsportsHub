@@ -52,3 +52,45 @@ export function liveClock(seconds: number, at: number, now: number): string {
   const elapsed = Math.min(Math.max(0, now - at), MAX_CLOCK_DRIFT_MS);
   return formatClock(seconds + Math.floor(elapsed / 1000));
 }
+
+export const STALE_SNAPSHOT_MS = 30000;
+
+export type ClockState = 'live' | 'stale' | 'waiting';
+
+export interface ClockView {
+  state: ClockState;
+  time: string | null;
+  note: string | null;
+}
+
+export function staleAge(ms: number): string {
+  const seconds = Math.floor(Math.max(0, ms) / STALE_SNAPSHOT_MS) * (STALE_SNAPSHOT_MS / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+  if (seconds < 60) {
+    return `${seconds} s`;
+  }
+  if (minutes < 60) {
+    return `${minutes} min`;
+  }
+  if (hours < 24) {
+    return `${hours} h`;
+  }
+  return days === 1 ? '1 dan' : `${days} dana`;
+}
+
+export function clockView(seconds: number | null, at: number | null, now: number): ClockView {
+  if (seconds === null || at === null) {
+    return { state: 'waiting', time: null, note: 'Čeka se prvi podatak iz igre' };
+  }
+  const age = Math.max(0, now - at);
+  if (age >= STALE_SNAPSHOT_MS) {
+    return {
+      state: 'stale',
+      time: formatClock(seconds),
+      note: `zadnji podatak prije ${staleAge(age)}`,
+    };
+  }
+  return { state: 'live', time: liveClock(seconds, at, now), note: null };
+}

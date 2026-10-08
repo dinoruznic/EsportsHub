@@ -10,7 +10,7 @@ import { MatchTopicMessage, SnapshotStats, matchTopic } from '../../core/realtim
 import { RealtimeService } from '../../core/realtime/realtime.service';
 import { buildBracket, roundLabel } from '../turniri/bracket/bracket-layout';
 import { FeedContext, FeedEntry, fromMessage, historyFeed, prependEntry } from './match-events';
-import { formatClock, liveClock } from './match-format';
+import { clockView } from './match-format';
 
 const STATUS_LABELS: Record<string, string> = {
   SCHEDULED: 'Zakazan',
@@ -89,14 +89,9 @@ export class MatchLiveStore {
   readonly statusLabel = computed(() => STATUS_LABELS[this.match()?.status ?? ''] ?? '');
   readonly live = computed(() => this.match()?.status === 'LIVE');
   readonly finished = computed(() => this.match()?.status === 'FINISHED');
-  readonly clock = computed(() => {
-    const base = this.snapshot()?.gameTimeSeconds ?? null;
-    const at = this.snapshotAt();
-    if (base === null || at === null) {
-      return null;
-    }
-    return this.live() ? liveClock(base, at, this.now()) : formatClock(base);
-  });
+  readonly clock = computed(() =>
+    clockView(this.snapshot()?.gameTimeSeconds ?? null, this.snapshotAt(), this.now()),
+  );
 
   connect(id: Signal<number>): void {
     toObservable(id, { injector: this.injector })
