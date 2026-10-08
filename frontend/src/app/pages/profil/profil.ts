@@ -7,11 +7,12 @@ import { Me } from '../../core/api/models';
 import { PlayersApi } from '../../core/api/players-api';
 import { ErrorState } from '../../shared/error-state/error-state';
 import { Skeleton } from '../../shared/skeleton/skeleton';
+import { GameAccounts } from './game-accounts';
 import { ProfileHeader } from './profile-header';
 
 @Component({
   selector: 'app-profil',
-  imports: [ErrorState, Skeleton, ProfileHeader],
+  imports: [ErrorState, GameAccounts, Skeleton, ProfileHeader],
   templateUrl: './profil.html',
   styleUrl: './profil.scss',
 })

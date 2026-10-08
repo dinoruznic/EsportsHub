@@ -1,0 +1,102 @@
+@let a = account();
+<header class="top">
+  <app-game-badge [code]="a.gameCode" [name]="a.gameName" />
+  <span class="spacer"></span>
+  @if (a.region) {
+    <span class="num region">{{ a.region }}</span>
+  }
+  @if (!readonly()) {
+    <button
+      type="button"
+      class="menu-button"
+      aria-label="Opcije naloga"
+      aria-haspopup="true"
+      [attr.aria-expanded]="menuOpen()"
+      (click)="menuOpen.set(!menuOpen())"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <circle cx="5" cy="12" r="1.6" />
+        <circle cx="12" cy="12" r="1.6" />
+        <circle cx="19" cy="12" r="1.6" />
+      </svg>
+    </button>
+  }
+</header>
+
+@if (menuOpen() && !readonly()) {
+  <div class="menu" role="group" aria-label="Opcije naloga">
+    <button type="button" class="btn btn-ghost edit" (click)="onEdit()">Uredi</button>
+    <app-confirm-inline
+      class="delete"
+      label="Obriši"
+      question="Obrisati nalog?"
+      confirmLabel="Da, obriši"
+      [busy]="deleting()"
+      (confirmed)="remove.emit()"
+    />
+  </div>
+}
+@if (deleteError(); as message) {
+  <p class="error" role="alert">{{ message }}</p>
+}
+
+<p class="ign">
+  <span class="ign-name">{{ ign().name }}</span>
+  @if (ign().tag; as tag) {
+    <span class="ign-tag">{{ tag }}</span>
+  }
+</p>
+
+<div class="skill">
+  @switch (kind()) {
+    @case ('TIER') {
+      <app-rank-emblem [rank]="a.rank" [size]="44" />
+      <span class="rank-name">{{ rank() || 'Bez ranga' }}</span>
+    }
+    @case ('NUMERIC') {
+      <span class="num rating">{{ rating() ?? '—' }}</span>
+      <span class="rating-label">{{ ratingName() }}</span>
+    }
+  }
+</div>
+
+@if (a.position) {
+  <p class="position">
+    pozicija <span class="num">{{ a.position }}</span>
+  </p>
+}
+
+<footer class="transfer">
+  @if (readonly()) {
+    @if (available()) {
+      <span class="badge">Dostupan za transfer</span>
+    }
+  } @else {
+    <div class="toggle-row">
+      <span class="toggle-label" [id]="'transfer-label-' + a.id">Dostupan za transfer</span>
+      <button
+        type="button"
+        class="switch"
+        role="switch"
+        [attr.aria-checked]="available()"
+        [attr.aria-labelledby]="'transfer-label-' + a.id"
+        [attr.aria-busy]="transfer()?.busy ?? false"
+        (click)="onToggle()"
+      >
+        <span class="knob"></span>
+      </button>
+    </div>
+    @if (available()) {
+      <p class="listed">
+        <span class="on">Na transfer listi</span>
+        @if (offers(); as label) {
+          <span class="offers">· {{ label }}</span>
+        }
+        <a class="market-link" routerLink="/market">Market →</a>
+      </p>
+    }
+    @if (transfer()?.error; as message) {
+      <p class="error" role="alert">{{ message }}</p>
+    }
+  }
+</footer>

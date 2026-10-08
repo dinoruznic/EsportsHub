@@ -1,0 +1,53 @@
+:host {
+  display: grid;
+  gap: 14px;
+  padding: 20px 22px;
+  border-color: rgb(226 177 84 / 0.35);
+}
+
+.title {
+  font: 700 20px/1 var(--display);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+form {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  align-items: start;
+  gap: 14px 16px;
+}
+
+.banner,
+.actions {
+  grid-column: 1 / -1;
+}
+
+.banner {
+  padding: 10px 12px;
+  border: 1px solid rgb(239 91 91 / 0.4);
+  border-radius: 8px;
+  background: rgb(239 91 91 / 0.12);
+  color: #ffb4b4;
+  font-size: 13px;
+}
+
+select.field-input {
+  cursor: pointer;
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.submit:disabled {
+  opacity: 0.7;
+  cursor: progress;
+}

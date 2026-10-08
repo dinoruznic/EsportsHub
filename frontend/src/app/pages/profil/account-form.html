@@ -1,0 +1,124 @@
+<h2 class="title">{{ editing() ? 'Uredi nalog' : 'Novi nalog' }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()" novalidate>
+  @if (serverError(); as message) {
+    <p class="banner" role="alert">{{ message }}</p>
+  }
+
+  <div class="field">
+    <label class="field-label" for="account-game">
+      Igra
+      @if (editing()) {
+        <span class="field-hint">igra se ne mijenja</span>
+      }
+    </label>
+    <select
+      id="account-game"
+      class="field-input"
+      formControlName="gameId"
+      [attr.aria-invalid]="error('gameId') ? true : null"
+      [attr.aria-describedby]="error('gameId') ? 'account-game-error' : null"
+    >
+      <option value="" disabled>Izaberi igru</option>
+      @for (g of selectableGames(); track g.id) {
+        <option [value]="g.id">{{ g.name }}</option>
+      }
+    </select>
+    @if (error('gameId'); as message) {
+      <p class="field-error" id="account-game-error">{{ message }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="account-ign">
+      Ime u igri
+      <span class="field-hint">npr. yueen8#EUW</span>
+    </label>
+    <input
+      id="account-ign"
+      class="field-input"
+      type="text"
+      formControlName="inGameName"
+      autocomplete="off"
+      spellcheck="false"
+      [attr.aria-invalid]="error('inGameName') ? true : null"
+      [attr.aria-describedby]="error('inGameName') ? 'account-ign-error' : null"
+    />
+    @if (error('inGameName'); as message) {
+      <p class="field-error" id="account-ign-error">{{ message }}</p>
+    }
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="account-region">
+      Regija
+      <span class="field-hint">neobavezno</span>
+    </label>
+    <select id="account-region" class="field-input" formControlName="regionId">
+      <option value="">—</option>
+      @for (option of options().regions; track option.id) {
+        <option [value]="option.id">{{ option.label }}</option>
+      }
+    </select>
+  </div>
+
+  <div class="field">
+    <label class="field-label" for="account-position">
+      Pozicija
+      <span class="field-hint">neobavezno</span>
+    </label>
+    <select id="account-position" class="field-input" formControlName="positionId">
+      <option value="">—</option>
+      @for (option of options().positions; track option.id) {
+        <option [value]="option.id">{{ option.label }}</option>
+      }
+    </select>
+  </div>
+
+  @switch (rankType()) {
+    @case ('TIER') {
+      <div class="field">
+        <label class="field-label" for="account-rank">
+          Rang
+          <span class="field-hint">neobavezno</span>
+        </label>
+        <select id="account-rank" class="field-input" formControlName="rankId">
+          <option value="">Bez ranga</option>
+          @for (option of options().ranks; track option.id) {
+            <option [value]="option.id">{{ rankName(option.label) }}</option>
+          }
+        </select>
+      </div>
+    }
+    @case ('NUMERIC') {
+      <div class="field">
+        <label class="field-label" for="account-rating">
+          Rating
+          <span class="field-hint">neobavezno</span>
+        </label>
+        <input
+          id="account-rating"
+          class="field-input"
+          type="text"
+          inputmode="numeric"
+          formControlName="rating"
+          autocomplete="off"
+          [attr.aria-invalid]="error('rating') ? true : null"
+          [attr.aria-describedby]="error('rating') ? 'account-rating-error' : null"
+        />
+        @if (error('rating'); as message) {
+          <p class="field-error" id="account-rating-error">{{ message }}</p>
+        }
+      </div>
+    }
+  }
+
+  <div class="actions">
+    <button type="button" class="btn btn-ghost" [disabled]="submitting()" (click)="cancel()">
+      Odustani
+    </button>
+    <button type="submit" class="btn btn-gold submit" [disabled]="submitting()">
+      {{ submitting() ? 'Čuvam…' : editing() ? 'Sačuvaj izmjene' : 'Dodaj nalog' }}
+    </button>
+  </div>
+</form>

@@ -1,0 +1,63 @@
+<div class="head">
+  <h2 class="eyebrow">Nalozi po igri</h2>
+  @if (accounts() && accounts()!.length > 0) {
+    <span class="num count">{{ accounts()!.length }} / {{ games().length }}</span>
+  }
+</div>
+
+@if (mode(); as m) {
+  <app-account-form
+    [games]="games()"
+    [usedGameCodes]="usedGameCodes()"
+    [account]="editing()"
+    (saved)="onSaved($event)"
+    (cancelled)="closeForm()"
+  />
+}
+
+@if (loadError(); as message) {
+  <app-error-state [message]="message" (retry)="load()" />
+} @else if (!accounts()) {
+  <app-skeleton class="grid" [count]="3" [height]="230" />
+} @else if (accounts()!.length === 0) {
+  @if (!mode()) {
+    <app-empty-state
+      title="Dodaj svoj prvi nalog"
+      text="Jedan profil može imati po jedan nalog za svaku igru, svaki sa svojim imenom u igri, regijom i rangom."
+    >
+      <button type="button" class="btn btn-gold add-first" (click)="openAdd()">
+        + Dodaj nalog
+      </button>
+    </app-empty-state>
+  }
+} @else {
+  <div class="grid">
+    @for (account of accounts(); track account.id) {
+      <app-account-card
+        [account]="account"
+        [rankType]="rankTypeOf(account)"
+        [transfer]="transfer()[account.id] ?? null"
+        [deleting]="deleting() === account.id"
+        [deleteError]="deleteErrors()[account.id] || null"
+        (edit)="openEdit(account)"
+        (remove)="remove(account)"
+        (toggle)="toggle(account, $event)"
+      />
+    }
+    <button
+      type="button"
+      class="add-card"
+      [attr.aria-disabled]="allGamesUsed()"
+      [class.disabled]="allGamesUsed()"
+      (click)="openAdd()"
+    >
+      <span class="plus" aria-hidden="true">+</span>
+      <span class="add-label">Dodaj nalog</span>
+      @if (allGamesUsed()) {
+        <span class="add-hint">Već imaš nalog za svaku igru.</span>
+      } @else {
+        <span class="add-hint">Po jedan nalog za svaku igru.</span>
+      }
+    </button>
+  </div>
+}
