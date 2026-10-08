@@ -50,7 +50,7 @@ public class MarketService {
         account.setMarketStatus(MarketStatus.AVAILABLE);
         gameAccountRepository.save(account);
 
-        return ListingResponse.from(transferListingRepository.save(listing));
+        return ListingResponse.from(transferListingRepository.save(listing), 0);
     }
 
     @Transactional(readOnly = true)
@@ -60,7 +60,7 @@ public class MarketService {
                 : transferListingRepository.findByStatus(ListingStatus.OPEN);
 
         return listings.stream()
-                .map(ListingResponse::from)
+                .map(listing -> ListingResponse.from(listing, activeOffers(listing)))
                 .toList();
     }
 
@@ -82,7 +82,7 @@ public class MarketService {
         account.setMarketStatus(MarketStatus.INACTIVE);
         gameAccountRepository.save(account);
 
-        return ListingResponse.from(transferListingRepository.save(listing));
+        return ListingResponse.from(transferListingRepository.save(listing), activeOffers(listing));
     }
 
     public OfferResponse makeOffer(String username, Long listingId, MakeOfferRequest request) {
@@ -214,10 +214,21 @@ public class MarketService {
     }
 
     @Transactional(readOnly = true)
+    public List<MyOfferResponse> listMyOffers(String username) {
+        return transferOfferRepository.findByFromTeam_Captain_UsernameOrderByCreatedAtDescIdDesc(username).stream()
+                .map(MyOfferResponse::from)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<ContractResponse> listTeamContracts(Long teamId) {
         return contractRepository.findByTeam_Id(teamId).stream()
                 .map(ContractResponse::from)
                 .toList();
+    }
+
+    private long activeOffers(TransferListing listing) {
+        return transferOfferRepository.countByListing_IdAndStatus(listing.getId(), OfferStatus.PENDING);
     }
 
     private OfferResponse closeOffer(TransferOffer offer, OfferStatus status) {

@@ -15,9 +15,10 @@ public record ListingResponse(
         Integer rating,
         Integer askingPrice,
         String status,
-        Instant createdAt
+        Instant createdAt,
+        long offerCount
 ) {
-    public static ListingResponse from(TransferListing listing) {
+    public static ListingResponse from(TransferListing listing, long offerCount) {
         GameAccount account = listing.getGameAccount();
         return new ListingResponse(
                 listing.getId(),
@@ -30,6 +31,7 @@ public record ListingResponse(
                 account.getRating(),
                 listing.getAskingPrice(),
                 listing.getStatus().name(),
-                listing.getCreatedAt());
+                listing.getCreatedAt(),
+                offerCount);
     }
 }
