@@ -48,6 +48,8 @@ class RefereeAssignmentIntegrationTest extends AbstractIntegrationTest {
         JsonNode other = semifinals.get(1);
         assertThat(withPlayingReferee.get("teamA").get("name").asString()).isEqualTo(teamNames.get(0));
         assertThat(withPlayingReferee.get("refereeUsername").asString()).isEqualTo(freeReferee);
+        assertThat(withPlayingReferee.get("refereeDisplayName").asString()).isEqualTo(freeReferee);
+        assertThat(withPlayingReferee.get("refereeAutomatic").asBoolean()).isTrue();
         assertThat(other.get("refereeUsername").asString()).isEqualTo(playingReferee);
         assertThat(bracket.get("rounds").get(1).get("matches").get(0).get("refereeUsername").isNull()).isTrue();
 
@@ -68,8 +70,10 @@ class RefereeAssignmentIntegrationTest extends AbstractIntegrationTest {
                 .isEqualTo(freeReferee);
 
         long finalId = bracket.get("rounds").get(1).get("matches").get(0).get("id").asLong();
-        assertThat(api.put("/api/matches/" + finalId + "/referee", admin, Map.of("username", freeReferee))
-                .expect(200).json().get("refereeUsername").asString()).isEqualTo(freeReferee);
+        JsonNode manual = api.put("/api/matches/" + finalId + "/referee", admin, Map.of("username", freeReferee))
+                .expect(200).json();
+        assertThat(manual.get("refereeUsername").asString()).isEqualTo(freeReferee);
+        assertThat(manual.get("refereeAutomatic").asBoolean()).isFalse();
     }
 
     @Test

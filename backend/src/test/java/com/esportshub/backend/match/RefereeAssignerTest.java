@@ -73,6 +73,7 @@ class RefereeAssignerTest {
 
         assertThat(refereeAssigner.assignIfMissing(match)).contains(free);
         assertThat(match.getReferee()).isEqualTo(free);
+        assertThat(match.isRefereeAuto()).isTrue();
         verify(matchRepository).save(match);
     }
 

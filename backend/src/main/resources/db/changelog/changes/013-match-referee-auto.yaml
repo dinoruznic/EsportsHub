@@ -1,0 +1,10 @@
+databaseChangeLog:
+
+  - changeSet:
+      id: 033-match-referee-auto
+      author: dino
+      changes:
+        - addColumn:
+            tableName: matches
+            columns:
+              - column: { name: referee_auto, type: BOOLEAN, defaultValueBoolean: false, constraints: { nullable: false } }

@@ -231,9 +231,13 @@ class MatchServiceTest {
         match.setReferee(null);
         when(userRepository.findByUsername("ref")).thenReturn(Optional.of(referee));
 
-        matchService.assignReferee(ADMIN, match.getId(), new AssignRefereeRequest(" ref "));
+        match.setRefereeAuto(true);
+
+        MatchView view = matchService.assignReferee(ADMIN, match.getId(), new AssignRefereeRequest(" ref "));
 
         assertThat(match.getReferee()).isEqualTo(referee);
+        assertThat(match.isRefereeAuto()).isFalse();
+        assertThat(view.refereeAutomatic()).isFalse();
     }
 
     @Test

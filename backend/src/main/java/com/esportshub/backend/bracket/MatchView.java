@@ -13,7 +13,9 @@ public record MatchView(
         String tournamentName,
         String gameCode,
         String roundName,
-        String refereeUsername
+        String refereeUsername,
+        String refereeDisplayName,
+        boolean refereeAutomatic
 ) {
     public static MatchView from(Match match) {
         return new MatchView(
@@ -29,6 +31,8 @@ public record MatchView(
                 match.getTournament().getName(),
                 match.getTournament().getGame().getCode(),
                 match.getRound() == null ? null : match.getRound().getName(),
-                match.getReferee() == null ? null : match.getReferee().getUsername());
+                match.getReferee() == null ? null : match.getReferee().getUsername(),
+                match.getReferee() == null ? null : match.getReferee().getDisplayName(),
+                match.getReferee() != null && match.isRefereeAuto());
     }
 }

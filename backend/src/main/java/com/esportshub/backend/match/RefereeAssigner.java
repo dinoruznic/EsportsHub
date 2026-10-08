@@ -57,6 +57,7 @@ public class RefereeAssigner {
 
         chosen.ifPresent(referee -> {
             match.setReferee(referee);
+            match.setRefereeAuto(true);
             matchRepository.save(match);
 
             Map<String, Object> data = new LinkedHashMap<>();

@@ -70,6 +70,9 @@ public class Match {
     @Column(name = "ended_at")
     private Instant endedAt;
 
+    @Column(name = "referee_auto", nullable = false)
+    private boolean refereeAuto;
+
     @PrePersist
     void onCreate() {
         if (status == null) {

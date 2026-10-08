@@ -55,6 +55,7 @@ public class MatchService {
         });
 
         match.setReferee(referee);
+        match.setRefereeAuto(false);
         matchRepository.save(match);
 
         publish(match, actor, MatchEvent.REFEREE_ASSIGNED, data("referee", referee.getUsername()));
