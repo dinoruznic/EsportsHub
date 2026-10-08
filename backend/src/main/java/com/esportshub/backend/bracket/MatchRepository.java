@@ -12,6 +12,8 @@ public interface MatchRepository extends JpaRepository<Match, Long> {
     List<Match> findByNextMatchIdOrderByIdAsc(Long nextMatchId);
     Optional<Match> findBySpectatorKey(String spectatorKey);
     List<Match> findByStatusOrderByStartedAtAscIdAsc(MatchStatus status);
+    List<Match> findByReferee_UsernameOrderByIdDesc(String username);
+    List<Match> findByStatusAndTeamAIsNotNullAndTeamBIsNotNullOrderByIdAsc(MatchStatus status);
     List<Match> findTop10ByStatusAndTeamAIsNotNullAndTeamBIsNotNullAndTournament_StatusOrderByIdAsc(
             MatchStatus status, TournamentStatus tournamentStatus);
 }

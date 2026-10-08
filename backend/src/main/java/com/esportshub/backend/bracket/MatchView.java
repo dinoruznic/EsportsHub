@@ -12,7 +12,8 @@ public record MatchView(
         Long tournamentId,
         String tournamentName,
         String gameCode,
-        String roundName
+        String roundName,
+        String refereeUsername
 ) {
     public static MatchView from(Match match) {
         return new MatchView(
@@ -27,6 +28,7 @@ public record MatchView(
                 match.getTournament().getId(),
                 match.getTournament().getName(),
                 match.getTournament().getGame().getCode(),
-                match.getRound() == null ? null : match.getRound().getName());
+                match.getRound() == null ? null : match.getRound().getName(),
+                match.getReferee() == null ? null : match.getReferee().getUsername());
     }
 }
