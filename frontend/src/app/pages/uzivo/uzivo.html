@@ -1,0 +1,96 @@
+<header class="head">
+  <div>
+    <p class="eyebrow">Sada se igra</p>
+    <h1 class="display-title">Uživo</h1>
+    <p class="lead">Mečevi u toku i oni koji slijede, rezultati se osvježavaju sami.</p>
+  </div>
+  <app-connection-indicator [state]="realtime.state()" />
+</header>
+
+@if (loadError(); as message) {
+  <app-error-state [message]="message" (retry)="load()" />
+} @else if (!matches()) {
+  <app-skeleton class="live-grid" [count]="3" [height]="200" />
+} @else if (live().length === 0 && upcoming().length === 0) {
+  <app-empty-state
+    title="Trenutno se ništa ne igra."
+    text="Pogledaj turnire i prati bracket dok čekaš sljedeći meč."
+  >
+    <a class="btn btn-gold" routerLink="/turniri">Turniri</a>
+  </app-empty-state>
+} @else {
+  <section class="section" aria-labelledby="live-heading">
+    <h2 id="live-heading" class="section-title">
+      <span class="dot" aria-hidden="true"></span>
+      Uživo sada
+    </h2>
+    @if (live().length === 0) {
+      <p class="none">Trenutno nema mečeva uživo.</p>
+    } @else {
+      <div class="live-grid">
+        @for (m of live(); track m.matchId) {
+          <a
+            class="live-card"
+            [routerLink]="['/mecevi', m.matchId]"
+            [queryParams]="{ turnir: m.tournamentId }"
+            [attr.data-match-id]="m.matchId"
+          >
+            <div class="card-top">
+              <app-game-badge [code]="m.gameCode" [name]="gameNames()[m.gameCode] ?? null" />
+              <span class="live-pill"><span class="pill-dot" aria-hidden="true"></span>Uživo</span>
+            </div>
+            <p class="context">{{ m.tournamentName }} · {{ round(m) }}</p>
+            <div class="score-row">
+              <div class="team">
+                <app-team-hex
+                  [teamId]="m.teamA?.id ?? null"
+                  [label]="m.teamA?.tag ?? ''"
+                  [size]="40"
+                />
+                <span class="team-name">{{ m.teamA?.name ?? 'Čeka se' }}</span>
+              </div>
+              <div class="num series">{{ m.scoreA ?? 0 }} : {{ m.scoreB ?? 0 }}</div>
+              <div class="team right">
+                <app-team-hex
+                  [teamId]="m.teamB?.id ?? null"
+                  [label]="m.teamB?.tag ?? ''"
+                  [size]="40"
+                />
+                <span class="team-name">{{ m.teamB?.name ?? 'Čeka se' }}</span>
+              </div>
+            </div>
+            @if (clock(m); as time) {
+              <p class="num clock">{{ time }}</p>
+            }
+          </a>
+        }
+      </div>
+    }
+  </section>
+
+  @if (upcoming().length > 0) {
+    <section class="section" aria-labelledby="next-heading">
+      <h2 id="next-heading" class="section-title">Sljedeće</h2>
+      <ul class="upcoming">
+        @for (m of upcoming(); track m.matchId) {
+          <li>
+            <a
+              class="next-row"
+              [routerLink]="['/mecevi', m.matchId]"
+              [queryParams]="{ turnir: m.tournamentId }"
+              [attr.data-match-id]="m.matchId"
+            >
+              <app-game-badge [code]="m.gameCode" />
+              <span class="teams">
+                <span class="team-name">{{ m.teamA?.name }}</span>
+                <span class="vs">vs</span>
+                <span class="team-name">{{ m.teamB?.name }}</span>
+              </span>
+              <span class="context">{{ m.tournamentName }} · {{ round(m) }}</span>
+            </a>
+          </li>
+        }
+      </ul>
+    </section>
+  }
+}
