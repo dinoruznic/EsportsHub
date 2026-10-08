@@ -61,6 +61,13 @@ Authorization: Bearer {{lTA}}
 
 { "role": "REFEREE" }
 
+### Admin daje ulogu ORGANIZER (samo organizator ili admin pravi turnir)
+POST {{host}}/api/admin/users/{{lOrg}}/roles
+Content-Type: application/json
+Authorization: Bearer {{lTA}}
+
+{ "role": "ORGANIZER" }
+
 ### 4. Turnir za 2 tima + odobrenje
 POST {{host}}/api/tournaments
 Content-Type: application/json

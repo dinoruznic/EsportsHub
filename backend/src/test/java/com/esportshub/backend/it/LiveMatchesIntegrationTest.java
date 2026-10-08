@@ -15,7 +15,7 @@ class LiveMatchesIntegrationTest extends AbstractIntegrationTest {
     @Test
     void liveListShowsLiveMatchesAndUpcomingMatchesWithBothTeams() {
         String admin = api.adminToken();
-        String organizer = api.register(unique("liveorg"));
+        String organizer = api.registerOrganizer(unique("liveorg"));
         long lol = api.gameId("LOL");
         String name = unique("Uzivo kup ");
 

@@ -19,7 +19,7 @@ class RefereeFlowIntegrationTest extends AbstractIntegrationTest {
         String admin = api.adminToken();
         long lol = api.gameId("LOL");
         String organizerName = unique("sudorg");
-        String organizer = api.register(organizerName);
+        String organizer = api.registerOrganizer(organizerName);
         String refereeName = unique("sudija");
         String referee = api.register(refereeName);
         String stranger = api.register(unique("stranac"));

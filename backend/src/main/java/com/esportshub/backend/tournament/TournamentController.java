@@ -20,6 +20,7 @@ public class TournamentController {
     private final TournamentService tournamentService;
 
     @PostMapping("")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
     public ResponseEntity<TournamentResponse> create(@AuthenticationPrincipal UserDetails principal,
                                                      @Valid @RequestBody CreateTournamentRequest request) {
         TournamentResponse created = tournamentService.create(principal.getUsername(), request);

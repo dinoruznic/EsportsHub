@@ -53,6 +53,12 @@ public class Api {
                 .json().get("token").asString();
     }
 
+    public String registerOrganizer(String username) {
+        String token = register(username);
+        grantRole(username, "ORGANIZER");
+        return token;
+    }
+
     public Response login(String usernameOrEmail, String password) {
         return post("/api/auth/login", null, Map.of("usernameOrEmail", usernameOrEmail, "password", password));
     }

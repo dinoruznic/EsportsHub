@@ -22,7 +22,7 @@ class TournamentFlowIntegrationTest extends AbstractIntegrationTest {
     void setUp() {
         lol = api.gameId("LOL");
         organizerName = unique("org");
-        organizer = api.register(organizerName);
+        organizer = api.registerOrganizer(organizerName);
     }
 
     @Test
@@ -141,6 +141,20 @@ class TournamentFlowIntegrationTest extends AbstractIntegrationTest {
         assertThat(completed.get("actor").asString()).isEqualTo(refereeName);
         assertThat(completed.get("source").asString()).isEqualTo("REFEREE");
         assertThat(completed.get("data").get("winnerTeamId").asLong()).isEqualTo(teams.get(0));
+    }
+
+    @Test
+    void onlyOrganizersAndAdminsCreateTournaments() {
+        String player = api.register(unique("igrac"));
+        Map<String, Object> request = Map.of(
+                "name", unique("Kup "),
+                "gameId", lol,
+                "format", "SINGLE_ELIMINATION",
+                "maxTeams", 4);
+
+        api.post("/api/tournaments", player, request).expect(403);
+        api.post("/api/tournaments", api.adminToken(), request).expect(201);
+        api.post("/api/tournaments", organizer, request).expect(201);
     }
 
     private long createTournament() {

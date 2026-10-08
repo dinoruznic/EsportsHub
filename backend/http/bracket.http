@@ -30,6 +30,21 @@ Content-Type: application/json
 
 > {% client.global.set("tokenO", response.body.token); %}
 
+### Admin login (za ulogu organizatora)
+POST {{host}}/api/auth/login
+Content-Type: application/json
+
+{ "usernameOrEmail": "admin", "password": "admin12345" }
+
+> {% client.global.set("tokenA", response.body.token); %}
+
+### Admin daje ulogu ORGANIZER (samo organizator ili admin pravi turnir)
+POST {{host}}/api/admin/users/{{org}}/roles
+Content-Type: application/json
+Authorization: Bearer {{tokenA}}
+
+{ "role": "ORGANIZER" }
+
 ### 3. Turnir (4 tima, single elimination)
 POST {{host}}/api/tournaments
 Content-Type: application/json

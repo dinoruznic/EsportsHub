@@ -43,7 +43,7 @@ class LiveIngestIntegrationTest extends AbstractIntegrationTest {
     @BeforeEach
     void setUp() {
         long lol = api.gameId("LOL");
-        organizer = api.register(unique("org"));
+        organizer = api.registerOrganizer(unique("org"));
         long tournamentId = api.post("/api/tournaments", organizer, Map.of(
                 "name", unique("Live "), "gameId", lol, "format", "SINGLE_ELIMINATION", "maxTeams", 2)).expect(201).id();
         api.post("/api/tournaments/" + tournamentId + "/approve", api.adminToken(), null).expect(200);

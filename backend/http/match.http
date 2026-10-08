@@ -84,6 +84,13 @@ Authorization: Bearer {{tA}}
     client.test("vise uloga (user_roles fix)", function(){ client.assert(JSON.stringify(response.body).indexOf("REFEREE") >= 0 && JSON.stringify(response.body).indexOf("PLAYER") >= 0); });
 %}
 
+### Admin daje ulogu ORGANIZER (samo organizator ili admin pravi turnir)
+POST {{host}}/api/admin/users/{{org}}/roles
+Content-Type: application/json
+Authorization: Bearer {{tA}}
+
+{ "role": "ORGANIZER" }
+
 ### 9. Turnir (4 tima)
 POST {{host}}/api/tournaments
 Content-Type: application/json
