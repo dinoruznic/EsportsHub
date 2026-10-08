@@ -45,6 +45,18 @@ const BACKEND_MESSAGES: Record<string, string> = {
   'oglas nije otvoren': 'Oglas više nije otvoren.',
   'oglas ne postoji': 'Oglas ne postoji.',
   'igrac ne postoji': 'Igrač ne postoji.',
+  'team name taken': 'Naziv tima je već zauzet.',
+  'team tag taken': 'Tag tima je već zauzet.',
+  'already a member': 'Igrač je već član ovog tima.',
+  'account game does not match team game': 'Nalog nije za igru ovog tima.',
+  'samo kapiten moze mijenjati sastav tima': 'Samo kapiten može mijenjati sastav tima.',
+  'clanstvo ne postoji': 'Član ne postoji.',
+  'tim i igrac nisu ista igra': 'Tim i igrač nisu iz iste igre.',
+  'ne mozes ponuditi na svoj oglas': 'Ne možeš poslati ponudu na svoj oglas.',
+  'nisi vlasnik oglasa': 'Samo vlasnik oglasa to može.',
+  'ponuda nije aktivna': 'Ponuda više nije aktivna.',
+  'nije tvoja ponuda': 'To nije tvoja ponuda.',
+  'ponuda ne postoji': 'Ponuda ne postoji.',
   'korisnik ne postoji': 'Igrač ne postoji.',
   'turnir nije u statusu pending': 'Turnir više ne čeka odobrenje.',
   'prijave nisu otvorene': 'Prijave za ovaj turnir nisu otvorene.',
@@ -70,6 +82,8 @@ const FIELD_MESSAGES: Record<string, Record<string, string>> = {
   displayName: { Size: 'Ime za prikaz može imati najviše 60 znakova.' },
   name: { Size: 'Naziv može imati najviše 80 znakova.' },
   inGameName: { Size: 'Ime u igri može imati najviše 60 znakova.' },
+  tag: { Size: 'Tag može imati najviše 5 znakova.' },
+  message: { Size: 'Poruka može imati najviše 255 znakova.' },
 };
 
 export function toApiError(error: unknown): ApiError {

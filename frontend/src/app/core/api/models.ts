@@ -212,6 +212,7 @@ export interface Listing {
   askingPrice: number | null;
   status: string;
   createdAt: string;
+  offerCount: number;
 }
 
 export interface Offer {
@@ -222,6 +223,70 @@ export interface Offer {
   amount: number | null;
   message: string | null;
   status: string;
+  createdAt: string;
+  respondedAt: string | null;
+}
+
+export type OfferStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'WITHDRAWN';
+
+export interface TeamMember {
+  membershipId: number;
+  gameAccountId: number;
+  inGameName: string;
+  ownerUsername: string;
+  rank: string | null;
+  position: string | null;
+  rating: number | null;
+  roleInTeam: string | null;
+  active: boolean;
+}
+
+export interface TeamDetail {
+  team: Team;
+  members: TeamMember[];
+}
+
+export interface CreateTeamRequest {
+  name: string;
+  tag: string;
+  gameId: number;
+  region: string | null;
+  logoUrl: string | null;
+}
+
+export interface Contract {
+  id: number;
+  gameAccountId: number;
+  inGameName: string;
+  teamId: number;
+  teamName: string;
+  salary: number | null;
+  startDate: string | null;
+  endDate: string | null;
+  status: string;
+  createdAt: string;
+}
+
+export interface MakeOfferRequest {
+  teamId: number;
+  amount: number;
+  message: string | null;
+}
+
+export interface MyOffer {
+  id: number;
+  listingId: number;
+  listingStatus: string;
+  teamId: number;
+  teamName: string;
+  teamTag: string;
+  gameAccountId: number;
+  inGameName: string;
+  gameCode: string;
+  ownerUsername: string;
+  amount: number | null;
+  message: string | null;
+  status: OfferStatus;
   createdAt: string;
   respondedAt: string | null;
 }
