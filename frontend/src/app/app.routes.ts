@@ -35,6 +35,11 @@ export const routes: Routes = [
         loadComponent: () => import('./pages/turniri/turnir-detalji'),
       },
       {
+        path: 'mecevi/:id',
+        title: 'Meč · EsportsHub',
+        loadComponent: () => import('./pages/mecevi/mec'),
+      },
+      {
         path: 'market',
         title: 'Market · EsportsHub',
         loadComponent: () => import('./pages/market/market'),

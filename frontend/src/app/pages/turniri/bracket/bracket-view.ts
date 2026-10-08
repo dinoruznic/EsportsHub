@@ -10,6 +10,8 @@ import {
   signal,
   viewChild,
 } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { Bracket } from '../../../core/api/models';
 import { TeamHex } from '../../../shared/team-hex/team-hex';
 import { buildBracket, findChampion } from './bracket-layout';
@@ -29,7 +31,7 @@ interface Box {
 
 @Component({
   selector: 'app-bracket-view',
-  imports: [TeamHex],
+  imports: [NgTemplateOutlet, RouterLink, TeamHex],
   templateUrl: './bracket-view.html',
   styleUrl: './bracket-view.scss',
   host: { '[class.preview]': 'preview()' },
@@ -38,6 +40,7 @@ export class BracketView {
   readonly bracket = input.required<Bracket>();
   readonly seeds = input<Record<number, number>>({});
   readonly preview = input(false);
+  readonly tournamentId = input<number | null>(null);
 
   private readonly host = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly destroyRef = inject(DestroyRef);

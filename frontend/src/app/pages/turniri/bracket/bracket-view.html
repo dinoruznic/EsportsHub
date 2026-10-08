@@ -12,36 +12,33 @@
         <div class="slots">
           @for (match of column.matches; track match.id) {
             <div class="slot">
-              <article
-                class="match"
-                [attr.data-match-id]="match.id"
-                [attr.data-status]="match.status"
-                [class.live]="match.status === 'LIVE'"
-                [class.champion-path]="match.championPath"
-              >
-                <header class="match-head">
-                  <span class="num">M{{ match.number }}</span>
-                  <span class="match-status">
-                    @if (match.status === 'LIVE') {
-                      <span class="live-dot" aria-hidden="true"></span>
-                    }
-                    {{ match.statusLabel }}
-                  </span>
-                </header>
-                @for (slot of match.slots; track $index) {
-                  <div class="row" [class.winner]="slot.winner" [class.loser]="slot.loser" [class.tbd]="!slot.team">
-                    <span class="num seed">{{ slot.seed ?? '' }}</span>
-                    @if (slot.team; as team) {
-                      <app-team-hex [teamId]="team.id" [label]="slot.monogram" [size]="24" />
-                      <span class="team" [title]="team.name">{{ team.name }}</span>
-                    } @else {
-                      <app-team-hex [size]="24" />
-                      <span class="team">{{ slot.placeholder }}</span>
-                    }
-                    <span class="num score">{{ slot.score ?? '–' }}</span>
-                  </div>
-                }
-              </article>
+              @if (preview()) {
+                <article
+                  class="match"
+                  [attr.data-match-id]="match.id"
+                  [attr.data-status]="match.status"
+                >
+                  <ng-container
+                    [ngTemplateOutlet]="card"
+                    [ngTemplateOutletContext]="{ $implicit: match }"
+                  />
+                </article>
+              } @else {
+                <a
+                  class="match"
+                  [routerLink]="['/mecevi', match.id]"
+                  [queryParams]="tournamentId() ? { turnir: tournamentId() } : {}"
+                  [attr.data-match-id]="match.id"
+                  [attr.data-status]="match.status"
+                  [class.live]="match.status === 'LIVE'"
+                  [class.champion-path]="match.championPath"
+                >
+                  <ng-container
+                    [ngTemplateOutlet]="card"
+                    [ngTemplateOutletContext]="{ $implicit: match }"
+                  />
+                </a>
+              }
             </div>
           }
         </div>
@@ -61,7 +58,11 @@
               <path d="M8 20h8" />
             </svg>
             @if (champion(); as info) {
-              <app-team-hex [teamId]="info.champion.id" [label]="info.champion.tag || info.champion.name" [size]="30" />
+              <app-team-hex
+                [teamId]="info.champion.id"
+                [label]="info.champion.tag || info.champion.name"
+                [size]="30"
+              />
               <span class="champion-name">{{ info.champion.name }}</span>
             } @else {
               <span class="waiting">Čeka se finale</span>
@@ -72,3 +73,33 @@
     </section>
   </div>
 </div>
+
+<ng-template #card let-match>
+  <header class="match-head">
+    <span class="num">M{{ match.number }}</span>
+    <span class="match-status">
+      @if (match.status === 'LIVE') {
+        <span class="live-dot" aria-hidden="true"></span>
+      }
+      {{ match.statusLabel }}
+    </span>
+  </header>
+  @for (slot of match.slots; track $index) {
+    <div
+      class="row"
+      [class.winner]="slot.winner"
+      [class.loser]="slot.loser"
+      [class.tbd]="!slot.team"
+    >
+      <span class="num seed">{{ slot.seed ?? '' }}</span>
+      @if (slot.team; as team) {
+        <app-team-hex [teamId]="team.id" [label]="slot.monogram" [size]="24" />
+        <span class="team" [title]="team.name">{{ team.name }}</span>
+      } @else {
+        <app-team-hex [size]="24" />
+        <span class="team">{{ slot.placeholder }}</span>
+      }
+      <span class="num score">{{ slot.score ?? '–' }}</span>
+    </div>
+  }
+</ng-template>

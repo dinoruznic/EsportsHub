@@ -1,8 +1,10 @@
 import { Component, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Highlights } from './bracket/bracket-layout';
 
 @Component({
   selector: 'app-match-highlights',
+  imports: [RouterLink],
   template: `
     @let h = highlights();
     <span class="label" [class.live]="h.live">
@@ -15,15 +17,22 @@ import { Highlights } from './bracket/bracket-layout';
     </span>
     <ul class="chips">
       @for (chip of h.chips; track chip.id) {
-        <li class="chip" [attr.data-match-id]="chip.id">
-          <span class="team">{{ chip.teamA }}</span>
-          @if (h.live) {
-            <span class="num score">{{ chip.scoreA ?? 0 }} : {{ chip.scoreB ?? 0 }}</span>
-          } @else {
-            <span class="vs">vs</span>
-          }
-          <span class="team">{{ chip.teamB }}</span>
-          <span class="round">· {{ chip.round }}</span>
+        <li>
+          <a
+            class="chip"
+            [routerLink]="['/mecevi', chip.id]"
+            [queryParams]="tournamentId() ? { turnir: tournamentId() } : {}"
+            [attr.data-match-id]="chip.id"
+          >
+            <span class="team">{{ chip.teamA }}</span>
+            @if (h.live) {
+              <span class="num score">{{ chip.scoreA ?? 0 }} : {{ chip.scoreB ?? 0 }}</span>
+            } @else {
+              <span class="vs">vs</span>
+            }
+            <span class="team">{{ chip.teamB }}</span>
+            <span class="round">· {{ chip.round }}</span>
+          </a>
         </li>
       }
     </ul>
@@ -87,7 +96,13 @@ import { Highlights } from './bracket/bracket-layout';
       border-radius: 999px;
       background: var(--panel-2);
       font-size: 13px;
+      color: inherit;
+      text-decoration: none;
       white-space: nowrap;
+
+      &:hover {
+        border-color: #3a4757;
+      }
     }
 
     .team {
@@ -115,4 +130,5 @@ import { Highlights } from './bracket/bracket-layout';
 })
 export class MatchHighlights {
   readonly highlights = input.required<Highlights>();
+  readonly tournamentId = input<number | null>(null);
 }
