@@ -330,7 +330,10 @@ describe('TurnirDetalji', () => {
 
     expect(row.querySelector('.label')!.textContent!.trim()).toBe('Uživo sada');
     expect(chip.getAttribute('data-match-id')).toBe('11');
-    expect(Array.from(chip.querySelectorAll('.team')).map((t) => t.textContent)).toEqual(['Tim 2', 'Tim 3']);
+    expect(Array.from(chip.querySelectorAll('.team')).map((t) => t.textContent)).toEqual([
+      'Tim 2',
+      'Tim 3',
+    ]);
     expect(chip.querySelector('.score')!.textContent).toBe('1 : 0');
     expect(chip.querySelector('.round')!.textContent).toBe('· Polufinale');
     expect(element.querySelector('app-champion-banner')).toBeNull();
@@ -359,5 +362,113 @@ describe('TurnirDetalji', () => {
     expect(element.querySelectorAll('.match.champion-path').length).toBe(2);
     expect(element.querySelector('app-match-highlights')).toBeNull();
     expect(element.querySelector('section.actions')).toBeNull();
+  });
+
+  it('fills the next match after WINNER_ADVANCED and shows the champion after TOURNAMENT_COMPLETED', async () => {
+    await render({
+      tournament: tournament({ status: 'ONGOING' }),
+      registrations: FOUR.map((r, i) => ({ ...r, seed: i + 1 })),
+      bracket: fourTeamBracket(),
+    });
+    stomp.last.connect();
+    const topic = '/topic/tournaments/1';
+    const team = (id: number) => ({ id, name: `Tim ${id}`, tag: `T${id}` });
+    const at = '2026-10-08T10:00:00Z';
+    const finalTeams = () =>
+      Array.from(element.querySelectorAll('.match[data-match-id="12"] .team')).map(
+        (t) => t.textContent,
+      );
+
+    expect([...stomp.last.topics.keys()]).toEqual([topic]);
+    expect(finalTeams()).toEqual(['Tim 1', 'Pobjednik meča 2']);
+
+    const semifinal = {
+      id: 11,
+      status: 'FINISHED',
+      teamA: team(2),
+      teamB: team(3),
+      scoreA: 0,
+      scoreB: 2,
+      winnerTeamId: 3,
+      nextMatchId: 12,
+    };
+    const final = {
+      id: 12,
+      status: 'SCHEDULED',
+      teamA: team(1),
+      teamB: team(3),
+      scoreA: 0,
+      scoreB: 0,
+      winnerTeamId: null,
+      nextMatchId: null,
+    };
+    stomp.last.emit(topic, {
+      type: 'FINISHED',
+      matchId: 11,
+      actor: 's',
+      match: semifinal,
+      data: {},
+      at,
+    });
+    stomp.last.emit(topic, {
+      type: 'WINNER_ADVANCED',
+      matchId: 12,
+      actor: 's',
+      match: final,
+      data: {},
+      at,
+    });
+    await harness.fixture.whenStable();
+
+    expect(element.querySelector('.match[data-match-id="11"]')!.getAttribute('data-status')).toBe(
+      'FINISHED',
+    );
+    expect(element.querySelector('.match[data-match-id="12"]')!.classList).toContain('flash');
+    expect(finalTeams()).toEqual(['Tim 1', 'Tim 3']);
+    expect(element.querySelector('app-match-highlights .label')!.textContent!.trim()).toBe(
+      'Sljedeći meč',
+    );
+
+    const finished = { ...final, status: 'FINISHED', scoreA: 1, scoreB: 3, winnerTeamId: 3 };
+    stomp.last.emit(topic, {
+      type: 'FINISHED',
+      matchId: 12,
+      actor: 's',
+      match: finished,
+      data: {},
+      at,
+    });
+    stomp.last.emit(topic, {
+      type: 'TOURNAMENT_COMPLETED',
+      matchId: 12,
+      actor: 's',
+      match: finished,
+      data: {},
+      at,
+    });
+    await settle();
+    http.expectOne('/api/tournaments/1').flush(tournament({ status: 'COMPLETED' }));
+    await harness.fixture.whenStable();
+
+    expect(element.querySelector('app-champion-banner .name')!.textContent).toBe('Tim 3');
+    expect(element.querySelector('app-registered-teams h2')!.textContent!.trim()).toBe(
+      'Konačni plasman',
+    );
+    expect(element.querySelector('.refresh')).toBeNull();
+  });
+
+  it('offers Osvježi only when the connection is offline', async () => {
+    await render({ tournament: tournament({ status: 'ONGOING' }), bracket: fourTeamBracket() });
+    stomp.last.connect();
+    await harness.fixture.whenStable();
+    expect(element.querySelector('.refresh')).toBeNull();
+
+    stomp.last.drop();
+    stomp.last.drop();
+    stomp.last.drop();
+    await harness.fixture.whenStable();
+
+    expect(element.querySelector('app-connection-indicator')!.textContent!.trim()).toBe('Bez veze');
+    expect(element.querySelector('.refresh')).not.toBeNull();
   });
 });
