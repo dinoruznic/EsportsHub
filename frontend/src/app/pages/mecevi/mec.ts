@@ -6,7 +6,7 @@ import { catchError, forkJoin, map, of, switchMap } from 'rxjs';
 import { toApiError } from '../../core/api/api-error';
 import { GamesApi } from '../../core/api/games-api';
 import { MatchesApi } from '../../core/api/matches-api';
-import { BracketMatch } from '../../core/api/models';
+import { BracketMatch, MatchEventRecord } from '../../core/api/models';
 import { TournamentsApi } from '../../core/api/tournaments-api';
 import { MatchTopicMessage, SnapshotStats, matchTopic } from '../../core/realtime/messages';
 import { RealtimeService } from '../../core/realtime/realtime.service';
@@ -15,6 +15,8 @@ import { ErrorState } from '../../shared/error-state/error-state';
 import { Skeleton } from '../../shared/skeleton/skeleton';
 import { TeamHex } from '../../shared/team-hex/team-hex';
 import { buildBracket } from '../turniri/bracket/bracket-layout';
+import { FeedContext, FeedEntry, fromMessage, historyFeed, prependEntry } from './match-events';
+import { MatchFeed } from './match-feed';
 import { formatClock } from './match-format';
 import { MatchStats } from './match-stats';
 
@@ -27,7 +29,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 @Component({
   selector: 'app-mec',
-  imports: [RouterLink, ConnectionIndicator, ErrorState, Skeleton, TeamHex, MatchStats],
+  imports: [RouterLink, ConnectionIndicator, ErrorState, Skeleton, TeamHex, MatchFeed, MatchStats],
   templateUrl: './mec.html',
   styleUrl: './mec.scss',
 })
@@ -39,9 +41,12 @@ export default class Mec {
   protected readonly realtime = inject(RealtimeService);
 
   private readonly route = inject(ActivatedRoute);
-  protected readonly id = toSignal(this.route.paramMap.pipe(map((params) => Number(params.get('id')))), {
-    requireSync: true,
-  });
+  protected readonly id = toSignal(
+    this.route.paramMap.pipe(map((params) => Number(params.get('id')))),
+    {
+      requireSync: true,
+    },
+  );
   private readonly hint = toSignal(
     this.route.queryParamMap.pipe(map((params) => Number(params.get('turnir')) || null)),
     { requireSync: true },
@@ -49,6 +54,8 @@ export default class Mec {
 
   protected readonly match = signal<BracketMatch | null>(null);
   protected readonly snapshot = signal<SnapshotStats | null>(null);
+  private readonly history = signal<MatchEventRecord[]>([]);
+  private readonly liveEntries = signal<FeedEntry[]>([]);
   private readonly snapshotAt = signal(0);
   protected readonly loadError = signal<string | null>(null);
   private readonly tournamentId = signal<number | null>(null);
@@ -64,13 +71,14 @@ export default class Mec {
       }),
   });
 
-  protected readonly tournament = computed(() => (this.context.hasValue() ? this.context.value().tournament : null));
+  protected readonly tournament = computed(() =>
+    this.context.hasValue() ? this.context.value().tournament : null,
+  );
+  private readonly columns = computed(() =>
+    this.context.hasValue() ? buildBracket(this.context.value().bracket, {}) : [],
+  );
   protected readonly card = computed(() => {
-    if (!this.context.hasValue()) {
-      return null;
-    }
-    const columns = buildBracket(this.context.value().bracket, {});
-    for (const column of columns) {
+    for (const column of this.columns()) {
       const card = column.matches.find((match) => match.id === this.id());
       if (card) {
         return { round: column.label, number: card.number };
@@ -84,10 +92,18 @@ export default class Mec {
     if (!value) {
       return 'Meč';
     }
-    const game = value.games.find((g) => g.code === value.tournament.gameCode)?.name ?? value.tournament.gameCode;
+    const game =
+      value.games.find((g) => g.code === value.tournament.gameCode)?.name ??
+      value.tournament.gameCode;
     return [game, card?.round, card ? `M${card.number}` : null].filter(Boolean).join(' · ');
   });
 
+  protected readonly feed = computed(() =>
+    this.liveEntries().reduce(
+      (feed, entry) => prependEntry(feed, entry),
+      historyFeed(this.history(), this.feedContext()),
+    ),
+  );
   protected readonly statusLabel = computed(() => STATUS_LABELS[this.match()?.status ?? ''] ?? '');
   protected readonly live = computed(() => this.match()?.status === 'LIVE');
   protected readonly finished = computed(() => this.match()?.status === 'FINISHED');
@@ -96,7 +112,9 @@ export default class Mec {
     if (base === null) {
       return null;
     }
-    const elapsed = this.live() ? Math.max(0, Math.floor((this.now() - this.snapshotAt()) / 1000)) : 0;
+    const elapsed = this.live()
+      ? Math.max(0, Math.floor((this.now() - this.snapshotAt()) / 1000))
+      : 0;
     return formatClock(base + elapsed);
   });
 
@@ -137,14 +155,26 @@ export default class Mec {
     this.load(this.id());
   }
 
+  private feedContext(): FeedContext {
+    return {
+      match: this.match(),
+      roundOf: (matchId) =>
+        this.columns().find((column) => column.matches.some((match) => match.id === matchId))
+          ?.label ?? null,
+    };
+  }
+
   private load(id: number): void {
     this.loadError.set(null);
     forkJoin({
       match: this.matchesApi.get(id),
       snapshot: this.matchesApi.snapshot(id).pipe(catchError(() => of(null))),
+      events: this.matchesApi.events(id).pipe(catchError(() => of([]))),
     }).subscribe({
-      next: ({ match, snapshot }) => {
+      next: ({ match, snapshot, events }) => {
         this.match.set(match);
+        this.history.set(events);
+        this.liveEntries.set([]);
         if (snapshot) {
           this.setSnapshot(snapshot, Date.parse(snapshot.capturedAt));
         }
@@ -162,10 +192,18 @@ export default class Mec {
     this.matchesApi
       .live()
       .pipe(catchError(() => of([])))
-      .subscribe((list) => this.tournamentId.set(list.find((item) => item.matchId === id)?.tournamentId ?? null));
+      .subscribe((list) =>
+        this.tournamentId.set(list.find((item) => item.matchId === id)?.tournamentId ?? null),
+      );
   }
 
   private apply(message: MatchTopicMessage): void {
+    const entry = fromMessage(message, this.feedContext());
+    this.liveEntries.update((entries) =>
+      entry.type === 'LIVE_SNAPSHOT' && entries.at(-1)?.type === 'LIVE_SNAPSHOT'
+        ? [...entries.slice(0, -1), entry]
+        : [...entries, entry],
+    );
     if (message.type === 'LIVE_SNAPSHOT') {
       this.setSnapshot(message.data as unknown as SnapshotStats, Date.parse(message.at));
       return;

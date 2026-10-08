@@ -41,5 +41,7 @@ export function teamName(match: BracketMatch | null, teamId: unknown): string {
 
 export function localTime(iso: string): string {
   const date = new Date(iso);
-  return [date.getHours(), date.getMinutes(), date.getSeconds()].map((part) => String(part).padStart(2, '0')).join(':');
+  return [date.getHours(), date.getMinutes(), date.getSeconds()]
+    .map((part) => String(part).padStart(2, '0'))
+    .join(':');
 }
