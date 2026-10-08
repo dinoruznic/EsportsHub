@@ -34,10 +34,18 @@ import { Skeleton } from '../../shared/skeleton/skeleton';
             <app-game-badge [code]="t.gameCode" [name]="gameNames()[t.gameCode] ?? null" />
             <a class="name" [routerLink]="['/turniri', t.id]">{{ t.name }}</a>
             <span class="by">
-              {{ t.organizerUsername }} · {{ created(t) }}
+              <a class="player" [routerLink]="['/igraci', t.organizerUsername]">{{
+                t.organizerUsername
+              }}</a>
+              · {{ created(t) }}
             </span>
             <span class="actions">
-              <button type="button" class="btn btn-gold approve" [disabled]="busyId() === t.id" (click)="approve(t)">
+              <button
+                type="button"
+                class="btn btn-gold approve"
+                [disabled]="busyId() === t.id"
+                (click)="approve(t)"
+              >
                 Odobri
               </button>
               <app-confirm-inline

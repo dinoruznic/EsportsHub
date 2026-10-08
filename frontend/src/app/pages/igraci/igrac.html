@@ -1,0 +1,39 @@
+@if (missing()) {
+  <app-empty-state
+    class="missing"
+    title="Igrač ne postoji."
+    [text]="'Nema igrača sa korisničkim imenom ' + username() + '.'"
+  >
+    <a class="btn btn-ghost" routerLink="/turniri">Nazad na turnire</a>
+  </app-empty-state>
+} @else if (data.error()) {
+  <app-error-state [message]="loadError()" (retry)="data.reload()" />
+} @else if (data.hasValue()) {
+  @let p = data.value().profile;
+  <app-profile-header
+    [username]="p.username"
+    [displayName]="p.displayName"
+    [roles]="p.roles"
+    [createdAt]="p.createdAt"
+    [teams]="p.teams"
+  />
+
+  <section class="accounts" aria-labelledby="accounts-heading">
+    <h2 id="accounts-heading" class="eyebrow">Nalozi po igri</h2>
+    @if (accounts().length === 0) {
+      <p class="none">Ovaj igrač još nema nijedan nalog.</p>
+    } @else {
+      <div class="grid">
+        @for (account of accounts(); track account.id) {
+          <app-account-card
+            [account]="account"
+            [rankType]="rankTypeOf(account)"
+            [readonly]="true"
+          />
+        }
+      </div>
+    }
+  </section>
+} @else {
+  <app-skeleton [count]="1" [height]="170" />
+}

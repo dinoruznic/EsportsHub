@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { authGuard, guestGuard } from './core/auth/guards';
+import { ownProfileGuard } from './pages/igraci/own-profile.guard';
 
 export const routes: Routes = [
   {
@@ -38,6 +39,12 @@ export const routes: Routes = [
         path: 'mecevi/:id',
         title: 'Meč · EsportsHub',
         loadComponent: () => import('./pages/mecevi/mec'),
+      },
+      {
+        path: 'igraci/:username',
+        title: 'Igrač · EsportsHub',
+        canActivate: [ownProfileGuard],
+        loadComponent: () => import('./pages/igraci/igrac'),
       },
       {
         path: 'market',

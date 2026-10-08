@@ -1,11 +1,12 @@
 import { Component, computed, input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Tournament } from '../../core/api/models';
 import { formatDate, formatKm } from '../../shared/format';
 import { StatusChip } from '../../shared/status-chip/status-chip';
 
 @Component({
   selector: 'app-tournament-stats',
-  imports: [StatusChip],
+  imports: [RouterLink, StatusChip],
   template: `
     @let t = tournament();
     <dl class="cells">
@@ -35,7 +36,11 @@ import { StatusChip } from '../../shared/status-chip/status-chip';
       </div>
       <div class="cell">
         <dt>Organizator</dt>
-        <dd class="organizer">{{ t.organizerUsername }}</dd>
+        <dd class="organizer">
+          <a class="player" [routerLink]="['/igraci', t.organizerUsername]">{{
+            t.organizerUsername
+          }}</a>
+        </dd>
       </div>
     </dl>
     <div class="actions"><ng-content /></div>
