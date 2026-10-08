@@ -10,12 +10,12 @@
 ![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?style=flat-square&logo=rabbitmq&logoColor=white)
 ![WebSocket](https://img.shields.io/badge/WebSocket-STOMP-010101?style=flat-square)
 ![Spring Security](https://img.shields.io/badge/Security-JWT_+_RBAC-6DB33F?style=flat-square&logo=springsecurity&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-193_passing-2EA043?style=flat-square)
-![Coverage](https://img.shields.io/badge/coverage-94%25_lines-2EA043?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-226_backend_%2B_206_frontend-2EA043?style=flat-square)
+![Coverage](https://img.shields.io/badge/coverage-97%25_lines-2EA043?style=flat-square)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
-![Angular](https://img.shields.io/badge/Angular-planned-DD0031?style=flat-square&logo=angular&logoColor=white)
+![Angular](https://img.shields.io/badge/Angular-22-DD0031?style=flat-square&logo=angular&logoColor=white)
 
-[Overview](#overview) · [Architecture](#architecture) · [Design Patterns](#design-patterns) · [Database](#database) · [Testing](#testing) · [Getting Started](#getting-started) · [API](#api-overview) · [Project Structure](#project-structure) · [Roadmap](#roadmap)
+[Overview](#overview) · [Demo](#demo-za-prezentaciju) · [Architecture](#architecture) · [Design Patterns](#design-patterns) · [Database](#database) · [Testing](#testing) · [Getting Started](#getting-started) · [API](#api-overview) · [Project Structure](#project-structure) · [Roadmap](#roadmap)
 
 ## Overview
 
@@ -25,16 +25,64 @@ The system is an **event + broadcast layer**, not a game controller: server brac
 
 | | Feature |
 |---|---|
-| 🔐 | **Accounts & roles** — JWT authentication, role-based authorization (PLAYER, REFEREE, ADMIN …), multiple roles per user |
-| 👤 | **Per-game player profiles** — one account per game with region, position and rank; tier-based ranks (LoL, Valorant) or numeric rating (CS2 ELO, Dota MMR) |
+| 🚪 | **Landing & auth** — full-screen landing page with login and registration on the same page, JWT sessions, everything else behind login |
+| 🔐 | **Roles** — PLAYER, ORGANIZER, REFEREE and ADMIN, several roles per user, role-aware navigation and route guards |
+| 🏆 | **Tournaments** — organizer-created, admin-approved, team registration with capacity limits, filters by status and game |
+| 🧩 | **Live bracket** — single elimination with standard seeding; the bracket view updates over WebSocket while matches are played and crowns the champion |
+| 📡 | **Live match page** — scoreboard, game clock, kills, gold lead and towers from live snapshots, plus an event feed (referee, Riot data, server, demo) pushed over STOMP |
+| 🔴 | **Uživo** — every live match and the next scheduled ones on one page, refreshed in real time |
+| 👤 | **Profiles & game accounts** — one account per game with region, position and rank; tier ranks (LoL, Valorant) or numeric rating (CS2, Dota 2) |
 | 👥 | **Teams** — captain-owned rosters; a member's game must match the team's game |
-| 💱 | **Transfer market** — players list themselves, captains make offers, accepting an offer signs a contract and moves the player into the team |
-| 🏆 | **Tournaments** — player-created, admin-approved, team registration with capacity limits |
-| 🧩 | **Brackets** — single elimination with standard seeding, generated from registered teams |
-| 📡 | **Live matches** — referee-driven match lifecycle, winners advance automatically, real-time WebSocket updates and a full event log |
+| 💱 | **Transfer market** — players list themselves, captains make offers, accepting an offer signs a contract and moves the player into the team (Facade) |
+| ⚖️ | **Referee panel** — assigned matches, start / score / finish controls, automatic referee assignment with conflict-of-interest rules, and the ready-to-copy agent command |
+| 🛠️ | **Admin panel** — overview tiles, user search with role management, pending tournament approval, one-click demo data and an automatic demo mode |
 | 🎮 | **Riot live data** — a desktop agent reads the League client's local API and streams game state through RabbitMQ |
 
 **Multi-game by design.** Games are data, not code: a new game is a row in `games` plus its ranks, positions and regions. Teams, tournaments, brackets and the market work for any game without a code change, and the profile form adapts to the game (`TIER` → rank dropdown, `NUMERIC` → rating field).
+
+## Demo za prezentaciju
+
+Everything needed for a live presentation is built into the admin panel. The demo endpoints exist only while `esportshub.demo.enabled` is `true` (the default in `application.yaml`; the integration test profile turns it off).
+
+```bash
+docker compose up -d
+cd backend && ./mvnw spring-boot:run
+cd frontend && npm start
+```
+
+1. Open http://localhost:4200 and log in as `admin` / `admin12345`.
+2. **Admin → Pregled → "Resetuj demo podatke"** and confirm. All data except the admin account is deleted and the database is filled with demo data through the normal services, so every business rule holds.
+3. **"Pokreni demo mečeve"** — the server keeps up to two matches of *Sarajevo Open* live, sends a snapshot every 2 s through RabbitMQ (game clock from 14:00, kills, gold lead, towers), ends a map about every minute and finishes the series (BO3, final BO5). The winner advances and the next match gets a referee automatically. The demo stops by itself when the tournament is over.
+4. Open **Uživo** or the *Sarajevo Open* bracket and watch it update without refreshing. Events played by the demo carry a `DEMO` tag in the match feed.
+
+What the reset creates:
+
+| | |
+|---|---|
+| Tournaments | **Jesenji LoL Kup** (completed, champion Drina Drakes, full match history) · **Sarajevo Open** (quarterfinals played, semifinals scheduled with referees, played by the demo) · **Balkan LoL Kup** (registration, 7 of 8 teams — Balkan Wolves can register live) · **CS2 Liga BiH** (waiting for approval) |
+| Teams | 8 LoL teams (Balkan Wolves, Sarajevo Snipers, Drina Drakes, Neretva Nexus, Una Unicorns, Mostar Mavericks, Tuzla Titans, Bihać Blaze) with 5 players each, 2 CS2 teams (Sarajevo Five, Banja Luka Bulls) |
+| Market | `dino` on the transfer list with offers from Balkan Wolves (650 KM) and Sarajevo Snipers (600 KM), plus three more free agents |
+
+Demo accounts:
+
+| Username | Role | Password |
+|---|---|---|
+| `admin` | Admin | `admin12345` |
+| `org_sarajevo` | Organizer (Jesenji LoL Kup, Sarajevo Open) | `lozinka123` |
+| `org_mostar` | Organizer (Balkan LoL Kup, CS2 Liga BiH) | `lozinka123` |
+| `sudija_amra` | Referee (semifinal 1) | `lozinka123` |
+| `sudija_kenan` | Referee (semifinal 2) | `lozinka123` |
+| `sudija_lejla` | Referee | `lozinka123` |
+| `dino` | Player with LoL, CS2 and Valorant accounts and two offers | `lozinka123` |
+| `kap_wolves` | Player, captain of Balkan Wolves | `lozinka123` |
+
+To show the real agent instead, log in as the match referee, copy the agent command from the referee panel and run it:
+
+```bash
+java -jar agent/target/esportshub-agent.jar --mock --start=14:00 --interval=2 --match-key=<key>
+```
+
+The same flow is scripted for the IntelliJ HTTP client in `backend/http/demo-reset.http` and `backend/http/demo-mode.http`.
 
 ## Architecture
 
@@ -44,9 +92,12 @@ flowchart LR
         R[Referee panel<br/>REST]
         B[Bracket logic<br/>server]
         A[Riot desktop agent<br/>127.0.0.1:2999]
+        D[Demo runner<br/>admin, every 2 s]
     end
 
     A -- JSON snapshot --> Q[(RabbitMQ<br/>esportshub.live)]
+    D -- same JSON snapshot --> Q
+    D -- start / score / finish --> S
     Q -- consumer --> S
     Q -. rejected .-> DLQ[(live.snapshots.dlq)]
     R --> S[Spring Boot<br/>MatchService<br/>state machine]
@@ -55,11 +106,12 @@ flowchart LR
     S -- publishes MatchEvent --> E{{Spring events}}
     E -- Observer 1<br/>same transaction --> L[(match_events<br/>audit log)]
     E -- Observer 2<br/>after commit --> W[WebSocket / STOMP<br/>/topic/...]
-    W --> V[Spectators<br/>browser]
+    W --> V[Angular app<br/>Uživo, match page, bracket]
 ```
 
 - **One event pipeline.** `MatchService` only publishes `MatchEvent`s and does not know who listens. The event logger writes them to `match_events` inside the same transaction; the broadcaster pushes them to spectators **after commit**, so nobody ever sees a result that is later rolled back.
 - **Live data is decoupled.** The Riot agent never talks to the backend directly — it publishes to RabbitMQ with a least-privilege broker user (write-only to one exchange). Invalid snapshots (unknown match key, match not live, malformed JSON) are dead-lettered instead of retried forever.
+- **The demo uses the real path.** The demo runner starts matches through `MatchService` and publishes snapshots to the same exchange with the same routing key and message format as the agent, so the RabbitMQ consumer, the event log and WebSocket broadcasting all run exactly as in a real game.
 - **Match keys are secrets.** A match's agent key is only visible to its referee, the organizer and admins; public views never expose it.
 
 ## Design Patterns
@@ -88,7 +140,7 @@ flowchart LR
 | API docs | springdoc-openapi (Swagger UI) |
 | Testing | JUnit 5, Mockito, AssertJ, Testcontainers (PostgreSQL + RabbitMQ), Awaitility, JaCoCo |
 | CI | GitHub Actions |
-| Frontend | Angular *(planned)* |
+| Frontend | Angular 22 — standalone components, signals, reactive forms, STOMP.js over WebSocket, Vitest |
 
 ## Database
 
@@ -98,7 +150,7 @@ Key ideas:
 - A person (`users`) is separated from their per-game identity (`game_accounts`, one per game).
 - Per-game reference tables (`game_ranks`, `game_positions`, `game_regions`) and `games.rank_type` drive validation and the profile form.
 - Competition: `tournaments` → `tournament_registrations` → `rounds` → `matches` (self-reference `next_match_id` forms the bracket tree).
-- Live & integrity: `match_events` (JSON payload, actor, source: `REFEREE` / `ORGANIZER` / `ADMIN` / `RIOT`), `live_game_snapshots`.
+- Live & integrity: `match_events` (JSON payload, actor, source: `REFEREE` / `ORGANIZER` / `ADMIN` / `RIOT` / `SISTEM` / `DEMO`), `live_game_snapshots`.
 - Market: `transfer_listings` → `transfer_offers` → `contracts`.
 
 ## Testing
@@ -106,12 +158,17 @@ Key ideas:
 ```bash
 cd backend
 ./mvnw verify        # requires Docker (Testcontainers)
+
+cd frontend
+npm run test:ci      # Vitest
+npm run build
 ```
 
-- **193 tests**, all passing — unit tests (pure JUnit + Mockito, no Spring context) for the core logic and end-to-end integration tests through real HTTP, PostgreSQL and RabbitMQ in containers.
-- Integration tests share one Spring context and one pair of containers; the full suite runs in about 70 seconds.
-- **94.5 % line coverage** (JaCoCo). The build fails below 90 %. Report: `backend/target/site/jacoco/index.html`.
-- Highlights: bracket seeding for 2–16 teams, the full match state-machine matrix, the market facade, a whole tournament from creation to champion over HTTP, WebSocket message order with a real STOMP client, and RabbitMQ ingestion including dead-lettering.
+- **226 backend tests**, all passing — unit tests (pure JUnit + Mockito, no Spring context) for the core logic and end-to-end integration tests through real HTTP, PostgreSQL and RabbitMQ in containers.
+- Integration tests run in the `test` profile with the demo disabled and share one Spring context; the demo tests enable it in a second context. The full suite runs in about two minutes.
+- **97 % line coverage** (JaCoCo). The build fails below 90 %. Report: `backend/target/site/jacoco/index.html`.
+- Highlights: bracket seeding for 2–16 teams, the full match state-machine matrix, the market facade, a whole tournament from creation to champion over HTTP, WebSocket message order with a real STOMP client, RabbitMQ ingestion including dead-lettering, an idempotent demo reset, and the demo runner playing *Sarajevo Open* to the end through RabbitMQ.
+- **206 frontend tests** (Vitest) for pages, API error mapping, live stores and the admin demo controls.
 - The agent has its own unit tests (Riot JSON mapping, side swap, turret attribution, mock generator).
 - **CI:** every push to `main` runs the backend and agent builds on GitHub Actions.
 
@@ -150,7 +207,7 @@ Open http://localhost:4200. The backend must be running on `:8080`, because the 
 
 The start page is a full-screen landing with login and registration on the same page; the rest of the app is only reachable after logging in. Demo admin: `admin` / `admin12345`.
 
-**Live demo:** run `backend/http/demo-setup.http` (creates a 4-team tournament and prints the spectator link), open the link, then step through `backend/http/demo-play.http` request by request and watch the bracket update without refreshing.
+For a presentation, follow [Demo za prezentaciju](#demo-za-prezentaciju). The older step-by-step API demo still works: run `backend/http/demo-setup.http`, open the spectator link it prints, then step through `backend/http/demo-play.http`.
 
 **Riot agent** (see [`agent/README.md`](agent/README.md)):
 
@@ -180,7 +237,8 @@ Authentication is stateless: log in, then send `Authorization: Bearer <token>`. 
 | Market | `/api/market/listings`, `/listings/{id}/offers`, `/offers/{id}/accept \| reject \| withdraw`, `/teams/{id}/contracts` |
 | Tournaments | `/api/tournaments`, `/pending`, `/{id}/approve \| reject`, `/{id}/registrations`, `/{id}/bracket` |
 | Matches | `/api/matches/{id}`, `/referee`, `/start`, `/score`, `/finish`, `/events`, `/live`, `/agent-key` |
-| Admin | `POST /api/admin/users/{username}/roles` |
+| Admin | `GET /api/admin/users`, `GET /api/admin/stats`, `POST /api/admin/users/{username}/roles`, `DELETE /api/admin/users/{username}/roles/{role}` |
+| Demo (admin) | `POST /api/admin/demo/reset`, `POST /api/admin/demo/start`, `POST /api/admin/demo/stop`, `GET /api/admin/demo/status` |
 | WebSocket | `/ws` → subscribe `/topic/tournaments/{id}` or `/topic/matches/{id}` |
 
 ## Project Structure
@@ -199,6 +257,7 @@ EsportsHub/
 │   │   ├── bracket/       # Strategy + Builder bracket generation
 │   │   ├── match/         # match state machine, events, WebSocket broadcast (Observer)
 │   │   ├── live/          # RabbitMQ ingestion of live game snapshots
+│   │   ├── demo/          # demo data reset + seed, automatic demo matches
 │   │   └── config/        # security, OpenAPI, WebSocket, bootstrap
 │   ├── src/main/resources/
 │   │   ├── db/changelog/  # Liquibase migrations
@@ -208,7 +267,12 @@ EsportsHub/
 ├── agent/                 # Riot Live Client Data desktop agent
 ├── infra/rabbitmq/        # broker definitions (least-privilege agent user)
 ├── .github/workflows/     # CI
-├── frontend/              # Angular app (planned)
+├── frontend/              # Angular app
+│   └── src/app/
+│       ├── core/          # API clients, auth, STOMP realtime service
+│       ├── layout/        # app shell and navigation
+│       ├── pages/         # landing, turniri, mecevi, uzivo, profil, igraci, timovi, market, sudija, admin
+│       └── shared/        # reusable UI pieces
 └── docker-compose.yml     # PostgreSQL + RabbitMQ
 ```
 
@@ -225,7 +289,10 @@ EsportsHub/
 - [x] Event log + WebSocket broadcasting (Observer)
 - [x] RabbitMQ ingestion + Riot desktop agent
 - [x] Unit + integration tests, coverage gate, CI
-- [ ] Angular frontend
+- [x] Angular frontend (landing, tournaments, live bracket, live match page, Uživo, profiles, teams, market)
+- [x] Referee panel with automatic referee assignment and conflict-of-interest rules
+- [x] Admin panel with roles, statistics and tournament approval
+- [x] One-click demo data and automatic demo mode through RabbitMQ
 - [ ] Dual result confirmation when no referee is assigned
 - [ ] Double elimination format
 
