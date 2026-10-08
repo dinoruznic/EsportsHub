@@ -17,7 +17,7 @@ import { TeamHex } from '../../shared/team-hex/team-hex';
 import { buildBracket } from '../turniri/bracket/bracket-layout';
 import { FeedContext, FeedEntry, fromMessage, historyFeed, prependEntry } from './match-events';
 import { MatchFeed } from './match-feed';
-import { formatClock } from './match-format';
+import { formatClock, liveClock } from './match-format';
 import { MatchStats } from './match-stats';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -112,10 +112,7 @@ export default class Mec {
     if (base === null) {
       return null;
     }
-    const elapsed = this.live()
-      ? Math.max(0, Math.floor((this.now() - this.snapshotAt()) / 1000))
-      : 0;
-    return formatClock(base + elapsed);
+    return this.live() ? liveClock(base, this.snapshotAt(), this.now()) : formatClock(base);
   });
 
   constructor() {

@@ -45,3 +45,10 @@ export function localTime(iso: string): string {
     .map((part) => String(part).padStart(2, '0'))
     .join(':');
 }
+
+export const MAX_CLOCK_DRIFT_MS = 120000;
+
+export function liveClock(seconds: number, at: number, now: number): string {
+  const elapsed = Math.min(Math.max(0, now - at), MAX_CLOCK_DRIFT_MS);
+  return formatClock(seconds + Math.floor(elapsed / 1000));
+}
