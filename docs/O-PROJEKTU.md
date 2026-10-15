@@ -45,7 +45,7 @@ Jedan korisnik može imati više uloga (npr. igrač i sudija).
 
 ### 1. Igrač i njegovi nalozi po igrama
 
-Ista osoba u različitim igrama ima različita imena i nivoe. Zato je **osoba** (korisnički nalog na platformi) odvojena od **naloga u igri**: Dino Ruznic je jedan korisnik, a u League of Legends je `yueen8#EUW` (rang Diamond, pozicija MID), u Counter-Strike 2 `dino_awp` (rating 18.450). Sistem dozvoljava po jedan nalog za svaku igru.
+Ista osoba u različitim igrama ima različita imena i nivoe. Zato je **osoba** (korisnički nalog na platformi) odvojena od **naloga u igri**: jedan igrač je jedan korisnik platforme, a u League of Legends može imati nalog `Nadimak#EUW` (rang Diamond, pozicija MID), dok u Counter-Strike 2 igra pod drugim imenom (rating 18.450). Sistem dozvoljava po jedan nalog za svaku igru.
 
 Igre se razlikuju po tome kako mjere nivo igrača: neke imaju rangove (stepenice poput Gold, Platinum, Diamond), neke brojčani rating. To je zapisano kao podatak o igri, pa se forma za unos naloga sama prilagodi igri, a backend provjerava da rang, pozicija i regija pripadaju toj igri.
 
@@ -147,7 +147,7 @@ Na amaterskoj sceni najveći problem su sporovi i sumnja u rezultate, pa sistem 
 | **Kill** | eliminacija protivničkog igrača |
 | **Gold** | resurs koji timovi skupljaju tokom igre; razlika u goldu pokazuje ko vodi |
 | **Toranj (tower)** | odbrambena građevina; rušenje tornjeva vodi ka pobjedi |
-| **Riot ID** | ime igrača u Riotovim igrama, u obliku `ime#TAG` (npr. `yueen8#EUW`) |
+| **Riot ID** | ime igrača u Riotovim igrama, u obliku `ime#TAG` (npr. `Nadimak#EUW`) |
 | **Rang / tier** | stepenica nivoa igrača (npr. Gold, Platinum, Diamond) |
 | **Rating / MMR** | brojčana mjera nivoa igrača (npr. 18.450 u CS2) |
 | **Pozicija** | uloga igrača u timu (u LoL-u: TOP, JUNGLE, MID, ADC, SUPPORT) |

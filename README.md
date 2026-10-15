@@ -54,29 +54,17 @@ cd frontend && npm start              # terminal 3
 
 1. Open http://localhost:4200 and log in as `admin` / `admin12345`.
 2. **Admin → Pregled → "Resetuj demo podatke"** and confirm. All data except the admin account is deleted and the database is filled with demo data through the normal services, so every business rule holds.
-3. **"Pokreni demo mečeve"** — the server keeps up to two matches of *Sarajevo Open* live, sends a snapshot every 2 s through RabbitMQ (game clock from 14:00, kills, gold lead, towers), ends a map about every minute and finishes the series (BO3, final BO5). The winner advances and the next match gets a referee automatically. The demo stops by itself when the tournament is over.
-4. Open **Uživo** or the *Sarajevo Open* bracket and watch it update without refreshing. Events played by the demo carry a `DEMO` tag in the match feed.
+3. **"Pokreni demo mečeve"** — the server keeps up to two matches of the ongoing demo tournament live, sends a snapshot every 2 s through RabbitMQ (game clock from 14:00, kills, gold lead, towers), ends a map about every minute and finishes the series (BO3, final BO5). The winner advances and the next match gets a referee automatically. The demo stops by itself when the tournament is over.
+4. Open **Uživo** or the tournament bracket and watch it update without refreshing. Events played by the demo carry a `DEMO` tag in the match feed.
 
-What the reset creates:
+What the reset creates (all names are fictional demo data):
 
 | | |
 |---|---|
-| Tournaments | **Jesenji LoL Kup** (completed, champion Drina Drakes, full match history) · **Sarajevo Open** (quarterfinals played, semifinals scheduled with referees, played by the demo) · **Balkan LoL Kup** (registration, 7 of 8 teams — Balkan Wolves can register live) · **CS2 Liga BiH** (waiting for approval) |
-| Teams | 8 LoL teams (Balkan Wolves, Sarajevo Snipers, Drina Drakes, Neretva Nexus, Una Unicorns, Mostar Mavericks, Tuzla Titans, Bihać Blaze) with 5 players each, 2 CS2 teams (Sarajevo Five, Banja Luka Bulls) |
-| Market | `dino` on the transfer list with offers from Balkan Wolves (650 KM) and Sarajevo Snipers (600 KM), plus three more free agents |
-
-Demo accounts:
-
-| Username | Role | Password |
-|---|---|---|
-| `admin` | Admin | `admin12345` |
-| `org_sarajevo` | Organizer (Jesenji LoL Kup, Sarajevo Open) | `lozinka123` |
-| `org_mostar` | Organizer (Balkan LoL Kup, CS2 Liga BiH) | `lozinka123` |
-| `sudija_amra` | Referee (semifinal 1) | `lozinka123` |
-| `sudija_kenan` | Referee (semifinal 2) | `lozinka123` |
-| `sudija_lejla` | Referee | `lozinka123` |
-| `dino` | Player with LoL, CS2 and Valorant accounts and two offers | `lozinka123` |
-| `kap_wolves` | Player, captain of Balkan Wolves | `lozinka123` |
+| Tournaments | one completed tournament with a champion and full match history · one ongoing tournament with scheduled matches and assigned referees, played by the demo mode · one open for registration with a free slot, so a team can register live · one waiting for admin approval |
+| Teams | eight LoL teams and two CS2 teams with full rosters |
+| Market | players on the transfer list with pending offers from teams |
+| Accounts | organizers, referees, captains and players for every role; the admin panel lists them with their passwords after the reset |
 
 To show the real agent instead, log in as the match referee, copy the agent command from the referee panel and run it:
 
@@ -93,9 +81,9 @@ Taken at 1600×900 right after "Resetuj demo podatke" with the demo mode running
 | | |
 |---|---|
 | ![Landing](docs/screenshots/landing.png) Landing with login and registration | ![Tournaments](docs/screenshots/tournaments.png) Tournaments |
-| ![Sarajevo Open bracket](docs/screenshots/sarajevo-open-bracket.png) Sarajevo Open — live bracket | ![Live match](docs/screenshots/live-match.png) Live match page with snapshots and the DEMO tag |
-| ![Uživo](docs/screenshots/uzivo.png) Uživo | ![Profile](docs/screenshots/profile-dino.png) Profile of `dino` with three game accounts |
-| ![Market](docs/screenshots/market.png) Market — offers on `dino`'s listing | ![Referee panel](docs/screenshots/referee-panel.png) Referee panel of `sudija_amra` |
+| ![Live bracket](docs/screenshots/sarajevo-open-bracket.png) Live bracket | ![Live match](docs/screenshots/live-match.png) Live match page with snapshots and the DEMO tag |
+| ![Uživo](docs/screenshots/uzivo.png) Uživo | ![Profile](docs/screenshots/profile-dino.png) Player profile with three game accounts |
+| ![Market](docs/screenshots/market.png) Market — offers on a player's listing | ![Referee panel](docs/screenshots/referee-panel.png) Referee panel |
 | ![Admin panel](docs/screenshots/admin-panel.png) Admin panel — overview, demo mode and demo accounts | |
 
 ## Architecture
@@ -181,7 +169,7 @@ npm run build
 - **226 backend tests**, all passing — unit tests (pure JUnit + Mockito, no Spring context) for the core logic and end-to-end integration tests through real HTTP, PostgreSQL and RabbitMQ in containers.
 - Integration tests run in the `test` profile with the demo disabled and share one Spring context; the demo tests enable it in a second context. The full suite runs in about two minutes.
 - **97 % line coverage** (JaCoCo). The build fails below 90 %. Report: `backend/target/site/jacoco/index.html`.
-- Highlights: bracket seeding for 2–16 teams, the full match state-machine matrix, the market facade, a whole tournament from creation to champion over HTTP, WebSocket message order with a real STOMP client, RabbitMQ ingestion including dead-lettering, an idempotent demo reset, and the demo runner playing *Sarajevo Open* to the end through RabbitMQ.
+- Highlights: bracket seeding for 2–16 teams, the full match state-machine matrix, the market facade, a whole tournament from creation to champion over HTTP, WebSocket message order with a real STOMP client, RabbitMQ ingestion including dead-lettering, an idempotent demo reset, and the demo runner playing a whole tournament to the end through RabbitMQ.
 - **206 frontend tests** (Vitest) for pages, API error mapping, live stores and the admin demo controls.
 - The agent has its own unit tests (Riot JSON mapping, side swap, turret attribution, mock generator).
 - **CI:** every push to `main` runs the backend, agent and frontend builds on GitHub Actions.
