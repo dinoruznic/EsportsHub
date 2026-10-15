@@ -7,10 +7,6 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Instant;
 import java.util.Map;
 
-/**
- * Jednostavan test endpoint da provjerimo da backend radi.
- * GET http://localhost:8080/api/ping
- */
 @RestController
 @RequestMapping("/api")
 public class PingController {

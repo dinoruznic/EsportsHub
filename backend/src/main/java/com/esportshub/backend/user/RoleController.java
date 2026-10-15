@@ -7,11 +7,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
-/**
- * Demonstrira cijeli lanac: Liquibase seed -> tabela roles -> Role entitet
- * -> RoleRepository -> ovaj controller -> JSON.
- * GET http://localhost:8080/api/roles
- */
 @RestController
 @RequestMapping("/api/roles")
 @RequiredArgsConstructor
