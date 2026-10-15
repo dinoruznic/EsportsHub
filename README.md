@@ -38,18 +38,18 @@ The system is an **event + broadcast layer**, not a game controller: server brac
 | 💱 | **Transfer market** — players list themselves, captains make offers, accepting an offer signs a contract and moves the player into the team (Facade) |
 | ⚖️ | **Referee panel** — assigned matches, start / score / finish controls, automatic referee assignment with conflict-of-interest rules, and the ready-to-copy agent command |
 | 🛠️ | **Admin panel** — overview tiles, user search with role management, pending tournament approval, one-click demo data and an automatic demo mode |
-| 🎮 | **Riot live data** — a desktop agent reads the League client's local API and streams game state through RabbitMQ |
+| 🎮 | **Riot live data** — a command-line agent on the referee's PC reads the League client's local API and streams game state through RabbitMQ |
 
 **Multi-game by design.** Games are data, not code: a new game is a row in `games` plus its ranks, positions and regions. Teams, tournaments, brackets and the market work for any game without a code change, and the profile form adapts to the game (`TIER` → rank dropdown, `NUMERIC` → rating field).
 
 ## Demo za prezentaciju
 
-Everything needed for a live presentation is built into the admin panel. The demo endpoints exist only while `esportshub.demo.enabled` is `true` (the default in `application.yaml`; the integration test profile turns it off).
+Everything needed for a live presentation is built into the admin panel. Run the three commands below in three separate terminals from the repository root. The demo endpoints exist only while `esportshub.demo.enabled` is `true` (the default in `application.yaml`; the integration test profile turns it off).
 
 ```bash
-docker compose up -d
-cd backend && ./mvnw spring-boot:run
-cd frontend && npm start
+docker compose up -d                  # terminal 1
+cd backend && ./mvnw spring-boot:run  # terminal 2
+cd frontend && npm start              # terminal 3
 ```
 
 1. Open http://localhost:4200 and log in as `admin` / `admin12345`.
@@ -307,9 +307,10 @@ EsportsHub/
 - [x] Referee panel with automatic referee assignment and conflict-of-interest rules
 - [x] Admin panel with roles, statistics and tournament approval
 - [x] One-click demo data and automatic demo mode through RabbitMQ
+- [ ] Desktop GUI for the agent (download for referees)
 - [ ] Dual result confirmation when no referee is assigned
 - [ ] Double elimination format
 
 ---
 
-*Academic project — Electrical Engineering.*
+*Academic project — Spring & Angular academy.*
