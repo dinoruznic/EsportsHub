@@ -19,6 +19,8 @@
 
 ## Overview
 
+> 📄 **O projektu (na bosanskom):** šta je EsportsHub, koji problem rješava, uloge, tokovi i rječnik pojmova za čitaoce koji ne igraju igre: [docs/O-PROJEKTU.md](docs/O-PROJEKTU.md)
+
 EsportsHub is a platform for amateur esports competition. Players build per-game profiles and get signed through a **transfer market**, organizers run **tournaments** with automatically generated brackets, and every match is **streamed live** to spectators.
 
 The system is an **event + broadcast layer**, not a game controller: server bracket logic, referee input and live in-game data all become the same kind of domain event, which is logged for integrity and pushed to everyone watching.
@@ -182,7 +184,7 @@ npm run build
 - Highlights: bracket seeding for 2–16 teams, the full match state-machine matrix, the market facade, a whole tournament from creation to champion over HTTP, WebSocket message order with a real STOMP client, RabbitMQ ingestion including dead-lettering, an idempotent demo reset, and the demo runner playing *Sarajevo Open* to the end through RabbitMQ.
 - **206 frontend tests** (Vitest) for pages, API error mapping, live stores and the admin demo controls.
 - The agent has its own unit tests (Riot JSON mapping, side swap, turret attribution, mock generator).
-- **CI:** every push to `main` runs the backend and agent builds on GitHub Actions.
+- **CI:** every push to `main` runs the backend, agent and frontend builds on GitHub Actions.
 
 Manual API scenarios for the IntelliJ HTTP client live in `backend/http/` (one file per feature).
 
