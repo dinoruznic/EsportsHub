@@ -15,11 +15,11 @@
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white)
 ![Angular](https://img.shields.io/badge/Angular-22-DD0031?style=flat-square&logo=angular&logoColor=white)
 
-[Overview](#overview) · [Demo](#demo-za-prezentaciju) · [Architecture](#architecture) · [Design Patterns](#design-patterns) · [Database](#database) · [Testing](#testing) · [Getting Started](#getting-started) · [API](#api-overview) · [Project Structure](#project-structure) · [Roadmap](#roadmap)
+[Overview](#overview) · [Demo](#demo) · [Architecture](#architecture) · [Design Patterns](#design-patterns) · [Database](#database) · [Testing](#testing) · [Getting Started](#getting-started) · [API](#api-overview) · [Project Structure](#project-structure) · [Roadmap](#roadmap)
 
 ## Overview
 
-> 📄 **O projektu (na bosanskom):** šta je EsportsHub, koji problem rješava, uloge, tokovi i rječnik pojmova za čitaoce koji ne igraju igre: [docs/O-PROJEKTU.md](docs/O-PROJEKTU.md)
+> 📄 **About the project:** what EsportsHub is, the problem it solves, roles, main flows and a glossary of gaming terms for readers who don't play games: [docs/O-PROJEKTU.md](docs/O-PROJEKTU.md)
 
 EsportsHub is a platform for amateur esports competition. Players build per-game profiles and get signed through a **transfer market**, organizers run **tournaments** with automatically generated brackets, and every match is **streamed live** to spectators.
 
@@ -32,7 +32,7 @@ The system is an **event + broadcast layer**, not a game controller: server brac
 | 🏆 | **Tournaments** — organizer-created, admin-approved, team registration with capacity limits, filters by status and game |
 | 🧩 | **Live bracket** — single elimination with standard seeding; the bracket view updates over WebSocket while matches are played and crowns the champion |
 | 📡 | **Live match page** — scoreboard, game clock, kills, gold lead and towers from live snapshots, plus an event feed (referee, Riot data, server, demo) pushed over STOMP |
-| 🔴 | **Uživo** — every live match and the next scheduled ones on one page, refreshed in real time |
+| 🔴 | **Live page** (*Uživo*) — every live match and the next scheduled ones on one page, refreshed in real time |
 | 👤 | **Profiles & game accounts** — one account per game with region, position and rank; tier ranks (LoL, Valorant) or numeric rating (CS2, Dota 2) |
 | 👥 | **Teams** — captain-owned rosters; a member's game must match the team's game |
 | 💱 | **Transfer market** — players list themselves, captains make offers, accepting an offer signs a contract and moves the player into the team (Facade) |
@@ -42,9 +42,9 @@ The system is an **event + broadcast layer**, not a game controller: server brac
 
 **Multi-game by design.** Games are data, not code: a new game is a row in `games` plus its ranks, positions and regions. Teams, tournaments, brackets and the market work for any game without a code change, and the profile form adapts to the game (`TIER` → rank dropdown, `NUMERIC` → rating field).
 
-## Demo za prezentaciju
+## Demo
 
-Everything needed for a live presentation is built into the admin panel. Run the three commands below in three separate terminals from the repository root. The demo endpoints exist only while `esportshub.demo.enabled` is `true` (the default in `application.yaml`; the integration test profile turns it off).
+Everything needed for a live presentation is built into the admin panel. The UI is in Bosnian, so button labels are quoted as they appear on screen, with a translation. Run the three commands below in three separate terminals from the repository root. The demo endpoints exist only while `esportshub.demo.enabled` is `true` (the default in `application.yaml`; the integration test profile turns it off).
 
 ```bash
 docker compose up -d                  # terminal 1
@@ -53,9 +53,9 @@ cd frontend && npm start              # terminal 3
 ```
 
 1. Open http://localhost:4200 and log in as `admin` / `admin12345`.
-2. **Admin → Pregled → "Resetuj demo podatke"** and confirm. All data except the admin account is deleted and the database is filled with demo data through the normal services, so every business rule holds.
-3. **"Pokreni demo mečeve"** — the server keeps up to two matches of the ongoing demo tournament live, sends a snapshot every 2 s through RabbitMQ (game clock from 14:00, kills, gold lead, towers), ends a map about every minute and finishes the series (BO3, final BO5). The winner advances and the next match gets a referee automatically. The demo stops by itself when the tournament is over.
-4. Open **Uživo** or the tournament bracket and watch it update without refreshing. Events played by the demo carry a `DEMO` tag in the match feed.
+2. **Admin → Pregled** (*Overview*) **→ "Resetuj demo podatke"** (*Reset demo data*) and confirm. All data except the admin account is deleted and the database is filled with demo data through the normal services, so every business rule holds.
+3. **"Pokreni demo mečeve"** (*Start demo matches*) — the server keeps up to two matches of the ongoing demo tournament live, sends a snapshot every 2 s through RabbitMQ (game clock from 14:00, kills, gold lead, towers), ends a map about every minute and finishes the series (BO3, final BO5). The winner advances and the next match gets a referee automatically. The demo stops by itself when the tournament is over.
+4. Open the **Live page** (*Uživo*) or the tournament bracket and watch it update without refreshing. Events played by the demo carry a `DEMO` tag in the match feed.
 
 What the reset creates (all names are fictional demo data):
 
@@ -76,13 +76,13 @@ The same flow is scripted for the IntelliJ HTTP client in `backend/http/demo-res
 
 ### Screenshots
 
-Taken at 1600×900 right after "Resetuj demo podatke" with the demo mode running.
+Taken at 1600×900 right after a demo data reset with the demo mode running.
 
 | | |
 |---|---|
 | ![Landing](docs/screenshots/landing.png) Landing with login and registration | ![Tournaments](docs/screenshots/tournaments.png) Tournaments |
 | ![Live bracket](docs/screenshots/sarajevo-open-bracket.png) Live bracket | ![Live match](docs/screenshots/live-match.png) Live match page with snapshots and the DEMO tag |
-| ![Uživo](docs/screenshots/uzivo.png) Uživo | ![Profile](docs/screenshots/profile-dino.png) Player profile with three game accounts |
+| ![Live page](docs/screenshots/uzivo.png) Live page | ![Profile](docs/screenshots/profile-dino.png) Player profile with three game accounts |
 | ![Market](docs/screenshots/market.png) Market — offers on a player's listing | ![Referee panel](docs/screenshots/referee-panel.png) Referee panel |
 | ![Admin panel](docs/screenshots/admin-panel.png) Admin panel — overview, demo mode and demo accounts | |
 
@@ -108,7 +108,7 @@ flowchart LR
     S -- publishes MatchEvent --> E{{Spring events}}
     E -- Observer 1<br/>same transaction --> L[(match_events<br/>audit log)]
     E -- Observer 2<br/>after commit --> W[WebSocket / STOMP<br/>/topic/...]
-    W --> V[Angular app<br/>Uživo, match page, bracket]
+    W --> V[Angular app<br/>live page, match page, bracket]
 ```
 
 - **One event pipeline.** `MatchService` only publishes `MatchEvent`s and does not know who listens. The event logger writes them to `match_events` inside the same transaction; the broadcaster pushes them to spectators **after commit**, so nobody ever sees a result that is later rolled back.
@@ -209,7 +209,7 @@ Open http://localhost:4200. The backend must be running on `:8080`, because the 
 
 The start page is a full-screen landing with login and registration on the same page; the rest of the app is only reachable after logging in. Demo admin: `admin` / `admin12345`.
 
-For a presentation, follow [Demo za prezentaciju](#demo-za-prezentaciju). The older step-by-step API demo still works: run `backend/http/demo-setup.http`, open the spectator link it prints, then step through `backend/http/demo-play.http`.
+For a presentation, follow [Demo](#demo). The older step-by-step API demo still works: run `backend/http/demo-setup.http`, open the spectator link it prints, then step through `backend/http/demo-play.http`.
 
 **Riot agent** (see [`agent/README.md`](agent/README.md)):
 
@@ -291,7 +291,7 @@ EsportsHub/
 - [x] Event log + WebSocket broadcasting (Observer)
 - [x] RabbitMQ ingestion + Riot desktop agent
 - [x] Unit + integration tests, coverage gate, CI
-- [x] Angular frontend (landing, tournaments, live bracket, live match page, Uživo, profiles, teams, market)
+- [x] Angular frontend (landing, tournaments, live bracket, live match page, live page, profiles, teams, market)
 - [x] Referee panel with automatic referee assignment and conflict-of-interest rules
 - [x] Admin panel with roles, statistics and tournament approval
 - [x] One-click demo data and automatic demo mode through RabbitMQ
